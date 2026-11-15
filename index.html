@@ -449,9 +449,9 @@ const PRESETS = {
   ipadmini: { name: '아이패드 미니', en: 'iPad mini', shape: 'box', w: 135, d: 6, h: 195, place: 'hand', face: 'front', ctrl: 100, action: 'press', screen: true },
   ipadair: { name: '아이패드 에어 11', en: 'iPad Air 11"', shape: 'box', w: 179, d: 6, h: 248, place: 'hand', face: 'front', ctrl: 120, action: 'press', screen: true },
   macbook: { name: '맥북 에어 13', en: 'MacBook Air 13"', shape: 'laptop', w: 304, d: 215, h: 11, place: 'table', face: 'top', ctrl: 11, action: 'press', posture: 'sit', noHand: true }, // opens on the table
-  airbuds: { name: '에어팟 프로 3 (착용)', en: 'AirPods Pro 3 (worn)', shape: 'earbud', w: 19, d: 27, h: 31, place: 'head', face: 'front', ctrl: 15, action: 'press' }, // each earbud 19.2 x 27.0 x 30.9 mm (Apple spec), in the ears
-  airpods: { name: '에어팟 프로 3 케이스', en: 'AirPods Pro 3 case', shape: 'box', look: 'case', w: 62, d: 22, h: 47, place: 'hand', face: 'front', ctrl: 20, action: 'press' }, // MagSafe case 62.2 x 21.8 x 47.2 mm
-  airmax: { name: '에어팟 맥스', en: 'AirPods Max', shape: 'headphone', w: 169, d: 83, h: 187, place: 'head', face: 'front', ctrl: 90, action: 'press' }, // over-ear headphones, worn
+  airbuds: { name: '무선 이어버드 (착용)', en: 'Wireless earbuds (worn)', shape: 'earbud', w: 19, d: 27, h: 31, place: 'head', face: 'front', ctrl: 15, action: 'press' }, // a typical stem earbud, about 19 x 27 x 31 mm, in the ears
+  airpods: { name: '이어버드 케이스', en: 'Earbuds case', shape: 'box', look: 'case', w: 62, d: 22, h: 47, place: 'hand', face: 'front', ctrl: 20, action: 'press' }, // a typical charging case
+  airmax: { name: '오버이어 헤드폰', en: 'Over-ear headphones', shape: 'headphone', w: 170, d: 85, h: 190, place: 'head', face: 'front', ctrl: 90, action: 'press' }, // typical over-ear headphones, worn
   mug: { name: '머그컵', en: 'Mug', shape: 'cup', style: 'mug', w: 82, d: 82, h: 95, place: 'hand', face: 'front', ctrl: 60, action: 'press' },
   glass: { name: '유리잔', en: 'Glass', shape: 'cup', style: 'glass', w: 72, d: 72, h: 110, place: 'hand', face: 'front', ctrl: 60, action: 'press' },
   latte: { name: '라떼잔', en: 'Latte cup', shape: 'cup', style: 'latte', w: 110, d: 110, h: 70, place: 'hand', face: 'front', ctrl: 40, action: 'press' },
@@ -795,6 +795,8 @@ scene.add(fill);
 const mats = {
   body: new THREE.MeshPhysicalMaterial({ roughness: 0.4, clearcoat: 0.55, clearcoatRoughness: 0.25 }), // satin, like a display mannequin
   foam: new THREE.MeshStandardMaterial({ roughness: 0.88 }),
+  pad: new THREE.MeshStandardMaterial({ roughness: 0.97 }), // a product's soft parts (ear cushions, headband pad, ear tips): the product colour, deeper
+  trim: new THREE.MeshStandardMaterial({ roughness: 0.5 }), // a product's hard small parts and face panels: the product colour, lighter and smoother
   surface: new THREE.MeshStandardMaterial({ roughness: 0.75 }),
   surfaceTop: new THREE.MeshStandardMaterial({ roughness: 0.6 }),
   frame: new THREE.MeshStandardMaterial({ roughness: 0.45, metalness: 0.35 }),
@@ -860,6 +862,8 @@ function applyTheme() {
   scene.background = new THREE.Color(tok('--viewport'));
   for (const m of [mats.body, mats.joint, mats.band]) m.color.set(tok('--body'));
   mats.foam.color.set(tok('--foam'));
+  mats.pad.color.set(tok('--foam')).multiplyScalar(0.62);
+  mats.trim.color.set(tok('--foam')).lerp(new THREE.Color(0xffffff), 0.08);
   mats.surface.color.set(tok('--surface'));
   mats.surfaceTop.color.set(tok('--surface')).multiplyScalar(0.93);
   mats.frame.color.set(tok('--ink-2'));
@@ -1648,58 +1652,116 @@ function laptopGeo(group, W, D, H) {
   lid.add(scr);
   group.userData.laptop = { screenTop: base + D * Math.sin(open), keyY: base, scr };
 }
-/* worn on the head: built in the head's own frame (y along the neck, z forward), from this person's ears and crown */
-function headphoneGeo(group, W, D, H) {
-  const A = S.A, hh = A.headH, half = HEAD_BOX.x * hh, ear = EAR.clone().multiplyScalar(hh), cupT = 0.2 * W, cupH = 0.5 * H;
-  const K = kit(group, mats.foam), xc = half + cupT / 2 - 0.006, yTop = HEAD_BOX.y * hh + 0.014, y0 = ear.y + cupH * 0.32;
-  for (const s of [-1, 1]) K.box(cupT, cupH, D, s * xc, ear.y, ear.z, 0, Math.min(cupT, D) * 0.45);
-  const pts = [];
-  for (let i = 0; i <= 16; i++) { const f = Math.PI * (1 - i / 16); pts.push(new V3(xc * Math.cos(f), y0 + (yTop - y0) * Math.sin(f), ear.z)); }
-  K.mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 48, 0.011, 10), 0, 0, 0);
-  group.userData.wear = { cupH, need: yTop - (ear.y - cupH / 2), have: H }; // band height the head needs vs the headphone's height
+/* a soft rounded-rectangle outline (superellipse) w across and h tall, centred; between y0 and y1 only when cut */
+function ovalPts(w, h, n = 2.8, seg = 72) {
+  const out = [];
+  for (let i = 0; i < seg; i++) { const t = (i / seg) * Math.PI * 2, c = Math.cos(t), s = Math.sin(t); out.push(new THREE.Vector2((w / 2) * Math.sign(c) * Math.abs(c) ** (2 / n), (h / 2) * Math.sign(s) * Math.abs(s) ** (2 / n))); }
+  return out;
 }
-/* earbuds (AirPods Pro style) in both ears: the body sits in the concha with its silicone tip in the ear canal, the stem runs down
-   toward the earlobe. W = front to back, D = across (body and tip), H = top of the body to the end of the stem (Pro 3: 19.2 x 27.0 x 30.9 mm) */
+const ovalShape = (w, h, n, seg) => new THREE.Shape(ovalPts(w, h, n, seg));
+/* an extruded outline with fully rounded edges: overall it keeps the outline's size and spans depth d from z = 0 */
+function softSlab(shapeFn, d, r) {
+  const b = Math.min(r, d / 2 - 0.0002), g = new THREE.ExtrudeGeometry(shapeFn(b * 0.92), { depth: Math.max(d - 2 * b, 0.0002), bevelEnabled: true, bevelThickness: b, bevelSize: b * 0.92, bevelSegments: 6, curveSegments: 48 });
+  return g.translate(0, 0, b);
+}
+/* a rounded-rectangle cross-section, half-sizes a (across the sweep's normal) and b (along z), corner radius r */
+function rrectProfile(a, b, r, k = 5) {
+  const out = [];
+  for (const [cx, cy, a0] of [[a - r, b - r, 0], [r - a, b - r, 90], [r - a, r - b, 180], [a - r, r - b, 270]])
+    for (let i = 0; i <= k; i++) { const t = deg(a0 + (90 * i) / k); out.push([cx + r * Math.cos(t), cy + r * Math.sin(t)]); }
+  return out;
+}
+/* a profile swept along a path that lies in a plane of constant z; u runs along the path's in-plane normal, v along z. scale(f) shrinks the
+   profile toward the ends (0..1 along the path); the ends are closed */
+function sweepGeo(path, prof, scale = () => 1) {
+  const n = path.length, m = prof.length, pos = [], idx = [];
+  const N = path.map((p, i) => { const t = path[Math.min(i + 1, n - 1)].clone().sub(path[Math.max(i - 1, 0)]).normalize(); return new V3(-t.y, t.x, 0); });
+  path.forEach((p, i) => { const k = scale(i / (n - 1)); for (const [u, v] of prof) pos.push(p.x + N[i].x * u * k, p.y + N[i].y * u * k, p.z + v * k); });
+  for (let i = 0; i < n - 1; i++) for (let j = 0; j < m; j++) { const a = i * m + j, b = i * m + ((j + 1) % m), c = a + m, d = b + m; idx.push(a, b, c, b, d, c); }
+  for (const [i, dir] of [[0, -1], [n - 1, 1]]) { // flat caps on their own vertices, so the sides keep smooth normals
+    const base = pos.length / 3, ctr = path[i];
+    pos.push(ctr.x, ctr.y, ctr.z);
+    for (let j = 0; j < m; j++) pos.push(pos[(i * m + j) * 3], pos[(i * m + j) * 3 + 1], pos[(i * m + j) * 3 + 2]);
+    for (let j = 0; j < m; j++) { const p0 = base + 1 + j, p1 = base + 1 + ((j + 1) % m); dir < 0 ? idx.push(base, p1, p0) : idx.push(base, p0, p1); }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+/* over-ear headphones, worn, built in the head's own frame (y along the neck, z forward) from this person's head and ears: a padded band
+   over the crown, a slider dropping from each end of it to a yoke on top of each cup, and oval cups whose plush cushions ring the ears.
+   W sets how thick the cups are, D their front-to-back length, H their height (half of H) and the band-height check */
+function headphoneGeo(group, W, D, H) {
+  const A = S.A, hh = A.headH, ear = EAR.clone().multiplyScalar(hh), own = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; m.userData.own = true; group.add(m); return m; };
+  const cupH = clamp(0.5 * H, 0.07, 0.13), cupL = clamp(D, 0.06, 0.11), shell = clamp(0.2 * W, 0.022, 0.045), pad = 0.02;
+  const sideX = eggRay(1, 0, 0) * hh * 0.985, xc = sideX + pad + shell / 2; // the cushion rests on the side of the head; xc is each cup's mid-plane
+  const yHinge = ear.y + cupH / 2 + 0.006, yEnd = yHinge + 0.03, bt = 0.011, pt = 0.008, yTop = HEAD_BOX.y * hh + 0.002 + pt + bt / 2;
+  for (const s of [-1, 1]) {
+    const M = new THREE.Matrix4().makeBasis(new V3(0, 0, -s), new V3(0, 1, 0), new V3(s, 0, 0)).setPosition(s * sideX, ear.y, ear.z); // cup frame: x along the head, y up, z outward
+    const ring = new THREE.Shape(ovalPts(cupL * 0.94 - 0.012, cupH * 0.94 - 0.012, 2.6)); ring.holes.push(new THREE.Path(ovalPts(cupL * 0.46 + 0.012, cupH * 0.58 + 0.012, 2.4).reverse()));
+    own(new THREE.ExtrudeGeometry(ring, { depth: pad - 0.012, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 6, curveSegments: 48 }).translate(0, 0, 0.006).applyMatrix4(M), mats.pad); // the cushion
+    own(new THREE.ShapeGeometry(ovalShape(cupL * 0.52, cupH * 0.64, 2.4)).translate(0, 0, pad - 0.002).applyMatrix4(M), mats.tire); // the cloth over the driver, seen through the cushion
+    own(softSlab((b) => ovalShape(cupL - 2 * b, cupH - 2 * b, 2.9), shell, Math.min(0.012, shell * 0.42)).translate(0, 0, pad).applyMatrix4(M), mats.foam); // the shell
+    own(softSlab((b) => ovalShape(cupL * 0.8 - 2 * b, cupH * 0.8 - 2 * b, 3.1), 0.0024, 0.001).translate(0, 0, pad + shell - 0.0012).applyMatrix4(M), mats.trim); // its face panel
+    const yoke = own(new RoundedBoxGeometry(0.012, 0.014, 0.026, 2, 0.005), mats.trim); yoke.position.set(s * xc, yHinge, ear.z);
+    const sl = own(new RoundedBoxGeometry(0.0075, yEnd - yHinge + 0.012, 0.017, 2, 0.003), mats.trim); sl.position.set(s * xc, (yHinge + yEnd) / 2 + 0.006, ear.z); // the slider, running up into the band
+  }
+  const path = [], nb = 2.3; // the band: an arch from one slider to the other, its pad resting on the crown
+  for (let i = 0; i <= 72; i++) { const t = Math.PI * (1 - i / 72), c = Math.cos(t), sn = Math.sin(t); path.push(new V3(xc * Math.sign(c) * Math.abs(c) ** (2 / nb), yEnd + (yTop - yEnd) * Math.abs(sn) ** (2 / nb), ear.z)); }
+  own(sweepGeo(path, rrectProfile(bt / 2, 0.017, 0.0045), (f) => 1 - 0.08 * smooth01((Math.abs(f - 0.5) / 0.5 - 0.94) / 0.06)), mats.foam);
+  const padPath = []; // the pad under the top of the arch, on the band's inner face
+  for (let i = 14; i <= 58; i++) { const t = path[i + 1].clone().sub(path[i - 1]).normalize(); padPath.push(path[i].clone().add(new V3(t.y, -t.x, 0).multiplyScalar(bt / 2 + pt / 2 - 0.0008))); }
+  own(sweepGeo(padPath, rrectProfile(pt / 2, 0.0135, 0.0036), (f) => 0.55 + 0.45 * smooth01(Math.min(f, 1 - f) / 0.12)), mats.pad);
+  group.userData.wear = { cupH, need: yTop - (ear.y - cupH / 2), have: H }; // band height the head needs vs the headphones' height
+}
+/* wireless earbuds in both ears: the body sits in the concha with its soft tip in the ear canal, a short stem runs down toward the earlobe.
+   W = front to back, D = across (body and tip), H = top of the body to the end of the stem (typical: 19 x 27 x 31 mm) */
 function earbudGeo(group, W, D, H) {
-  const hh = S.A.headH, mm = 0.001, sz = W / 19.2, sx = D / 27, sy = H / 30.9, M = mats.foam;
-  const add = (geo, pos, q) => { const m = new THREE.Mesh(geo, M); m.position.copy(pos); if (q) m.quaternion.copy(q); m.castShadow = true; m.userData.own = true; group.add(m); return m; };
-  const body = new THREE.SphereGeometry(1, 36, 24), p = body.attributes.position;
-  for (let i = 0; i < p.count; i++) { // a rounded bean, flatter on its outer face
-    const v = [p.getX(i), p.getY(i), p.getZ(i)].map((c, k) => Math.sign(c) * Math.abs(c) ** (k === 0 ? 0.75 : 0.9));
-    p.setXYZ(i, v[0] * 7 * mm * sx, v[1] * 8 * mm * sy, v[2] * 9.6 * mm * sz);
+  const hh = S.A.headH, mm = 0.001, sz = W / 19.2, sx = D / 27, sy = H / 30.9;
+  const add = (geo, mat, pos, q) => { const m = new THREE.Mesh(geo, mat); m.position.copy(pos); if (q) m.quaternion.copy(q); m.castShadow = true; m.userData.own = true; group.add(m); return m; };
+  const body = new THREE.SphereGeometry(1, 40, 28), p = body.attributes.position;
+  for (let i = 0; i < p.count; i++) { // a rounded pebble, flatter on its outer face and a little fuller toward the back
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i), f = 1 + 0.08 * z;
+    p.setXYZ(i, Math.sign(x) * Math.abs(x) ** 0.72 * 7.2 * mm * sx, Math.sign(y) * Math.abs(y) ** 0.86 * 8.2 * mm * sy * f, Math.sign(z) * Math.abs(z) ** 0.86 * 9.6 * mm * sz);
   }
   body.computeVertexNormals();
-  const stemGeo = new THREE.CapsuleGeometry(3 * mm, 15.5 * mm * sy, 6, 18).scale((2.6 / 3) * sx, 1, (3.5 / 3) * sz); // 5.2 x 7 mm, rounded end
-  const tipGeo = new THREE.CylinderGeometry(4.6 * mm, 5.6 * mm, 7.5 * mm * sx, 20);
+  const V2 = THREE.Vector2, tipPts = [new V2(0, 0), new V2(2.6, 0), new V2(2.7, 1.2), new V2(4.9, 2.2), new V2(5.9, 3.6), new V2(6.1, 5), new V2(5.4, 6.4), new V2(3.9, 7.3), new V2(2.2, 7.6), new V2(0, 7.6)].map((v) => v.multiplyScalar(mm));
+  const tipGeo = new THREE.LatheGeometry(tipPts, 28); // a soft mushroom tip, its dome toward the canal
+  const nozzle = new THREE.CylinderGeometry(2.7 * mm, 3.2 * mm, 3.2 * mm, 20);
+  const stemPts = [new V2(0, 0), new V2(2.3, 0.2), new V2(2.6, 1.4), new V2(2.7, 9), new V2(2.95, 14.5), new V2(3.3, 16.5), new V2(0, 17.6)].map((v) => v.multiplyScalar(mm));
+  const stemGeo = new THREE.LatheGeometry(stemPts, 24).scale(0.85 * sx, sy, 1.18 * sz); // slimmer across, deeper front to back, widening into the body
   for (const s of [-1, 1]) {
     const C = new V3(s * EAR_CANAL.x * hh, EAR_CANAL.y * hh, EAR_CANAL.z * hh), out = new V3(s, 0, 0);
     const bc = C.clone().addScaledVector(out, 7.2 * mm * sx).add(new V3(0, 1.5 * mm * sy, -2.5 * mm * sz));
-    add(body, bc);
-    const td = new V3(-s, 0.06, 0.2).normalize(); // the tip points into the canal
-    add(tipGeo, C.clone().addScaledVector(td, 1.5 * mm), new THREE.Quaternion().setFromUnitVectors(UP, td));
-    const d = new V3(s * 0.12, -1, 0.25).normalize(), top = bc.clone().add(new V3(s * 0.5 * mm, -5.5 * mm * sy, 3 * mm * sz));
-    add(stemGeo, top.clone().addScaledVector(d, 7.75 * mm * sy), new THREE.Quaternion().setFromUnitVectors(new V3(0, -1, 0), d));
+    add(body, mats.foam, bc);
+    const td = new V3(-s, 0.06, 0.2).normalize(), qt = new THREE.Quaternion().setFromUnitVectors(UP, td); // the tip points into the canal
+    add(nozzle, mats.trim, C.clone().addScaledVector(td, -2.6 * mm), qt);
+    add(tipGeo, mats.pad, C.clone().addScaledVector(td, -3.6 * mm), qt);
+    const d = new V3(s * 0.12, -1, 0.25).normalize(), top = bc.clone().add(new V3(s * 0.4 * mm, -4.6 * mm * sy, 2.6 * mm * sz));
+    add(stemGeo, mats.foam, top.clone().addScaledVector(d, 17.6 * mm * sy), new THREE.Quaternion().setFromUnitVectors(UP, d.clone().negate()));
   }
 }
-/* earbud case: a soft rounded slab; the lid is the top third and a groove runs round where it meets the base */
+/* earbuds case: a soft pebble; the lid is the top third and a fine groove runs round where it meets the base, with a status light below it */
 function caseGeo(group, W, D, H) {
-  const seam = 0.64 * H, gap = 0.0005, b = Math.min(D * 0.38, (H - seam) * 0.45, 0.01), r = Math.min(W, H) * 0.3;
-  const shape = (w, h, rb, rt) => {
-    const s = new THREE.Shape(), x0 = -w / 2, x1 = w / 2;
-    s.moveTo(x0 + rb, 0); s.lineTo(x1 - rb, 0); s.quadraticCurveTo(x1, 0, x1, rb);
-    s.lineTo(x1, h - rt); s.quadraticCurveTo(x1, h, x1 - rt, h);
-    s.lineTo(x0 + rt, h); s.quadraticCurveTo(x0, h, x0, h - rt);
-    s.lineTo(x0, rb); s.quadraticCurveTo(x0, 0, x0 + rb, 0);
-    return s;
+  const seam = 0.64 * H, gap = 0.0006, r = Math.min(D * 0.42, 0.011, (H - seam) * 0.4), V2 = THREE.Vector2;
+  const clipY = (pts, yc, below) => { // the part of a convex outline below (or above) one height, cut straight across
+    const out = [], inside = (y) => (below ? y <= yc : y >= yc);
+    pts.forEach((a, i) => { const b = pts[(i + 1) % pts.length]; if (inside(a.y)) out.push(a); if (inside(a.y) !== inside(b.y)) out.push(new V2(a.x + ((b.x - a.x) * (yc - a.y)) / (b.y - a.y), yc)); });
+    return out;
   };
-  for (const [y0, y1, rb, rt] of [[0, seam - gap / 2, r, 0], [seam + gap / 2, H, 0, r]]) {
-    const h = y1 - y0 - 2 * b, rr = (v) => clamp(v - b, 0.0003, h / 2 - 0.0001);
-    const g = new THREE.ExtrudeGeometry(shape(W - 2 * b, Math.max(h, 0.0004), rr(rb), rr(rt)), { depth: Math.max(D - 2 * b, 0.0005), bevelEnabled: true, bevelThickness: b, bevelSize: b, bevelSegments: 5, curveSegments: 16 });
-    g.translate(0, y0 + b, -(D - b));
-    const m = new THREE.Mesh(g, mats.foam);
+  const piece = (lo, hi) => (b) => { // inset by the bevel that will round it back out to the full size
+    let pts = ovalPts(W - 2 * b, H - 2 * b, 3.2, 128).map((v) => new V2(v.x, v.y + H / 2));
+    if (lo > 0) pts = clipY(pts, lo + b, false);
+    if (hi < H) pts = clipY(pts, hi - b, true);
+    return new THREE.Shape(pts);
+  };
+  for (const [lo, hi] of [[0, seam - gap / 2], [seam + gap / 2, H]]) {
+    const m = new THREE.Mesh(softSlab(piece(lo, hi), D, r).translate(0, 0, -D), mats.foam);
     m.castShadow = true; m.receiveShadow = true; m.userData.own = true;
     group.add(m);
   }
+  const led = new THREE.Mesh(new THREE.CircleGeometry(0.0011, 16), mats.trim); // the status light on the front
+  led.position.set(0, seam - 0.006, 0.0003); led.userData.own = true; group.add(led);
 }
 /* cups: mug with a handle, plain tapered glass, wide latte bowl; turned on a lathe (outside up, then the inside back down) */
 function cupGeo(group, style, W, H) {
