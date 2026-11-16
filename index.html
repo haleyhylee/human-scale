@@ -1394,12 +1394,29 @@ function dims() {
 const ctrlM = () => (S.ctrl / 1000) * S.scale;
 /* filling a cup: held under the outlet when the control is on the front (water purifier),
    standing on the drip tray when the button is on top (coffee machine) */
-const isDispense = () => S.action === 'dispense' && !isFurniture() && S.place !== 'hand';
+/* what the box is: an example keeps its own use, so only places and controls that make sense for it are offered (a tablet is held or laid
+   on the desk, a mug never fills a cup, an air purifier stands on the floor); your own box, cylinder or sphere, or a loaded model, can be anything */
+function kind() {
+  if (S.source !== 'box') return 'free';
+  if (S.shape === 'headphone' || S.shape === 'earbud') return 'worn';
+  if (S.screen || S.look === 'paper' || S.shape === 'ring') return 'flat';
+  if (S.shape === 'laptop') return 'laptop';
+  if (S.shape === 'cup' || S.look === 'tumbler' || S.look === 'case') return 'small';
+  if (S.look === 'purifier' || S.look === 'coffee') return 'dispenser';
+  if (S.look === 'airpurifier') return 'floor';
+  return 'free';
+}
+const PLACE_OK = { worn: ['head'], flat: ['hand', 'desk'], laptop: ['table', 'desk'], small: ['hand', 'desk', 'table', 'counter'], dispenser: ['counter', 'table', 'desk'], floor: ['floor'] };
+const placeOk = (p) => (kind() === 'free' ? !(p === 'hand' && S.noHand) : PLACE_OK[kind()].includes(p));
+const canDispense = () => kind() === 'free' || kind() === 'dispenser';
+const hasControls = () => ['free', 'dispenser', 'floor'].includes(kind()); // the others are simply held, worn, typed on or looked at
+const lookOnly = () => deskItem() || (kind() === 'small' && S.place !== 'hand'); // set down just to be looked at: no reaching or pressing
+const isDispense = () => S.action === 'dispense' && !isFurniture() && S.place !== 'hand' && canDispense();
 const cupInHand = () => isDispense() && S.face === 'front';
 const cupOnTray = () => isDispense() && S.face === 'top';
 const isCoffee = () => /커피|coffee|espresso|에스프레소|라떼|latte|캡슐|capsule/i.test(`${S.name} ${S.pkey || ''}`);
 const carried = () => S.place === 'hand' || S.place === 'head'; // held in the hands or worn on the head
-const setDown = () => S.source === 'box' && (S.shape === 'ring' || S.look === 'paper'); // things that only get held, or set down on the desk to look at
+const setDown = () => S.source === 'box' && (S.shape === 'ring' || S.look === 'paper' || S.screen); // things that are held, or laid flat on the desk: a ring, a sheet, a phone, a tablet
 const deskItem = () => atDesk() && setDown();
 const tableTop = () => dims().H + (furn() === 'coffee' ? S.lift * LIFT_RISE * S.scale : 0); // a lift-up top counts where it is
 /* the computer desk a product can sit on (place 'desk'): the person sits at the keyboard in front of a 24-inch monitor and the product
@@ -2113,7 +2130,7 @@ function layoutProduct() {
     else if (deskItem()) { product.rotation.x = -Math.PI / 2; product.position.y += dims().H; } // the sheet lies flat, its short edge toward the person
   }
   const show = !carried() && !isFurniture() && S.shape !== 'laptop' && !deskItem();
-  marker.visible = show;
+  marker.visible = show && hasControls() && !lookOnly();
   spout.visible = show && isDispense();
   tray.visible = show && cupOnTray();
   button.visible = show && cupInHand() && S.mode === 'use';
@@ -2684,20 +2701,20 @@ function evaluate() {
       const lim = clamp(want, minCtl, Math.max(minCtl, P.H - 0.02));
       if (Math.abs(lim - cur) >= 0.02) push(`ctl:${S.persona}:${S.place}:${mmi(cur)}`, sugLv, L(`${nm} 높이를 ${mmi(cur)}→${mmi(lim)}mm로 ${lim > cur ? '올리면' : '내리면'} ${who}에게 편한 높이예요.`, `${lim > cur ? 'Raise' : 'Lower'} the ${nm.toLowerCase()} to ${mmi(lim)} mm (now ${mmi(cur)}) to suit this ${whoEn}.`), ok, () => { S.ctrl = Math.round((lim * 1000) / S.scale); });
       if (want > P.H + 0.02) {
-        if (S.place === 'floor' && P.H <= 0.45) push(`up:${S.persona}`, 'warn', L('제품이 낮아요. 테이블(72cm) 위에 두면 덜 숙여요.', "It's low. On a 72 cm table you'd lean less."), L('테이블로', 'To table'), () => { S.place = 'table'; }, true); // only things small enough to live on a table
-        else if (S.place === 'table' && !p.seated && P.H <= 0.6) push(`up2:${S.persona}`, 'warn', L('조리대(85cm) 위에 두면 덜 숙여요.', "On an 85 cm counter you'd lean less."), L('조리대로', 'To counter'), () => { S.place = 'counter'; }, true);
+        if (S.place === 'floor' && P.H <= 0.45 && placeOk('table')) push(`up:${S.persona}`, 'warn', L('제품이 낮아요. 테이블(72cm) 위에 두면 덜 숙여요.', "It's low. On a 72 cm table you'd lean less."), L('테이블로', 'To table'), () => { S.place = 'table'; }, true); // only things small enough to live on a table
+        else if (S.place === 'table' && !p.seated && P.H <= 0.6 && placeOk('counter')) push(`up2:${S.persona}`, 'warn', L('조리대(85cm) 위에 두면 덜 숙여요.', "On an 85 cm counter you'd lean less."), L('조리대로', 'To counter'), () => { S.place = 'counter'; }, true);
       }
-      if (want < minCtl - 0.04 && S.place !== 'floor' && !atDesk()) push(`down:${S.persona}:${S.place}`, 'warn', L(`받침이 높아요. ${S.place === 'counter' ? '테이블(72cm)' : '바닥'}에 두면 어때요?`, `The stand is high. Try it on the ${S.place === 'counter' ? '72 cm table' : 'floor'}?`), L('바꾸기', 'Move'), () => { S.place = S.place === 'counter' ? 'table' : 'floor'; }, true);
-    } else if (S.face === 'top' && cause !== 'low') {
+      if (want < minCtl - 0.04 && S.place !== 'floor' && !atDesk() && placeOk(S.place === 'counter' ? 'table' : 'floor')) push(`down:${S.persona}:${S.place}`, 'warn', L(`받침이 높아요. ${S.place === 'counter' ? '테이블(72cm)' : '바닥'}에 두면 어때요?`, `The stand is high. Try it on the ${S.place === 'counter' ? '72 cm table' : 'floor'}?`), L('바꾸기', 'Move'), () => { S.place = S.place === 'counter' ? 'table' : 'floor'; }, true);
+    } else if (S.face === 'top' && cause !== 'low' && kind() !== 'dispenser' && clamp(goodHand - sy, 0.02, P.H - 0.02) >= 0.06) { // a dispenser keeps its cup flow; a front control a few cm off the base is no help
       const want = clamp(goodHand - sy, 0.02, P.H - 0.02);
       push(`face:${S.persona}:${S.place}`, sugLv, L(`조작부를 윗면에서 앞면 ${mmi(want)}mm 높이로 옮기면 ${who}도 쉽게 눌러요.`, `Move the controls from the top to the front at ${mmi(want)} mm and this ${whoEn} presses them easily.`), L('앞면으로', 'To front'), () => { S.face = 'front'; S.action = 'press'; S.ctrl = Math.round((want * 1000) / S.scale); });
     } else if (S.face === 'top') {
       const newH = goodHand - sy - 0.012;
       if (newH > P.H + 0.04 && newH < 2.2) push(`h:${S.persona}:${S.place}:${mmi(P.H)}`, sugLv, L(`높이를 ${mmi(P.H)}→${mmi(newH)}mm로 키우면 윗면 버튼까지 덜 숙여요.`, `Make it ${mmi(newH)} mm tall (now ${mmi(P.H)}) and the top buttons need less bending.`), ok, () => setDimEffective('h', mmi(newH)));
-      if (S.place === 'floor' && P.H <= 0.45) push(`up:${S.persona}`, 'warn', L('테이블(72cm) 위에 두면 덜 숙여요.', "On a 72 cm table you'd lean less."), L('테이블로', 'To table'), () => { S.place = 'table'; }, true);
+      if (S.place === 'floor' && P.H <= 0.45 && placeOk('table')) push(`up:${S.persona}`, 'warn', L('테이블(72cm) 위에 두면 덜 숙여요.', "On a 72 cm table you'd lean less."), L('테이블로', 'To table'), () => { S.place = 'table'; }, true);
     }
   }
-  if (S.face === 'top' && eyeY - (sy + P.H) < 0.15 && !out.sug.some((s) => s.key.startsWith('face:'))) {
+  if (S.face === 'top' && eyeY - (sy + P.H) < 0.15 && !out.sug.some((s) => s.key.startsWith('face:')) && kind() !== 'dispenser' && clamp(goodHand - sy, 0.02, P.H - 0.02) >= 0.06) {
     const want = clamp(goodHand - sy, 0.02, P.H - 0.02);
     push(`vis:${S.persona}:${S.place}`, eyeY - (sy + P.H) < 0.03 ? 'bad' : 'warn', L(`윗면 버튼이 ${who} 눈높이에 가까워 잘 안 보여요. 앞면 ${mmi(want)}mm 높이로 옮겨볼까요?`, `The top buttons sit near this ${whoEn}'s eye level. Move them to the front at ${mmi(want)} mm?`), L('앞면으로', 'To front'), () => { S.face = 'front'; S.action = 'press'; S.ctrl = Math.round((want * 1000) / S.scale); });
   }
@@ -2881,8 +2898,11 @@ function furnitureChecks(out, add, push, b0) {
 
 /* ---------- update pipeline ---------- */
 function refresh(o = {}) {
-  const p = PERSONAS[S.persona];
-  if (deskItem()) S.mode = 'compare';
+  const p = PERSONAS[S.persona], k = kind(); // an example keeps a place and a use that make sense for it, whatever was clicked or restored
+  if (PLACE_OK[k] && !PLACE_OK[k].includes(S.place) && !isFurniture()) S.place = PLACE_OK[k][0];
+  if (S.action === 'dispense' && !canDispense()) S.action = 'press';
+  if (k === 'dispenser') S.action = 'dispense';
+  if (lookOnly()) { if (S.mode !== 'compare') { S.itemMode = S.mode; S.mode = 'compare'; } } else if (S.itemMode) { S.mode = S.itemMode; S.itemMode = null; } // only looked at; the mode comes back after
   S.A = anthro(p, S.height, S.bmi);
   seatSetup(p);
   buildBody(S.A, p);
@@ -3012,7 +3032,7 @@ function syncUI() {
   $('bmiOut').textContent = L(`BMI ${S.bmi.toFixed(1)} · ${bodyLabel(S.bmi, p)} · 몸 두께가 체형에 맞춰 바뀌어요`, `BMI ${S.bmi.toFixed(1)} · ${bodyLabel(S.bmi, p)} · body girth follows the build`);
   for (const b of $('presetChips').querySelectorAll('[data-preset]')) b.setAttribute('aria-pressed', String(S.source === 'box' && b.dataset.preset === S.preset));
   segSet('shapeSeg', 'shape', S.shape); segSet('placeSeg', 'place', S.place); segSet('faceSeg', 'face', S.face); segSet('actSeg', 'act', S.action); segSet('modeSeg', 'mode', S.mode); segSet('langSeg', 'lang', LANG);
-  const isModel = S.source === 'model', fixedForm = isFurniture() || ring || ['cup', 'laptop', 'headphone', 'earbud'].includes(S.shape) || S.look === 'paper'; // these come only from the examples
+  const isModel = S.source === 'model', fixedForm = isFurniture() || ring || ['cup', 'laptop', 'headphone', 'earbud'].includes(S.shape) || S.look === 'paper' || kind() !== 'free'; // these come only from the examples
   $('shapeField').hidden = isModel || fixedForm; $('sizeField').hidden = isModel;
   if (!isModel) {
     const big = Math.max(S.w, S.shape === 'cyl' ? S.w : S.d, S.h), key = S.name + '|' + S.shape;
@@ -3035,9 +3055,10 @@ function syncUI() {
   $('sOut').innerHTML = `${Math.round(S.scale * 100)}<small>%</small>`;
   const P = dims();
   $('sDims').textContent = L(`${isModel ? '모델' : '목업'} 실제 크기 ${mmi(P.W)} × ${mmi(P.D)} × ${mmi(P.H)} mm`, `${isModel ? 'Model' : 'Mockup'} actual size ${mmi(P.W)} × ${mmi(P.D)} × ${mmi(P.H)} mm`);
-  $('ctrlField').hidden = carried() || isFurniture() || S.shape === 'laptop' || deskItem();
+  $('ctrlField').hidden = carried() || isFurniture() || S.shape === 'laptop' || deskItem() || !hasControls();
   $('placeField').hidden = isFurniture() || S.place === 'head';
-  for (const b of $('placeSeg').children) b.disabled = (b.dataset.place === 'hand' && S.noHand && S.source === 'box') || (setDown() && !['hand', 'desk'].includes(b.dataset.place)); // nobody carries a coffee machine around; a ring or a sheet is held, or set down on the desk
+  for (const b of $('placeSeg').children) b.disabled = !placeOk(b.dataset.place); // nobody carries a coffee machine around; a tablet is held or laid on the desk; an air purifier stands on the floor
+  for (const b of $('actSeg').children) b.disabled = (b.dataset.act === 'dispense' && !canDispense()) || (b.dataset.act === 'press' && kind() === 'dispenser'); // only a dispenser fills a cup
   $('furnHint').hidden = !isFurniture();
   if (isFurniture()) $('furnHint').textContent = furnHintText();
   $('liftField').hidden = furn() !== 'coffee';
@@ -3050,7 +3071,7 @@ function syncUI() {
   $('cIn').max = Math.round(isModel ? S.model.h : S.h);
   $('cIn').value = S.ctrl;
   $('cOut').textContent = `${mmi(ctrlM())}mm`;
-  for (const b of $('modeSeg').children) b.disabled = carried() || deskItem(); // a ring or a sheet on the desk is only looked at
+  for (const b of $('modeSeg').children) b.disabled = carried() || lookOnly(); // a ring, a sheet, a phone laid on the desk or a mug set down is only looked at
   $('modelOpts').hidden = !isModel; $('backToBox').hidden = !isModel;
   $('btnPlay').disabled = (S.mode === 'compare' && S.place !== 'hand') || A.chair === 'product' || S.place === 'head';
   const fpBtn = $('views').querySelector('[data-view="first"]'); // worn things can't be seen from your own eyes
