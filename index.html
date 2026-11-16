@@ -956,7 +956,18 @@ function fillCleft(pts) {
   const c = pts.length / 2, b = pts[c - 2][1]; // the back centre and, two points out, the fullest part of the buttocks
   return pts.map(([x, z], i) => (Math.abs(i - c) <= 1 ? [x, Math.min(z, b * (i === c ? 0.985 : 0.99))] : [x, z]));
 }
-const TORSO_RINGS = TORSO_PROFILE.map((L) => ({ f: L.f, p: resampleRing(fillCleft(Array.from({ length: L.p.length / 2 }, (_, i) => [L.p[2 * i], L.p[2 * i + 1]])), TORSO_N) }));
+/* the front of the lower torso, from the crotch up past the hips, filled out to its convex hull: a mannequin's plain, flat front with no
+   groin hollows; each front point (within 80 degrees of straight ahead) goes out along its own ray to the hull */
+function fillFront(pts, f) {
+  if (f >= 0.3) return pts;
+  const P = pts.slice().sort((u, v) => u[0] - v[0] || u[1] - v[1]), cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], up = [];
+  for (const q of P) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+  for (const q of P.slice().reverse()) { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+  const H = lo.slice(0, -1).concat(up.slice(0, -1));
+  const hullR = (dx, dz) => { let best = 0; for (let i = 0; i < H.length; i++) { const a = H[i], b = H[(i + 1) % H.length], ex = b[0] - a[0], ez = b[1] - a[1], den = dx * ez - dz * ex; if (Math.abs(den) < 1e-12) continue; const t = (a[0] * ez - a[1] * ex) / den, s = (a[0] * dz - a[1] * dx) / den; if (t > 0 && s >= -1e-9 && s <= 1 + 1e-9) best = Math.max(best, t); } return best; };
+  return pts.map(([x, z]) => { const r = Math.hypot(x, z); if (r < 1e-9 || Math.abs(Math.atan2(x, z)) > deg(80)) return [x, z]; const h = hullR(x / r, z / r); return h > r ? [(x / r) * h, (z / r) * h] : [x, z]; });
+}
+const TORSO_RINGS = TORSO_PROFILE.map((L) => ({ f: L.f, p: resampleRing(fillFront(fillCleft(Array.from({ length: L.p.length / 2 }, (_, i) => [L.p[2 * i], L.p[2 * i + 1]])), L.f), TORSO_N) }));
 const ELLIPSE = Array.from({ length: TORSO_N }, (_, i) => { const t = (i / TORSO_N) * Math.PI * 2; return [Math.sin(t), Math.cos(t)]; });
 const smooth01 = (x) => { const t = clamp(x, 0, 1); return t * t * (3 - 2 * t); };
 const WAIST_BAND = [[0.335, 1.004], [0.345, 1.032], [0.415, 1.032], [0.425, 1.004]]; // [height in torso lengths, how far it stands off the body]
