@@ -100,7 +100,15 @@ button { cursor: pointer; }
 .btn.icon { width: 32px; padding: 0; font-size: 17px; line-height: 1; }
 @media (max-width: 520px) {
   .hud .btn { height: 30px; padding: 0 9px; font-size: 12px; }
-  .toast p { font-size: 13px; }
+  /* on a phone the tip stays small and lets the scene show through */
+  .toast { gap: 8px; align-items: center; padding: 6px 6px 6px 10px; border-radius: 10px; box-shadow: 0 2px 10px rgb(0 0 0 / 0.08);
+    background: color-mix(in srgb, var(--raise) 72%, transparent); border-color: color-mix(in srgb, var(--line) 60%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .toast .kicker { gap: 5px; font-size: 10px; margin-bottom: 2px; }
+  .toast .lv { font-size: 10px; padding: 2px 4px; }
+  .toast p { font-size: 12px; line-height: 1.35; }
+  .toast .acts { gap: 4px; }
+  .toast .btn { height: 28px; padding: 0 9px; font-size: 12px; }
+  .toast .btn.icon { width: 28px; padding: 0; font-size: 15px; }
 }
 .ph { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; }
 .brand { display: flex; flex-direction: column; gap: 3px; }
