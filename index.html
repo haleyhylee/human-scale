@@ -440,15 +440,15 @@ const pLabel = (p) => L(p.label, p.en);
 /* furniture: shape 'desk' = anything with a top (H = top height), 'chair' = anything you sit on (H = seat height) */
 const FURN = (o) => ({ place: 'floor', face: 'top', ctrl: o.h, action: 'press', ...o });
 const PRESETS = {
-  purifier: { name: '슬림 정수기', en: 'Slim water purifier', shape: 'box', w: 180, d: 420, h: 380, place: 'counter', face: 'front', ctrl: 230, action: 'dispense', noHand: true },
-  coffee: { name: '커피머신', en: 'Coffee machine', shape: 'box', w: 240, d: 400, h: 330, place: 'counter', face: 'top', ctrl: 160, action: 'dispense', noHand: true }, // button on top, cup on the drip tray
-  air: { name: '공기청정기', en: 'Air purifier', shape: 'box', w: 300, d: 300, h: 720, place: 'floor', face: 'top', ctrl: 720, action: 'press', noHand: true },
-  tumbler: { name: '텀블러', en: 'Tumbler', shape: 'cyl', w: 72, d: 72, h: 190, place: 'hand', face: 'front', ctrl: 120, action: 'press' },
-  phone: { name: '아이폰 17', en: 'iPhone 17', shape: 'box', w: 72, d: 8, h: 150, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true },
-  galaxy: { name: '갤럭시 S26', en: 'Galaxy S26', shape: 'box', w: 72, d: 7, h: 150, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true },
-  ipadmini: { name: '아이패드 미니', en: 'iPad mini', shape: 'box', w: 135, d: 6, h: 195, place: 'hand', face: 'front', ctrl: 100, action: 'press', screen: true },
-  ipadair: { name: '아이패드 에어 11', en: 'iPad Air 11"', shape: 'box', w: 179, d: 6, h: 248, place: 'hand', face: 'front', ctrl: 120, action: 'press', screen: true },
-  macbook: { name: '맥북 에어 13', en: 'MacBook Air 13"', shape: 'laptop', w: 304, d: 215, h: 11, place: 'table', face: 'top', ctrl: 11, action: 'press', posture: 'sit', noHand: true }, // opens on the table
+  purifier: { name: '슬림 정수기', en: 'Slim water purifier', shape: 'box', look: 'purifier', w: 180, d: 420, h: 380, place: 'counter', face: 'front', ctrl: 230, action: 'dispense', noHand: true },
+  coffee: { name: '커피머신', en: 'Coffee machine', shape: 'box', look: 'coffee', w: 240, d: 400, h: 330, place: 'counter', face: 'top', ctrl: 160, action: 'dispense', noHand: true }, // button on top, cup on the drip tray
+  air: { name: '공기청정기', en: 'Air purifier', shape: 'box', look: 'airpurifier', w: 300, d: 300, h: 720, place: 'floor', face: 'top', ctrl: 720, action: 'press', noHand: true },
+  tumbler: { name: '텀블러', en: 'Tumbler', shape: 'cyl', look: 'tumbler', w: 72, d: 72, h: 190, place: 'hand', face: 'front', ctrl: 120, action: 'press' },
+  phone: { name: '스마트폰 6.3인치', en: 'Smartphone 6.3"', shape: 'box', w: 72, d: 8, h: 150, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true },
+  galaxy: { name: '대화면 스마트폰 6.9인치', en: 'Large smartphone 6.9"', shape: 'box', w: 78, d: 8, h: 163, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true },
+  ipadmini: { name: '태블릿 8.3인치', en: 'Tablet 8.3"', shape: 'box', w: 135, d: 6, h: 195, place: 'hand', face: 'front', ctrl: 100, action: 'press', screen: true },
+  ipadair: { name: '태블릿 11인치', en: 'Tablet 11"', shape: 'box', w: 179, d: 6, h: 248, place: 'hand', face: 'front', ctrl: 120, action: 'press', screen: true },
+  macbook: { name: '노트북 13인치', en: 'Laptop 13"', shape: 'laptop', w: 304, d: 215, h: 11, place: 'table', face: 'top', ctrl: 11, action: 'press', posture: 'sit', noHand: true }, // opens on the table
   airbuds: { name: '무선 이어버드 (착용)', en: 'Wireless earbuds (worn)', shape: 'earbud', w: 19, d: 27, h: 31, place: 'head', face: 'front', ctrl: 15, action: 'press' }, // a typical stem earbud, about 19 x 27 x 31 mm, in the ears
   airpods: { name: '이어버드 케이스', en: 'Earbuds case', shape: 'box', look: 'case', w: 62, d: 22, h: 47, place: 'hand', face: 'front', ctrl: 20, action: 'press' }, // a typical charging case
   airmax: { name: '오버이어 헤드폰', en: 'Over-ear headphones', shape: 'headphone', w: 170, d: 85, h: 190, place: 'head', face: 'front', ctrl: 90, action: 'press' }, // typical over-ear headphones, worn
@@ -1357,19 +1357,21 @@ const holder = new THREE.Group();
 product.add(holder);
 const marker = new THREE.Mesh(new THREE.TorusGeometry(0.016, 0.0035, 10, 36), mats.marker);
 product.add(marker);
+const steel = new THREE.MeshStandardMaterial({ color: 0xc3c7cb, roughness: 0.3, metalness: 0.7 }); // nozzles, grilles
 const spout = new THREE.Group();
 product.add(spout);
+const spoutArm = new THREE.Group(), spoutLook = new THREE.Group(); // the plain outlet, or one shaped for the product's look (setSpoutLook)
+spout.add(spoutArm, spoutLook);
 {
-  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.016, 0.042), mats.frame);
+  const arm = new THREE.Mesh(new RoundedBoxGeometry(0.03, 0.018, 0.048, 3, 0.007), mats.trim);
   arm.position.set(0, 0, 0.021); arm.castShadow = true;
-  const noz = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.02, 14), mats.frame);
-  noz.position.set(0, -0.012, 0.035);
-  spout.add(arm, noz);
+  const noz = new THREE.Mesh(new THREE.CylinderGeometry(0.0052, 0.006, 0.014, 20), steel);
+  noz.position.set(0, -0.015, 0.035);
+  spoutArm.add(arm, noz);
 }
 const button = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 0.003, 24), mats.marker); // dispense button on top, pressed by the free hand
 product.add(button);
-const tray = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mats.frame); // drip tray under a coffee machine's outlet
-tray.castShadow = true; tray.receiveShadow = true;
+const tray = new THREE.Group(); // drip tray under a coffee machine's outlet: a dark base with a steel grille (setTray)
 product.add(tray);
 const TRAY_TOP = 0.022, NOZZLE = 0.022; // drip tray height; the nozzle tip hangs this far below the outlet height
 const surface = new THREE.Group();
@@ -1638,19 +1640,67 @@ function setLift(group, k) {
 
 const screenMat = new THREE.MeshStandardMaterial({ color: 0x0b0c0e, roughness: 0.2, metalness: 0.1 });
 
-/* laptop: base and lid hinged at the back, opened to 110°, black screen inside the lid */
+/* many small parts, each placed by its matrix, as one geometry (one draw call) */
+function mergeGeo(list) {
+  const parts = list.map(([g, M]) => { const n = (g.index ? g.toNonIndexed() : g.clone()).applyMatrix4(M); g.dispose(); return n; });
+  const len = parts.reduce((t, g) => t + g.attributes.position.array.length, 0), pos = new Float32Array(len), nor = new Float32Array(len);
+  let o = 0;
+  for (const g of parts) { pos.set(g.attributes.position.array, o); nor.set(g.attributes.normal.array, o); o += g.attributes.position.array.length; g.dispose(); }
+  const out = new THREE.BufferGeometry(); out.setAttribute('position', new THREE.BufferAttribute(pos, 3)); out.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  return out;
+}
+/* a rounded plate: w across, d long (shape y 0..d), t thick (z 0..t), corners r, edges rounded by bev */
+const plateGeo = (w, d, t, r, bev, seg = 4) => new THREE.ExtrudeGeometry(roundRect(w - 2 * bev, d - 2 * bev, Math.max(r - bev, 0.0004)), { depth: Math.max(t - 2 * bev, 0.0001), bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: seg, curveSegments: 12 }).translate(0, bev, bev);
+const ON_DECK = new THREE.Matrix4().makeBasis(new V3(1, 0, 0), new V3(0, 0, -1), new V3(0, 1, 0)); // a plate lying flat: its length toward the back (−z), its thickness up
+/* laptop: a base and a lid on a barrel hinge at the back, opened to 110°. The base has a full keyboard (dark keys in a darker well) with
+   speaker grilles either side and a trackpad below it, and ports on the left side; inside the lid, black glass with the lit screen in thin
+   bezels and a webcam at the top. The keyboard's key pitch and the bezels follow the laptop's size */
 function laptopGeo(group, W, D, H) {
-  const base = Math.max(0.006, H * 0.6), lidT = Math.max(0.004, H * 0.4), open = deg(110);
-  kit(group, mats.foam).box(W, base, D, 0, base / 2, -D / 2, 0, Math.min(0.006, base * 0.45));
-  kit(group, mats.tire).box(W * 0.84, 0.0008, D * 0.4, 0, base + 0.0004, -D * 0.66);
+  const base = Math.max(0.006, H * 0.6), lidT = Math.max(0.004, H * 0.4), open = deg(110), r = Math.min(0.011, W * 0.035, D * 0.05);
+  const own = (geo, mat, parent = group) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; m.userData.own = true; parent.add(m); return m; };
+  const flat = (w, d, rr) => new THREE.ShapeGeometry(roundRect(w, d, rr), 10).applyMatrix4(ON_DECK); // a flat rounded rectangle on the deck, from z 0 back to −d
+  own(plateGeo(W, D, base, r, Math.min(0.0024, base * 0.4)).applyMatrix4(ON_DECK), mats.foam);
+  // keyboard: six rows, the function row half height; key pitch u
+  const kw = Math.min(W * 0.9, 14.5 * 0.0195), u = Math.min(kw / 14.5, (D * 0.52) / 5.55), kd = 5.55 * u, kz = -D + Math.max(0.011, D * 0.06), cap = u * 0.84;
+  const rows = [[0.55, Array(14).fill(14.5 / 14)], [1, [...Array(13).fill(1), 1.5]], [1, [1.5, ...Array(13).fill(1)]], [1, [1.75, ...Array(11).fill(1), 1.75]], [1, [2.25, ...Array(10).fill(1), 2.25]], [1, [1, 1, 1, 1.25, 5, 1.25, 1, 1, -1, 1]]];
+  const keys = [], key = (w, d, x, z) => keys.push([plateGeo(w, d, 0.0011, Math.min(0.0018, w / 3, d / 3), 0.00035, 1).applyMatrix4(ON_DECK), new THREE.Matrix4().makeTranslation(x, base - 0.0002, z + d / 2)]);
+  let z = kz;
+  for (const [h, ws] of rows) {
+    let x = -7.25 * u; const rowD = h * u;
+    for (const k of ws) {
+      const kwu = Math.abs(k) * u, cx = x + kwu / 2, cz = z + rowD / 2;
+      if (k < 0) { const hd = (rowD - (u - cap)) / 2 - 0.0003; key(cap, hd, cx, cz - hd / 2 - 0.0003); key(cap, hd, cx, cz + hd / 2 + 0.0003); } // the up and down arrows share one key's space
+      else key(kwu - (u - cap), rowD - (u - cap), cx, cz);
+      x += kwu;
+    }
+    z += rowD;
+  }
+  own(mergeGeo(keys), mats.tire);
+  own(flat(kw + 0.004, kd + 0.004, 0.004).translate(0, base + 0.00005, kz - 0.002 + kd + 0.004), mats.pad); // the well round the keys
+  const side = (W - kw) / 2;
+  if (side > 0.011) { // speaker grilles: rows of small holes either side of the keyboard
+    const dots = [], dot = new THREE.CircleGeometry(0.00045, 8).applyMatrix4(new THREE.Matrix4().makeRotationX(-Math.PI / 2)), step = 0.0019, cols = Math.floor(Math.min(0.009, side - 0.006) / step);
+    for (const sx of [-1, 1]) for (let i = 0; i < cols; i++) for (let zz = kz + 0.004; zz < kz + kd - 0.004; zz += step) dots.push([dot.clone(), new THREE.Matrix4().makeTranslation(sx * (kw / 2 + side / 2 + (i - (cols - 1) / 2) * step), base + 0.00006, zz)]);
+    dot.dispose();
+    if (dots.length) own(mergeGeo(dots), mats.pad);
+  }
+  const tpTop = kz + kd + 0.012, tpD = Math.min(0.085, -0.01 - tpTop), tpW = Math.min(W * 0.42, 0.135); // the trackpad, centred under the keys
+  if (tpD > 0.03) own(flat(tpW, tpD, 0.006).translate(0, base + 0.00005, tpTop + tpD), mats.trim);
+  for (const pz of [-D * 0.3, -D * 0.3 - 0.012]) { const p = own(new RoundedBoxGeometry(0.0012, Math.min(0.0028, base * 0.42), 0.0086, 2, 0.0005), mats.tire); p.position.set(-W / 2 + 0.0004, base * 0.5, pz); } // two ports
+  const rb = Math.min(base, lidT) * 0.55, barrel = own(new THREE.CylinderGeometry(rb, rb, W * 0.72, 24), mats.pad); // the hinge
+  barrel.rotation.z = Math.PI / 2; barrel.position.set(0, base - rb * 0.35, -D - rb * 0.15);
+  // the lid, in its own frame: across x, from the hinge (z 0) to the top edge (z D), the inside face at y 0 facing down when shut
   const lid = new THREE.Group();
   lid.position.set(0, base, -D); lid.rotation.x = -open;
   group.add(lid);
-  kit(lid, mats.foam).box(W, lidT, D, 0, lidT / 2, D / 2, 0, Math.min(0.005, lidT * 0.45));
-  const scr = new THREE.Mesh(new THREE.PlaneGeometry(W * 0.92, D * 0.88), screenMat);
-  scr.rotation.x = Math.PI / 2; scr.position.set(0, -0.0004, D / 2); scr.userData.own = true;
-  lid.add(scr);
-  group.userData.laptop = { screenTop: base + D * Math.sin(open), keyY: base, scr };
+  const bevL = Math.min(0.0016, lidT * 0.38), IN = new THREE.Matrix4().makeBasis(new V3(1, 0, 0), new V3(0, 0, 1), new V3(0, -1, 0)); // IN: a flat shape on the inside face
+  own(plateGeo(W, D, lidT, r, bevL).applyMatrix4(new THREE.Matrix4().makeBasis(new V3(-1, 0, 0), new V3(0, 0, 1), new V3(0, 1, 0))), mats.foam, lid);
+  own(new THREE.ShapeGeometry(roundRect(W - 2 * bevL - 0.0003, D - 2 * bevL - 0.0003, Math.max(r - bevL, 0.0005)), 12).translate(0, bevL + 0.00015, 0).applyMatrix4(IN).translate(0, -0.00005, 0), screenMat, lid); // the glass
+  const bs = Math.max(W * 0.016, bevL + 0.003), bt = bs + 0.004, bb = Math.max(D * 0.05, bs + 0.006), sw = W - 2 * bs, sh = D - bt - bb;
+  const scr = own(fitUV(new THREE.ShapeGeometry(roundRect(sw, sh, 0.003), 8)).translate(0, -sh / 2, 0).applyMatrix4(IN), screenLit(), lid);
+  scr.position.set(0, -0.00011, bb + sh / 2); scr.castShadow = false;
+  own(new THREE.CircleGeometry(0.0011, 20).applyMatrix4(IN), lensMat, lid).position.set(0, -0.00016, D - bt / 2); // the webcam
+  group.userData.laptop = { screenTop: base + D * Math.sin(open), keyY: base + 0.0009, scr };
 }
 /* a soft rounded-rectangle outline (superellipse) w across and h tall, centred; between y0 and y1 only when cut */
 function ovalPts(w, h, n = 2.8, seg = 72) {
@@ -1688,30 +1738,43 @@ function sweepGeo(path, prof, scale = () => 1) {
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
   return g;
 }
-/* over-ear headphones, worn, built in the head's own frame (y along the neck, z forward) from this person's head and ears: a padded band
-   over the crown, a slider dropping from each end of it to a yoke on top of each cup, and oval cups whose plush cushions ring the ears.
+/* over-ear headphones, worn, built in the head's own frame (y along the neck, z forward) from this person's head and ears. The band follows
+   the head's own curve a finger's width off it, its padded middle resting on the crown, and only parts from the head near its ends, where
+   a short slider runs down to a yoke on each cup; the cups lean in with the head so their cushions sit flat on it round the ears.
    W sets how thick the cups are, D their front-to-back length, H their height (half of H) and the band-height check */
 function headphoneGeo(group, W, D, H) {
   const A = S.A, hh = A.headH, ear = EAR.clone().multiplyScalar(hh), own = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; m.userData.own = true; group.add(m); return m; };
-  const cupH = clamp(0.5 * H, 0.07, 0.13), cupL = clamp(D, 0.06, 0.11), shell = clamp(0.2 * W, 0.022, 0.045), pad = 0.02;
-  const sideX = eggRay(1, 0, 0) * hh * 0.985, xc = sideX + pad + shell / 2; // the cushion rests on the side of the head; xc is each cup's mid-plane
-  const yHinge = ear.y + cupH / 2 + 0.006, yEnd = yHinge + 0.03, bt = 0.011, pt = 0.008, yTop = HEAD_BOX.y * hh + 0.002 + pt + bt / 2;
+  const cupH = clamp(0.5 * H, 0.075, 0.115), cupL = clamp(0.88 * D, 0.058, 0.095), shell = clamp(0.13 * W, 0.017, 0.03), pad = 0.017;
+  const sideX = eggRay(1, 0, 0) * hh * 0.985, tiltZ = deg(10), tiltY = deg(5); // the cushion rests on the side of the head, the cups lean in at the top and the front
+  const ends = [];
   for (const s of [-1, 1]) {
-    const M = new THREE.Matrix4().makeBasis(new V3(0, 0, -s), new V3(0, 1, 0), new V3(s, 0, 0)).setPosition(s * sideX, ear.y, ear.z); // cup frame: x along the head, y up, z outward
-    const ring = new THREE.Shape(ovalPts(cupL * 0.94 - 0.012, cupH * 0.94 - 0.012, 2.6)); ring.holes.push(new THREE.Path(ovalPts(cupL * 0.46 + 0.012, cupH * 0.58 + 0.012, 2.4).reverse()));
+    const M = new THREE.Matrix4().makeTranslation(s * sideX, ear.y, ear.z).multiply(new THREE.Matrix4().makeRotationZ(s * tiltZ)).multiply(new THREE.Matrix4().makeRotationY(-s * tiltY))
+      .multiply(new THREE.Matrix4().makeBasis(new V3(0, 0, -s), new V3(0, 1, 0), new V3(s, 0, 0))); // cup frame: x along the head, y up, z outward
+    const ring = new THREE.Shape(ovalPts(cupL * 0.95 - 0.012, cupH * 0.95 - 0.012, 2.3)); ring.holes.push(new THREE.Path(ovalPts(cupL * 0.52 + 0.012, cupH * 0.64 + 0.012, 2.2).reverse()));
     own(new THREE.ExtrudeGeometry(ring, { depth: pad - 0.012, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 6, curveSegments: 48 }).translate(0, 0, 0.006).applyMatrix4(M), mats.pad); // the cushion
-    own(new THREE.ShapeGeometry(ovalShape(cupL * 0.52, cupH * 0.64, 2.4)).translate(0, 0, pad - 0.002).applyMatrix4(M), mats.tire); // the cloth over the driver, seen through the cushion
-    own(softSlab((b) => ovalShape(cupL - 2 * b, cupH - 2 * b, 2.9), shell, Math.min(0.012, shell * 0.42)).translate(0, 0, pad).applyMatrix4(M), mats.foam); // the shell
-    own(softSlab((b) => ovalShape(cupL * 0.8 - 2 * b, cupH * 0.8 - 2 * b, 3.1), 0.0024, 0.001).translate(0, 0, pad + shell - 0.0012).applyMatrix4(M), mats.trim); // its face panel
-    const yoke = own(new RoundedBoxGeometry(0.012, 0.014, 0.026, 2, 0.005), mats.trim); yoke.position.set(s * xc, yHinge, ear.z);
-    const sl = own(new RoundedBoxGeometry(0.0075, yEnd - yHinge + 0.012, 0.017, 2, 0.003), mats.trim); sl.position.set(s * xc, (yHinge + yEnd) / 2 + 0.006, ear.z); // the slider, running up into the band
+    own(new THREE.ShapeGeometry(ovalShape(cupL * 0.58, cupH * 0.7, 2.2)).translate(0, 0, pad - 0.002).applyMatrix4(M), mats.tire); // the cloth over the driver, seen through the cushion
+    own(softSlab((b) => ovalShape(cupL - 2 * b, cupH - 2 * b, 2.35), shell, Math.min(0.009, shell * 0.45)).translate(0, 0, pad).applyMatrix4(M), mats.foam); // the shell
+    own(softSlab((b) => ovalShape(cupL * 0.78 - 2 * b, cupH * 0.8 - 2 * b, 2.35), 0.002, 0.0009).translate(0, 0, pad + shell - 0.001).applyMatrix4(M), mats.trim); // its face panel
+    const hinge = new V3(0, cupH / 2 + 0.005, pad + shell * 0.45).applyMatrix4(M);
+    const yoke = own(new RoundedBoxGeometry(0.012, 0.013, 0.026, 2, 0.005), mats.trim); yoke.position.copy(hinge); yoke.rotation.z = s * tiltZ;
+    ends.push(hinge.clone().add(new V3(-s * 0.0012, 0.009, 0)));
   }
-  const path = [], nb = 2.3; // the band: an arch from one slider to the other, its pad resting on the crown
-  for (let i = 0; i <= 72; i++) { const t = Math.PI * (1 - i / 72), c = Math.cos(t), sn = Math.sin(t); path.push(new V3(xc * Math.sign(c) * Math.abs(c) ** (2 / nb), yEnd + (yTop - yEnd) * Math.abs(sn) ** (2 / nb), ear.z)); }
-  own(sweepGeo(path, rrectProfile(bt / 2, 0.017, 0.0045), (f) => 1 - 0.08 * smooth01((Math.abs(f - 0.5) / 0.5 - 0.94) / 0.06)), mats.foam);
-  const padPath = []; // the pad under the top of the arch, on the band's inner face
-  for (let i = 14; i <= 58; i++) { const t = path[i + 1].clone().sub(path[i - 1]).normalize(); padPath.push(path[i].clone().add(new V3(t.y, -t.x, 0).multiplyScalar(bt / 2 + pt / 2 - 0.0008))); }
-  own(sweepGeo(padPath, rrectProfile(pt / 2, 0.0135, 0.0036), (f) => 0.55 + 0.45 * smooth01(Math.min(f, 1 - f) / 0.12)), mats.pad);
+  // the band: the head's outline in the plane of the cups, pushed out by the pad at the crown and easing out to the yokes at the ends
+  const C0 = new V3(0, ear.y, ear.z), headR = (phi) => { const c = Math.cos(phi), sn = Math.sin(phi), e = HEAD_EGG; let lo = 0, hi = 1; // head units, from the ears' height
+    for (let i = 0; i < 22; i++) { const t = (lo + hi) / 2; if (eggF(c * t, EAR.y + sn * t, EAR.z) > 0) hi = t; else lo = t; } return lo * hh; };
+  const bt = 0.0075, pt = 0.0075, offTop = 0.002 + pt + bt / 2, E = ends[1], phiE = Math.atan2(E.y - C0.y, E.x - C0.x), offE = Math.hypot(E.x - C0.x, E.y - C0.y) - headR(phiE);
+  const path = [], N = 96;
+  for (let i = 0; i <= N; i++) {
+    const phi = Math.PI - phiE - ((Math.PI - 2 * phiE) * i) / N, u = Math.abs(phi - Math.PI / 2) / (Math.PI / 2 - phiE), off = offTop + (offE - offTop) * u ** 3.2;
+    const r = headR(phi) + off; path.push(new V3(C0.x + r * Math.cos(phi), C0.y + r * Math.sin(phi), ear.z));
+  }
+  const cut = Math.round(N * 0.12); // the outer twelfth at each end is the slider, slimmer and smoother than the band
+  own(sweepGeo(path.slice(cut - 1, N - cut + 2), rrectProfile(bt / 2, 0.0145, 0.0034), (f) => 1 - 0.06 * smooth01((Math.abs(f - 0.5) / 0.5 - 0.9) / 0.1)), mats.foam);
+  for (const [i0, i1] of [[0, cut + 1], [N - cut - 1, N]]) own(sweepGeo(path.slice(i0, i1 + 1), rrectProfile(0.0032, 0.0105, 0.0024)), mats.trim);
+  const padPath = []; // the pad under the middle of the band
+  for (let i = Math.round(N * 0.24); i <= Math.round(N * 0.76); i++) { const t = path[i + 1].clone().sub(path[i - 1]).normalize(); padPath.push(path[i].clone().add(new V3(t.y, -t.x, 0).multiplyScalar(bt / 2 + pt / 2 - 0.0006))); }
+  own(sweepGeo(padPath, rrectProfile(pt / 2, 0.0125, 0.0034), (f) => 0.6 + 0.4 * smooth01(Math.min(f, 1 - f) / 0.14)), mats.pad);
+  const yTop = path[N / 2].y + bt / 2;
   group.userData.wear = { cupH, need: yTop - (ear.y - cupH / 2), have: H }; // band height the head needs vs the headphones' height
 }
 /* wireless earbuds in both ears: the body sits in the concha with its soft tip in the ear canal, a short stem runs down toward the earlobe.
@@ -1806,19 +1869,165 @@ function roundRect(w, h, r) {
   s.lineTo(x0, r); s.quadraticCurveTo(x0, 0, x0 + r, 0);
   return s;
 }
-/* phone: a rounded slab with a black screen (the screen turns toward the eyes when held) */
+/* a lit screen: a soft dark gradient with a glow, shared by phones, tablets and laptops */
+let SCREEN_MAT = null;
+function screenLit() {
+  if (SCREEN_MAT) return SCREEN_MAT;
+  const c = document.createElement('canvas'); c.width = 256; c.height = 512;
+  const g = c.getContext('2d'), lin = g.createLinearGradient(0, 0, 0, 512);
+  lin.addColorStop(0, '#2c3d5c'); lin.addColorStop(0.55, '#18202f'); lin.addColorStop(1, '#0d1016');
+  g.fillStyle = lin; g.fillRect(0, 0, 256, 512);
+  const rad = g.createRadialGradient(70, 120, 10, 70, 120, 260); rad.addColorStop(0, 'rgba(110,150,210,0.55)'); rad.addColorStop(1, 'rgba(110,150,210,0)');
+  g.fillStyle = rad; g.fillRect(0, 0, 256, 512);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  SCREEN_MAT = new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.45, roughness: 0.18, metalness: 0 });
+  return SCREEN_MAT;
+}
+const lensMat = new THREE.MeshStandardMaterial({ color: 0x07080a, roughness: 0.08, metalness: 0.2 });
+/* flat shape geometry with its UVs stretched over its own bounds, so a texture fills it */
+function fitUV(geo) {
+  geo.computeBoundingBox(); const bb = geo.boundingBox, p = geo.attributes.position, uv = [];
+  for (let i = 0; i < p.count; i++) uv.push((p.getX(i) - bb.min.x) / (bb.max.x - bb.min.x || 1), (p.getY(i) - bb.min.y) / (bb.max.y - bb.min.y || 1));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); return geo;
+}
+/* phone or tablet: a rounded slab with softly rounded edges; the front is black glass with the lit screen inside a thin bezel (a phone has a
+   punch-hole camera in the screen, a tablet a camera in the bezel); the back has a camera island in its top corner; buttons on the sides and
+   a port at the bottom. Built round its middle so the whole device turns about when the screen should face the eyes */
 function phoneGeo(group, W, D, H) {
-  const r = Math.min(W, H) * 0.14, bev = Math.min(0.0015, D * 0.2), bz = Math.min(0.0025, W * 0.04);
-  const body = new THREE.ExtrudeGeometry(roundRect(W - 2 * bev, H - 2 * bev, Math.max(r - bev, 0.0005)), { depth: Math.max(D - 2 * bev, 0.0005), bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 3, curveSegments: 12 });
-  body.translate(0, bev, -(D - bev));
-  const m = new THREE.Mesh(body, mats.foam);
-  m.castShadow = true; m.receiveShadow = true; m.userData.own = true;
-  group.add(m);
-  const scr = new THREE.Mesh(new THREE.ShapeGeometry(roundRect(W - 2 * bz, H - 2 * bz, Math.max(r - bz, 0.0005)), 12).translate(0, bz, 0), screenMat);
-  scr.userData.own = true; scr.userData.screen = true;
-  group.add(scr);
+  const tab = W > 0.11, dev = new THREE.Group(), add = (geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; m.userData.own = true; dev.add(m); return m; };
+  dev.position.z = -D / 2; dev.userData.screen = true; dev.userData.device = true; dev.userData.own = true;
+  group.add(dev);
+  const r = (tab ? 0.072 : 0.135) * W, bev = Math.min(0.42 * D, tab ? 0.0022 : 0.0026);
+  add(new THREE.ExtrudeGeometry(roundRect(W - 2 * bev, H - 2 * bev, Math.max(r - bev, 0.0005)), { depth: Math.max(D - 2 * bev, 0.0003), bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 5, curveSegments: 18 }).translate(0, bev, -D / 2 + bev), mats.foam);
+  const gW = W - 2 * bev - 0.0003, gH = H - 2 * bev - 0.0003, front = D / 2 + 0.00006;
+  add(new THREE.ShapeGeometry(roundRect(gW, gH, Math.max(r - bev, 0.0005)), 16).translate(0, bev + 0.00015, front), screenMat); // the glass
+  const bz = tab ? Math.max(0.045 * W, bev + 0.004) : Math.max(0.026 * W, bev + 0.0012), sW = W - 2 * bz, sH = H - 2 * bz;
+  add(fitUV(new THREE.ShapeGeometry(roundRect(sW, sH, Math.max(r - bz, 0.0008)), 16)).translate(0, bz, front + 0.00005), screenLit()); // the screen
+  const cam = new THREE.CircleGeometry(tab ? 0.0014 : 0.0017, 20);
+  add(cam, lensMat, 0, tab ? H - bz / 2 : H - bz - 0.0058, front + 0.0001);
+  // the back: a camera island in the top corner (seen from behind, the left one)
+  const isl = tab ? 0.1 * W : 0.37 * W, m = tab ? 0.06 * W : 0.075 * W, ix = W / 2 - m - isl / 2, iy = H - m - isl / 2, back = -D / 2, rise = tab ? 0.0007 : 0.0011, face = back - 1.4 * rise; // face: the island's outer face
+  const island = add(new THREE.ExtrudeGeometry(roundRect(isl, isl, isl * 0.3), { depth: rise, bevelEnabled: true, bevelThickness: rise * 0.4, bevelSize: rise * 0.4, bevelSegments: 2, curveSegments: 12 }).translate(0, -isl / 2, 0), mats.trim, ix, iy, back);
+  island.rotation.y = Math.PI;
+  const lens = (cx, cy, rr) => { const ring = add(new THREE.CylinderGeometry(rr * 1.3, rr * 1.36, 0.0012, 32), mats.frame, cx, cy, face - 0.0005); ring.rotation.x = Math.PI / 2; add(new THREE.CircleGeometry(rr, 28), lensMat, cx, cy, face - 0.0012).rotation.y = Math.PI; };
+  if (tab) lens(ix, iy, isl * 0.24);
+  else { const q = isl * 0.25; lens(ix + q * 0.85, iy + q, isl * 0.17); lens(ix + q * 0.85, iy - q, isl * 0.17); add(new THREE.CircleGeometry(isl * 0.07, 18), mats.cup, ix - q * 0.95, iy + q, face - 0.0001).rotation.y = Math.PI; }
+  // buttons and the port
+  const btn = (len, x, y, along = 'y') => add(new RoundedBoxGeometry(along === 'y' ? 0.0014 : len, along === 'y' ? len : 0.0014, Math.min(D * 0.42, 0.0032), 2, 0.0005), mats.trim, x, y, 0);
+  if (tab) { btn(0.03, W / 2 - 0.035, H + 0.0004, 'x'); btn(0.022, W / 2 + 0.0004, H - 0.04); btn(0.022, W / 2 + 0.0004, H - 0.068); }
+  else { btn(0.016, W / 2 + 0.0004, 0.66 * H); btn(0.011, -W / 2 - 0.0004, 0.74 * H); btn(0.011, -W / 2 - 0.0004, 0.65 * H); }
+  add(new RoundedBoxGeometry(tab ? 0.0095 : 0.0088, 0.0012, Math.min(D * 0.45, 0.0032), 2, 0.0005), mats.tire, 0, 0.0003, 0); // the charging port
 }
 
+/* ---------- appliances and a tumbler ---------- */
+const meshIn = (group) => (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; m.userData.own = true; group.add(m); return m; };
+const flatUp = (w, d, rr, seg = 8) => new THREE.ShapeGeometry(roundRect(w, d, rr), seg).translate(0, -d / 2, 0).applyMatrix4(ON_DECK); // a flat rounded rectangle facing up, centred
+/* a steel grille plate with dark slots across it, w by d, facing up at height y, centred on (x, z) */
+function grille(own, w, d, y, x, z) {
+  own(flatUp(w, d, Math.min(0.003, w / 4, d / 4)).translate(x, y, z), steel);
+  const n = Math.max(1, Math.floor((w - 0.008) / 0.0065)), slots = [];
+  for (let i = 0; i < n; i++) slots.push([new THREE.PlaneGeometry(0.0026, Math.max(d - 0.014, 0.004)).rotateX(-Math.PI / 2), new THREE.Matrix4().makeTranslation(x + (i - (n - 1) / 2) * 0.0065, y + 0.00012, z)]);
+  own(mergeGeo(slots), mats.tire);
+}
+function setTray(w, d) {
+  const key = `${w.toFixed(4)}|${d.toFixed(4)}`;
+  if (tray.userData.key === key) return;
+  tray.userData.key = key; disposeGroup(tray);
+  const own = meshIn(tray), b = own(new RoundedBoxGeometry(w, TRAY_TOP, d, 2, 0.004), mats.frame);
+  b.position.y = TRAY_TOP / 2;
+  grille(own, w - 0.012, d - 0.012, TRAY_TOP + 0.0001, 0, 0);
+}
+/* the outlet shaped for the product: a water purifier's faucet bar, or a coffee machine's head reaching up to its top over the cup */
+function setSpoutLook() {
+  const P = dims(), look = S.source === 'box' && S.shape === 'box' && (S.look === 'purifier' || S.look === 'coffee') ? S.look : null;
+  const key = `${look}|${ctrlM().toFixed(4)}|${P.W.toFixed(4)}|${P.H.toFixed(4)}`;
+  if (spoutLook.userData.key === key) return;
+  spoutLook.userData.key = key; disposeGroup(spoutLook);
+  spoutArm.visible = !look;
+  const own = meshIn(spoutLook);
+  if (look === 'purifier') {
+    own(new RoundedBoxGeometry(0.034, 0.022, 0.066, 3, 0.0095), mats.trim).position.set(0, 0, 0.029);
+    own(new THREE.CylinderGeometry(0.0052, 0.0058, 0.012, 20), steel).position.set(0, -0.016, 0.035);
+    own(new THREE.CircleGeometry(0.0036, 18).rotateX(Math.PI / 2), mats.tire).position.set(0, -0.02205, 0.035);
+    own(new THREE.CircleGeometry(0.0032, 18).rotateX(-Math.PI / 2), mats.cup).position.set(0, 0.01105, 0.046); // a light on top of the bar
+  } else if (look === 'coffee') {
+    const hw = P.W - 0.002, up = Math.max(P.H - ctrlM() + 0.012, 0.03); // the whole front above the cup reaches out over it
+    own(plateGeo(hw, 0.13, up, Math.min(0.026, hw / 4), Math.min(0.01, P.W * 0.05, P.H * 0.04)).applyMatrix4(ON_DECK), mats.foam).position.set(0, -0.012, 0.09);
+    own(new THREE.CircleGeometry(0.024, 32).rotateX(Math.PI / 2), mats.tire).position.set(0, -0.01215, 0.038); // the brew head
+    own(new THREE.CylinderGeometry(0.0042, 0.0052, 0.01, 20), steel).position.set(0, -0.017, 0.035);
+  }
+}
+/* slim water purifier: a narrow upright body with a lighter front panel, a touch panel on top at the front and a drip tray at its foot;
+   the faucet bar is the outlet (setSpoutLook) */
+function purifierGeo(group, W, D, H) {
+  const own = meshIn(group), r = Math.min(0.024, W * 0.14), bev = Math.min(0.01, W * 0.06, H * 0.05);
+  own(plateGeo(W, D, H, r, bev).applyMatrix4(ON_DECK), mats.foam);
+  const pw = W - 2 * r - 0.002, pb = Math.min(0.03, H * 0.1), pt = H - bev - 0.008;
+  if (pw > 0.02) own(new THREE.ShapeGeometry(roundRect(pw, pt - pb, 0.006), 8).translate(0, pb, 0.00025), mats.trim); // front panel
+  const tw = W - 2 * r - 0.012, td = Math.min(0.06, D * 0.2), zc = -bev - 0.006 - td / 2;
+  if (tw > 0.03) {
+    own(flatUp(tw, td, 0.008).translate(0, H + 0.0002, zc), mats.tire); // touch panel
+    const dots = [];
+    for (let i = 0; i < 4; i++) dots.push([new THREE.CircleGeometry(0.0028, 16).rotateX(-Math.PI / 2), new THREE.Matrix4().makeTranslation((i - 1.5) * Math.min(0.022, tw / 4.6), H + 0.0004, zc + td * 0.12)]);
+    dots.push([new THREE.PlaneGeometry(tw * 0.55, 0.0022).rotateX(-Math.PI / 2), new THREE.Matrix4().makeTranslation(0, H + 0.0004, zc - td * 0.26)]);
+    own(mergeGeo(dots), mats.cup);
+  }
+  const trw = W * 0.8, trd = 0.06; // drip tray
+  own(new RoundedBoxGeometry(trw, 0.012, trd, 2, 0.004), mats.frame).position.set(0, 0.006, trd / 2 - 0.006);
+  grille(own, trw - 0.012, trd - 0.012, 0.0121, 0, trd / 2 - 0.006);
+}
+/* coffee machine: the body, a clear water tank at the back with water in it, two buttons and a steel cup-warmer plate on top;
+   the head over the cup and the drip tray are the outlet and tray (setSpoutLook, setTray) */
+function coffeeGeo(group, W, D, H) {
+  const own = meshIn(group), tD = Math.min(0.1, D * 0.24), r = Math.min(0.022, W * 0.1), bev = Math.min(0.01, W * 0.05, H * 0.04), front = D - tD;
+  own(plateGeo(W, front, H, r, bev).applyMatrix4(ON_DECK), mats.foam);
+  const tw = W - 2 * Math.max(r, 0.012), th = H * 0.78, tr = Math.min(0.014, tw * 0.2), y0 = 0.014;
+  own(plateGeo(W, tD + 0.02, y0, r, 0.004).applyMatrix4(ON_DECK).translate(0, 0, -front + 0.02), mats.foam); // the tank's base
+  own(plateGeo(tw, tD - 0.003, th, tr, 0.004).applyMatrix4(ON_DECK).translate(0, y0, -front - 0.001), mats.glass); // the tank
+  own(plateGeo(tw - 0.008, tD - 0.011, th * 0.6, Math.max(tr - 0.004, 0.003), 0.003).applyMatrix4(ON_DECK).translate(0, y0 + 0.003, -front - 0.005), mats.water);
+  own(plateGeo(tw + 0.002, tD - 0.001, 0.012, tr, 0.004).applyMatrix4(ON_DECK).translate(0, y0 + th, -front), mats.pad); // its lid
+  const zb = -Math.min(0.08, D * 0.25);
+  for (const sx of [-1, 1]) own(new THREE.CylinderGeometry(0.0085, 0.0085, 0.003, 28), mats.trim).position.set(sx * 0.034, H + 0.0012, zb);
+  const wz0 = zb - 0.03, wz1 = -front + bev + 0.012; // cup warmer
+  if (wz0 - wz1 > 0.04) own(flatUp(W - 2 * bev - 0.02, wz0 - wz1, 0.006).translate(0, H + 0.0002, (wz0 + wz1) / 2), steel);
+}
+/* air purifier: a rounded column on a dark recessed plinth; on top a dark control panel with a ring display at the front and the outlet
+   grille behind it; rows of intake slits round the lower body */
+function airPurifierGeo(group, W, D, H) {
+  const own = meshIn(group), pl = Math.min(0.022, H * 0.04), r = Math.min(0.07, W * 0.22, D * 0.22), bev = Math.min(0.022, W * 0.07, D * 0.07, H * 0.05);
+  own(plateGeo(W, D, H - pl, r, bev).applyMatrix4(ON_DECK).translate(0, pl, 0), mats.foam);
+  own(plateGeo(W - 0.024, D - 0.024, pl + 0.006, Math.max(r - 0.012, 0.005), 0.003).applyMatrix4(ON_DECK).translate(0, 0, -0.012), mats.pad);
+  const fw = W - 2 * bev, zc = -Math.min(0.08, D * 0.25), cw = Math.min(fw * 0.62, 0.17), cd = Math.min(0.056, D * 0.18);
+  own(flatUp(cw, cd, cd * 0.45).translate(0, H + 0.0003, zc), mats.tire); // control panel
+  const ui = [[new THREE.RingGeometry(0.0095, 0.0118, 40).rotateX(-Math.PI / 2), new THREE.Matrix4().makeTranslation(0, H + 0.0005, zc)]];
+  for (const x of [-0.046, -0.031, 0.031, 0.046]) if (Math.abs(x) < cw / 2 - 0.008) ui.push([new THREE.CircleGeometry(0.0026, 14).rotateX(-Math.PI / 2), new THREE.Matrix4().makeTranslation(x, H + 0.0005, zc)]);
+  own(mergeGeo(ui), mats.cup);
+  const gz0 = zc - cd / 2 - 0.012, gz1 = -D + bev + 0.014, gw = fw - 0.024; // the outlet grille
+  if (gz0 - gz1 > 0.04 && gw > 0.04) {
+    own(flatUp(gw, gz0 - gz1, Math.min(0.03, r * 0.6)).translate(0, H + 0.0003, (gz0 + gz1) / 2), mats.tire);
+    const slats = [], n = Math.floor((gw - 0.02) / 0.0095);
+    for (let i = 0; i < n; i++) { const x = (i - (n - 1) / 2) * 0.0095, edge = Math.max(0, Math.abs(x) - (gw / 2 - Math.min(0.03, r * 0.6))), len = gz0 - gz1 - 0.012 - 2 * (Math.min(0.03, r * 0.6) - Math.sqrt(Math.max(0, Math.min(0.03, r * 0.6) ** 2 - edge ** 2)));
+      if (len > 0.01) slats.push([new THREE.BoxGeometry(0.0028, 0.0022, len), new THREE.Matrix4().makeTranslation(x, H + 0.0011, (gz0 + gz1) / 2)]); }
+    if (slats.length) own(mergeGeo(slats), mats.trim);
+  }
+  // intake slits on all four sides
+  const sy0 = pl + Math.min(0.05, H * 0.08), sh = (H - pl) * 0.56, slits = [], pitch = 0.011;
+  const face = (len, place) => { const n = Math.max(0, Math.floor((len - 2 * r - 0.012) / pitch)); for (let i = 0; i < n; i++) slits.push([new THREE.PlaneGeometry(0.0034, sh).translate(0, sy0 + sh / 2, 0), place((i - (n - 1) / 2) * pitch)]); };
+  face(W, (t) => new THREE.Matrix4().makeTranslation(t, 0, 0.0003));
+  face(W, (t) => new THREE.Matrix4().makeTranslation(t, 0, -D - 0.0003).multiply(new THREE.Matrix4().makeRotationY(Math.PI)));
+  face(D, (t) => new THREE.Matrix4().makeTranslation(W / 2 + 0.0003, 0, -D / 2 + t).multiply(new THREE.Matrix4().makeRotationY(Math.PI / 2)));
+  face(D, (t) => new THREE.Matrix4().makeTranslation(-W / 2 - 0.0003, 0, -D / 2 + t).multiply(new THREE.Matrix4().makeRotationY(-Math.PI / 2)));
+  if (slits.length) own(mergeGeo(slits), mats.tire);
+}
+/* tumbler: a body with a rounded foot, a slim dark seam, a lid a shade deeper with a rounded top, a drinking opening and a slide tab */
+function tumblerGeo(group, W, H) {
+  const own = meshIn(group), R = W / 2, lidH = Math.min(0.034, H * 0.18), seam = 0.0024, yb = H - lidH, V2 = THREE.Vector2, zc = -R;
+  own(new THREE.LatheGeometry([[0, 0], [R * 0.9, 0], [R * 0.955, 0.0016], [R * 0.982, 0.006], [R, 0.022], [R, yb - seam]].map(([x, y]) => new V2(x, y)), 72).translate(0, 0, zc), mats.foam);
+  own(new THREE.CylinderGeometry(R * 0.975, R * 0.975, seam + 0.001, 72, 1, true).translate(0, yb - seam / 2, zc), mats.tire);
+  own(new THREE.LatheGeometry([[R, yb], [R, H - 0.007], [R * 0.99, H - 0.0035], [R * 0.965, H - 0.0008], [R * 0.93, H], [0, H]].map(([x, y]) => new V2(x, y)), 72).translate(0, 0, zc), mats.pad);
+  own(new THREE.ShapeGeometry(ovalShape(R * 0.62, R * 0.26, 2.4), 24).rotateX(-Math.PI / 2), mats.tire).position.set(0, H + 0.0003, zc + R * 0.56);
+  own(new RoundedBoxGeometry(R * 0.4, 0.003, R * 0.3, 2, 0.0012), mats.trim).position.set(0, H + 0.0012, zc + R * 0.1);
+}
 function buildProduct() {
   disposeGroup(holder);
   holder.userData = {};
@@ -1832,6 +2041,10 @@ function buildProduct() {
   else if (S.shape === 'earbud') earbudGeo(holder, S.w, S.d, S.h);
   else if (S.screen && S.shape === 'box') phoneGeo(holder, W, D, Hh);
   else if (S.look === 'case' && S.shape === 'box') caseGeo(holder, W, D, Hh);
+  else if (S.look === 'purifier' && S.shape === 'box') purifierGeo(holder, W, D, Hh);
+  else if (S.look === 'coffee' && S.shape === 'box') coffeeGeo(holder, W, D, Hh);
+  else if (S.look === 'airpurifier' && S.shape === 'box') airPurifierGeo(holder, W, D, Hh);
+  else if (S.look === 'tumbler' && S.shape === 'cyl') tumblerGeo(holder, W, Hh);
   else {
     const geo = S.shape === 'cyl' ? new THREE.CylinderGeometry(W / 2, W / 2, Hh, 56).translate(0, Hh / 2, -D / 2)
       : S.shape === 'sphere' ? new THREE.SphereGeometry(0.5, 48, 32).scale(W, Hh, D).translate(0, Hh / 2, -D / 2)
@@ -1892,7 +2105,7 @@ function layoutHuman() {
 function layoutProduct() {
   const P = dims();
   const scr = holder.children.find((m) => m.userData.screen);
-  if (scr) { const k = handKind(), back = S.place === 'hand' && k !== 'sheet' && k !== 'face'; scr.position.z = back ? -S.d / 1000 - 0.0002 : 0.0002; scr.rotation.y = back ? Math.PI : 0; } // the screen faces the eyes
+  if (scr) { const k = handKind(), back = S.place === 'hand' && k !== 'sheet' && k !== 'face'; if (scr.userData.device) scr.rotation.y = back ? Math.PI : 0; else { scr.position.z = back ? -S.d / 1000 - 0.0002 : 0.0002; scr.rotation.y = back ? Math.PI : 0; } } // the screen faces the eyes
   holder.position.set(0, 0, 0);
   if (!carried()) {
     product.position.set(0, SURF[S.place], 0); product.rotation.set(0, 0, 0); holder.scale.setScalar(S.scale);
@@ -1907,7 +2120,8 @@ function layoutProduct() {
   if (button.visible) button.position.copy(buttonPoint());
   if (!show) return;
   if (isDispense()) spout.position.set(0, ctrlM(), 0);
-  if (cupOnTray()) { tray.scale.set(Math.min(P.W * 0.8, 0.17), TRAY_TOP, 0.12); tray.position.set(0, TRAY_TOP / 2, 0.025); }
+  if (cupOnTray()) { setTray(Math.min(P.W * 0.8, 0.17), 0.12); tray.position.set(0, 0, 0.025); }
+  if (isDispense()) setSpoutLook();
   if (S.face === 'top') { marker.position.set(0, P.H + 0.003, -Math.min(0.08, P.D * 0.25)); marker.rotation.set(-Math.PI / 2, 0, 0); }
   else if (S.action === 'dispense') { marker.position.set(0, ctrlM() - 0.024, 0.035); marker.rotation.set(-Math.PI / 2, 0, 0); }
   else { marker.position.set(0, ctrlM(), 0.003); marker.rotation.set(0, 0, 0); }
