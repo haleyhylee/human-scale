@@ -2513,10 +2513,10 @@ function palmGrip(HD, P) {
 /* a pouch carried at the side: the arm hangs, the palm lies on the pouch's outer face with the fingers down along it, its back to the hip;
    its long side runs forward, a little ahead of the hand (hand frame: x palm normal, y to the fingertips, z to the little finger) */
 function clutchHold(HD, P) {
-  const x0 = HD.palmT / 2 + 0.002, yc = 0.5 * HD.palmLen;
-  const shape = { kind: 'r', cx: x0 + P.D / 2, cy: yc, ax: P.D / 2, by: P.H / 2, z0: -P.W, z1: P.W };
-  const rp = restPose(), hp = { f: HD.fingers.map((F) => solve(shape, new V3(0, F.y, F.z), UP, FAX, F.L, F.r, [40, 30, 20])), tm: rp.tm, tq: rp.tq, t: rp.t };
-  const rel = new THREE.Matrix4().makeBasis(new V3(0, 0, -1), new V3(0, -1, 0), new V3(-1, 0, 0)).setPosition(x0, yc + P.H / 2, 0.035);
+  const x0 = HD.palmT / 2 + 0.002, bot = 0.92 * HD.palmLen; // its bottom edge just above the knuckles: the fingers curl round under it
+  const shape = { kind: 'r', cx: x0 + P.D / 2, cy: bot - P.H / 2, ax: P.D / 2, by: P.H / 2, z0: -P.W, z1: P.W };
+  const rp = restPose(), hp = { f: HD.fingers.map((F) => solve(shape, new V3(0, F.y, F.z), UP, FAX, F.L, F.r, [95, 100, 80])), tm: new V3(0.35, 0.85, -0.4).normalize(), tq: rp.tq, t: [deg(5), deg(8)] }; // the thumb lies along the outer face
+  const rel = new THREE.Matrix4().makeBasis(new V3(0, 0, -1), new V3(0, -1, 0), new V3(-1, 0, 0)).setPosition(x0, bot, 0.035);
   return { kind: 'clutch', hp, rel };
 }
 /* a mug or latte cup by its handle: the first finger (two for a mug) through it round the handle's outer bar, the others curled under, thumb on top */
@@ -3447,7 +3447,7 @@ function syncUI() {
   $('cOut').textContent = `${mmi(ctrlM())}mm`;
   for (const b of $('modeSeg').children) b.disabled = carried() || lookOnly(); // a ring, a sheet, a phone laid on the desk or a mug set down is only looked at
   $('modelOpts').hidden = !isModel; $('backToBox').hidden = !isModel;
-  $('btnPlay').disabled = (S.mode === 'compare' && S.place !== 'hand') || A.chair === 'product' || S.place === 'head' || S.place === 'back';
+  $('btnPlay').disabled = handKind() === 'clutch' || (S.mode === 'compare' && S.place !== 'hand') || A.chair === 'product' || S.place === 'head' || S.place === 'back';
   const fpBtn = $('views').querySelector('[data-view="first"]'); // worn things can't be seen from your own eyes
   fpBtn.disabled = S.place === 'head';
   fpBtn.title = S.place === 'head' ? L('머리에 쓰는 제품은 1인칭으로 볼 수 없어요', "Worn on the head, so there's nothing to see from the eyes") : '';
