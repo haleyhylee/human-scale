@@ -525,6 +525,7 @@ const PRESETS = {
   wardrobe: FURN({ name: '옷장', en: 'Wardrobe', shape: 'desk', style: 'wardrobe', w: 900, d: 600, h: 2000, posture: 'stand' }), // two doors, a hanging rail inside
   drawer: FURN({ name: '서랍장', en: 'Chest of drawers', shape: 'desk', style: 'drawer', w: 800, d: 450, h: 1000, posture: 'stand' }),
   armchair: FURN({ name: '1인 소파', en: 'Armchair', shape: 'chair', style: 'armchair', w: 850, d: 560, h: 420 }),
+  sofa2: FURN({ name: '2인 소파', en: '2-seat sofa', shape: 'chair', style: 'sofa', w: 1500, d: 570, h: 420 }),
   sofa: FURN({ name: '3인 소파', en: '3-seat sofa', shape: 'chair', style: 'sofa', w: 2000, d: 580, h: 420 }),
   sofa4: FURN({ name: '4인 소파', en: '4-seat sofa', shape: 'chair', style: 'sofa', w: 2600, d: 600, h: 420 }),
   beanbag: FURN({ name: '빈백', en: 'Beanbag', shape: 'chair', style: 'beanbag', w: 900, d: 900, h: 220 }), // H = how high you sit once it gives way
@@ -537,6 +538,7 @@ const PRESETS = {
 const FAMILIES = {
   phone: { ko: '스마트폰', en: 'Smartphone', sizes: [['phone', '6.3인치', '6.3"'], ['galaxy', '6.9인치', '6.9"']] },
   tablet: { ko: '태블릿', en: 'Tablet', sizes: [['ipadmini', '8.3인치', '8.3"'], ['ipadair', '11인치', '11"']] },
+  sofa: { ko: '소파', en: 'Sofa', sizes: [['armchair', '1인', '1-seat'], ['sofa2', '2인', '2-seat'], ['sofa', '3인', '3-seat'], ['sofa4', '4인', '4-seat']] },
   luggage: { ko: '캐리어', en: 'Suitcase', sizes: [['lug20', '20인치', '20"'], ['lug24', '24인치', '24"'], ['lug26', '26인치', '26"'], ['lug28', '28인치', '28"'], ['lug30', '30인치', '30"']] },
 };
 const familyOf = (k) => Object.keys(FAMILIES).find((f) => FAMILIES[f].sizes.some((x) => x[0] === k)) || null;
@@ -546,7 +548,7 @@ const PRESET_GROUPS = [
   [['가방·캐리어', 'Bags & luggage'], ['backpack', 'pouch', 'fam:luggage']],
   [['컵', 'Cups'], ['tumbler', 'mug', 'glass', 'latte']],
   [['목업·소품', 'Mockup & objects'], ['a4', 'objet', 'ring']],
-  [['가구', 'Furniture'], ['desk', 'standing', 'dining', 'living', 'bar', 'sink', 'drawer', 'wardrobe', 'chair', 'pstool', 'office', 'stool', 'armchair', 'sofa', 'sofa4', 'beanbag']],
+  [['가구', 'Furniture'], ['desk', 'standing', 'dining', 'living', 'bar', 'sink', 'drawer', 'wardrobe', 'chair', 'pstool', 'office', 'stool', 'fam:sofa', 'beanbag']],
 ];
 /* ring sizes (Korean 호 = Japanese 号): inner diameter 13.0 mm at size 1, +1/3 mm per size */
 const ringD = (n) => 13 + (n - 1) / 3;
