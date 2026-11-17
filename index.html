@@ -3613,8 +3613,8 @@ function overlayInsets() {
   const top = $('views').getBoundingClientRect().bottom - sr.top;
   let hudTop = Math.min($('pill').getBoundingClientRect().top, $('btnPlay').getBoundingClientRect().top);
   $('tipdock').style.bottom = `${Math.max(8, sr.bottom - hudTop + 6)}px`; // the tip rides just above the bottom bar
-  if (!$('toast').hidden) hudTop = Math.min(hudTop, $('toast').getBoundingClientRect().top);
-  return { h, top: clamp(top + 8, 0, h * 0.42), bot: clamp(sr.bottom - hudTop + 6, 0, h * 0.42) };
+  // the tip floats over the scene: the framing leaves it out, so the scene stays centred whether the tip is open or closed
+  return { h, top: clamp(top + 8 + (S.guides ? 24 : 0) /* room for the height tag over the head */, 0, h * 0.42), bot: clamp(sr.bottom - hudTop + 6, 0, h * 0.42) };
 }
 function fitView() {
   queueGhostCheck();
