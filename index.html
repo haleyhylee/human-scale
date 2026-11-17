@@ -101,6 +101,8 @@ button { cursor: pointer; }
 .lv.warn { color: var(--warn); background: var(--warn-bg); }
 .lv.bad { color: var(--bad); background: var(--bad-bg); }
 .lv.info { color: var(--ink-2); background: var(--bg); }
+.lv.ico { display: inline-flex; align-items: center; justify-content: center; padding: 3px 5px; vertical-align: -3px; }
+.lv.ico svg { width: 14px; height: 14px; display: block; }
 .hud { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding-block: 18px 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: linear-gradient(to top, color-mix(in srgb, var(--viewport) 94%, transparent) 55%, transparent); }
 .verdict { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 150px; }
 .verdict .txt { font-size: 13px; line-height: 1.35; min-width: 0; }
@@ -119,6 +121,7 @@ button { cursor: pointer; }
   .toast { gap: 8px; align-items: center; padding: 6px 6px 6px 10px; border-radius: 10px; }
   .toast .kicker { gap: 5px; font-size: 10px; margin-bottom: 2px; }
   .toast .lv { font-size: 10px; padding: 2px 4px; }
+  .toast .lv.ico svg { width: 12px; height: 12px; }
   .toast p { font-size: 12px; line-height: 1.35; }
   .toast .acts { gap: 4px; }
   .toast .btn { height: 28px; padding: 0 9px; font-size: 12px; }
@@ -345,6 +348,11 @@ input:disabled { opacity: 0.55; }
     </section>
 
     <section class="tabpanel" id="tab-product" role="tabpanel" aria-labelledby="tb-product" hidden>
+      <div class="field">
+        <div class="label"><span data-en="Examples">예시 제품</span> <span class="muted" data-en="pick one, then fine-tune it in Settings">고른 뒤 설정 탭에서 다듬어요</span></div>
+        <div class="presets" id="presetChips"></div>
+        <div class="field-sub" id="variantField" hidden><div class="label" data-en="Size">크기</div><div class="seg full" id="variantSeg"></div></div>
+      </div>
       <form class="ai-box" id="aiForm" hidden>
         <label for="aiDesc" data-en="Make it from a product name or a description">판매 중인 제품 이름이나 설명으로 만들기</label>
         <div class="ai-row">
@@ -353,11 +361,6 @@ input:disabled { opacity: 0.55; }
         </div>
         <p class="hint" id="aiStatus" data-en="AI estimates the real size and builds a plain mockup at that size. Check final numbers on the product page.">AI가 실제 치수를 추정해 그 크기의 단순한 목업을 만들어요. 최종 치수는 제품 페이지에서 확인하세요.</p>
       </form>
-      <div class="field">
-        <div class="label"><span data-en="Examples">예시 제품</span> <span class="muted" data-en="pick one, then fine-tune it in Settings">고른 뒤 설정 탭에서 다듬어요</span></div>
-        <div class="presets" id="presetChips"></div>
-        <div class="field-sub" id="variantField" hidden><div class="label" data-en="Size">크기</div><div class="seg full" id="variantSeg"></div></div>
-      </div>
       <div class="field">
         <div class="label"><span data-en="Your own model">내 모델 넣기</span> <span class="muted">GLB · GLTF · OBJ · STL</span></div>
         <div class="row2">
@@ -593,6 +596,19 @@ const SURF = { floor: 0, table: 0.72, desk: 0.74, counter: 0.85, hand: 0, head: 
 const placeLabel = (k) => ({ floor: L('바닥', 'floor'), table: L('테이블', 'table'), desk: L('책상', 'desk'), counter: L('조리대', 'counter'), hand: L('손', 'hand'), head: L('머리', 'head'), back: L('등', 'back'), plinth: L('단상', 'plinth'), air: L('공중', 'midair') })[k];
 const PLACES = ['floor', 'table', 'desk', 'counter', 'hand'];
 const lvText = (k) => ({ good: L('편안', 'Good'), info: L('참고', 'Note'), warn: L('주의', 'Caution'), bad: L('문제', 'Problem') })[k];
+/* the check level as an icon (thumbs up, warning triangle, no, info; a bulb for an AI idea), its word kept as the label for screen readers and on hover */
+const LV_ICON = {
+  good: '<path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/>',
+  warn: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  bad: '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>',
+  info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+  idea: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+};
+function setLv(el, level, label = lvText(level), icon = level) {
+  el.className = `lv ${level} ico`;
+  el.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LV_ICON[icon] || LV_ICON.info}</svg>`;
+  el.setAttribute('role', 'img'); el.setAttribute('aria-label', label); el.title = label;
+}
 const RANK = { good: 0, info: 0, warn: 1, bad: 2 };
 const EDGE = 0.05; // front edge of a table or counter (product front face sits at z = 0)
 
@@ -3350,12 +3366,12 @@ function renderChecks() {
     const li = document.createElement('li');
     const k = document.createElement('span'); k.className = 'k'; k.textContent = c.k;
     const v = document.createElement('span'); v.className = 'v';
-    const pill = document.createElement('span'); pill.className = `lv ${c.level}`; pill.textContent = lvText(c.level);
+    const pill = document.createElement('span'); setLv(pill, c.level);
     const t = document.createElement('span'); t.textContent = c.v;
     v.append(pill, t); li.append(k, v);
     return li;
   }));
-  for (const el of [$('pill'), $('tabPill')]) { el.className = `lv ${E.verdict}`; el.textContent = lvText(E.verdict); }
+  for (const el of [$('pill'), $('tabPill')]) setLv(el, E.verdict);
   $('hudText').textContent = E.summary;
 }
 
@@ -3551,8 +3567,7 @@ const intro = {
 };
 function showToast(it) {
   toastItem = it;
-  $('toastLv').className = `lv ${it.level}`;
-  $('toastLv').textContent = it.src && it.src.startsWith('AI') ? L('제안', 'Idea') : lvText(it.level);
+  if (it.src && it.src.startsWith('AI')) setLv($('toastLv'), it.level, L('제안', 'Idea'), 'idea'); else setLv($('toastLv'), it.level);
   $('toastSrc').textContent = it.src || L('자동 점검', 'Auto check');
   $('toastText').textContent = it.text;
   $('toastApply').hidden = !it.apply;
