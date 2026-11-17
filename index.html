@@ -2762,7 +2762,7 @@ function layoutProduct() {
     else if (laidFlat()) { product.rotation.x = -Math.PI / 2; product.position.y += dims().H; } // the sheet lies flat, its short edge toward the person
   }
   const show = !carried() && !isFurniture() && S.shape !== 'laptop' && !laidFlat();
-  marker.visible = show && hasControls() && !lookOnly();
+  marker.visible = (show || (S.place === 'hand' && !isFurniture())) && hasControls() && !lookOnly(); // held in the hand, the button still shows where it is
   spout.visible = show && isDispense();
   tray.visible = show && cupOnTray();
   button.visible = show && cupInHand() && S.mode === 'use';
@@ -3702,7 +3702,7 @@ function refresh(o = {}) {
   if (S.action === 'dispense' && !canDispense()) S.action = 'press';
   if (k === 'dispenser') S.action = 'dispense';
   if (rowUnits() && S.row[S.pick] && (S.row[S.pick].w !== S.w || S.row[S.pick].d !== S.d || S.row[S.pick].h !== S.h)) S.row = S.row.map((u, i) => (i === S.pick ? { ...u, w: S.w, d: S.d, h: S.h } : u)); // the size fields are the picked unit's
-  if (lookOnly() && !lookAtIt()) { if (S.mode !== 'compare') { S.itemMode = S.mode; S.mode = 'compare'; } } else if (S.itemMode) { S.mode = S.itemMode; S.itemMode = null; } // only looked at; the mode comes back after (on the plinth it can also be looked down at)
+  if (lookOnly() && !lookAtIt() && !carried()) { if (S.mode !== 'compare') { S.itemMode = S.mode; S.mode = 'compare'; } } else if (S.itemMode) { S.mode = S.itemMode; S.itemMode = null; } // only looked at; the mode comes back after (on the plinth it can also be looked down at)
   for (const [k, d] of [['table', 720], ['desk', 740], ['counter', 850], ['plinth', 900], ['air', 1000]]) SURF[k] = ((S.surf && S.surf[k]) || d) / 1000;
   SURF.wall = Math.max(0, ((S.surf && S.surf.wall) || 1450) / 1000 - dims().H / 2); // on the wall: its middle at the set height // the table, desk or counter it stands on, at its set height
   { const key = [S.pkey, S.place, S.mode, S.persona, S.posture, S.source].join('|'); if (key !== anim.key) { anim.key = key; Object.assign(anim, { played: false, phase: 'idle', reach: 1, open: 0, pour: 0, fill: 0, drink: 0 }); } } // a new setup starts at rest
@@ -3885,7 +3885,7 @@ function syncUI() {
   $('sDims').textContent = L(`${isModel ? '모델' : '목업'} 실제 크기 ${mmi(P.W)} × ${mmi(P.D)} × ${mmi(P.H)} mm`, `${isModel ? 'Model' : 'Mockup'} actual size ${mmi(P.W)} × ${mmi(P.D)} × ${mmi(P.H)} mm`);
   { // controls: a plain solid (or an AI-made mockup) can have them switched off; only a dispenser offers filling a cup
     const offable = ctrlKind(); // anything with a button, tap or switch can have it off (a lamp starts off)
-    $('ctrlField').hidden = carried() || isFurniture() || S.shape === 'laptop' || laidFlat() || !(hasControls() || offable);
+    $('ctrlField').hidden = (carried() && S.place !== 'hand') || isFurniture() || S.shape === 'laptop' || laidFlat() || !(hasControls() || offable); // held in the hand too: its button can be on or off
     $('ctrlOnSeg').hidden = !offable; segSet('ctrlOnSeg', 'on', ctrlOff() ? '0' : '1');
     $('ctrlBody').hidden = ctrlOff();
     $('actSeg').hidden = !canDispense();
