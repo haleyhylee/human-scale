@@ -81,6 +81,8 @@ button { cursor: pointer; }
 .toast .kicker { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; }
 .toast p { margin: 0; font-size: 13.5px; line-height: 1.45; }
 .toast .acts { display: flex; gap: 6px; align-items: center; }
+/* the tip lets the scene show through, on every screen */
+.toast { background: color-mix(in srgb, var(--raise) 62%, transparent); border-color: color-mix(in srgb, var(--line) 55%, transparent); box-shadow: 0 2px 10px rgb(0 0 0 / 0.06); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 @keyframes rise { from { transform: translateY(-6px); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
 .lv { display: inline-block; font: 600 11px/1 var(--font-body); padding: 3px 6px; border-radius: 4px; white-space: nowrap; }
@@ -103,8 +105,7 @@ button { cursor: pointer; }
 @media (max-width: 520px) {
   .hud .btn { height: 30px; padding: 0 9px; font-size: 12px; }
   /* on a phone the tip stays small and lets the scene show through */
-  .toast { gap: 8px; align-items: center; padding: 6px 6px 6px 10px; border-radius: 10px; box-shadow: 0 2px 10px rgb(0 0 0 / 0.08);
-    background: color-mix(in srgb, var(--raise) 72%, transparent); border-color: color-mix(in srgb, var(--line) 60%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .toast { gap: 8px; align-items: center; padding: 6px 6px 6px 10px; border-radius: 10px; }
   .toast .kicker { gap: 5px; font-size: 10px; margin-bottom: 2px; }
   .toast .lv { font-size: 10px; padding: 2px 4px; }
   .toast p { font-size: 12px; line-height: 1.35; }
@@ -234,6 +235,7 @@ input:disabled { opacity: 0.55; }
         <div class="lens" id="lensSeg" role="group" aria-label="렌즈 초점거리" data-en-aria="Lens focal length"><span data-en="Lens mm">렌즈 mm</span><button type="button" data-lens="20">20</button><button type="button" data-lens="35">35</button><button type="button" data-lens="50">50</button><button type="button" data-lens="85">85</button></div>
         <span class="vsep" aria-hidden="true"></span>
         <button type="button" class="chip" id="btnMeasure" aria-pressed="false" data-en="Measure">치수 재기</button>
+        <button type="button" class="chip" id="btnGhost" aria-pressed="false" data-en="See-through person">사람 반투명</button>
       </div>
       <div class="toast" id="toast" role="status" hidden>
         <div>
@@ -797,7 +799,7 @@ const controlsP = new OrbitControls(perspCam, canvas);
 controlsP.enableDamping = true; controlsP.dampingFactor = 0.08;
 controlsP.maxPolarAngle = deg(89); controlsP.minDistance = 0.2; controlsP.maxDistance = 20;
 const controlsO = new OrbitControls(orthoCam, canvas);
-controlsO.enableRotate = false; controlsO.enableDamping = true; controlsO.screenSpacePanning = true; controlsO.enabled = false;
+controlsO.zoomToCursor = true; controlsO.enableRotate = false; controlsO.enableDamping = true; controlsO.screenSpacePanning = true; controlsO.enabled = false;
 controlsO.mouseButtons.LEFT = THREE.MOUSE.PAN; controlsO.touches.ONE = THREE.TOUCH.PAN;
 
 scene.add(new THREE.HemisphereLight(0xffffff, 0x80848a, 1.45));
@@ -3345,10 +3347,18 @@ function syncLens() {
   else if (S.E) $('vhint').textContent = L(`눈높이 ${cmi(S.E.land.eyeY)}cm 시야 · 드래그해서 둘러보기`, `Eye height ${cmi(S.E.land.eyeY)} cm · drag to look around`);
 }
 /* + / − / 기본: works in every view (ortho views scale, 3인칭·버드뷰 move closer, 1인칭 narrows the view) */
+/* zooming in closes on the product (earbuds on a face, a ring on a finger), not on the middle of the person */
+const zoomFocus = () => new THREE.Box3().setFromObject(product).getCenter(new V3());
 function zoomView(f) {
-  if (isOrtho()) { orthoCam.zoom = clamp(orthoCam.zoom / f, 0.2, 15); orthoCam.updateProjectionMatrix(); return; }
+  if (isOrtho()) {
+    const z0 = orthoCam.zoom, z1 = clamp(z0 / f, 0.2, 15), k = z0 / z1, c = zoomFocus(), t = controlsO.target, mv = c.clone().add(t.clone().sub(c).multiplyScalar(k < 1 ? k * k : k)).sub(t);
+    orthoCam.zoom = z1; orthoCam.updateProjectionMatrix();
+    t.add(mv); orthoCam.position.add(mv); controlsO.update();
+    return;
+  }
   if (S.view === 'first') { perspCam.fov = clamp(perspCam.fov * f, 8, 100); perspCam.updateProjectionMatrix(); return; }
   const t = controlsP.target, v = perspCam.position.clone().sub(t);
+  if (f < 1) t.lerp(zoomFocus(), 1 - f); // in: the view slides toward the product as it closes in
   v.setLength(clamp(v.length() * f, controlsP.minDistance, controlsP.maxDistance));
   perspCam.position.copy(t).add(v);
   controlsP.update();
@@ -3476,7 +3486,7 @@ function setGhost(on) {
 
 const clock = new THREE.Clock();
 function tick() {
-  setGhost(S.view === 'front' && S.mode === 'use' && !carried() && S.ghost);
+  setGhost(!!S.seeThru || (S.view === 'front' && S.mode === 'use' && !carried() && S.ghost));
   stepAnim(Math.min(clock.getDelta(), 0.05));
   human.updateMatrixWorld(true);
   const pose = poseNow();
@@ -3859,6 +3869,7 @@ function setMeasure(on) {
   drawMeasure(); syncLens();
 }
 $('btnMeasure').addEventListener('click', () => setMeasure(!meas.on));
+$('btnGhost').addEventListener('click', () => { S.seeThru = !S.seeThru; $('btnGhost').setAttribute('aria-pressed', String(S.seeThru)); }); // the person see-through in every view, so the product shows behind or inside them
 const worldAt = (e) => { const r = canvas.getBoundingClientRect(); return new V3(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1, 0).unproject(orthoCam); };
 canvas.addEventListener('pointerdown', (e) => {
   if (!meas.on || !isOrtho()) return;
