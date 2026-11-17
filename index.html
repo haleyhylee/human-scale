@@ -17,6 +17,7 @@
   --surface: #efeee9;
   --tire: #2c2e30;
   --accent: #e0561a;
+  --slider: #723838;
   --on-accent: #1a120d;
   --accent-ink: #ad400c;
   --good: #2a7f4f;
@@ -33,7 +34,7 @@
   :root:not([data-theme="light"]) {
     --bg: #131414; --panel: #18191a; --raise: #202122; --ink: #e6e7e8; --ink-2: #9a9da0; --line: #2e3031;
     --viewport: #151617; --mat: #34373a; --mat-line: #8b9095; --foam: #9a4e4e; --body: #d8d4cd; --surface: #3d3f41; --tire: #101112;
-    --accent: #ff7638; --on-accent: #1a120d; --accent-ink: #ff9a68;
+    --accent: #ff7638; --on-accent: #1a120d; --accent-ink: #ff9a68; --slider: #b45c5c; --slider: #b45c5c;
     --good: #52c283; --warn: #e3ad42; --bad: #f2705c; --good-bg: #183026; --warn-bg: #362c13; --bad-bg: #3a1d18;
     color-scheme: dark;
   }
@@ -41,7 +42,7 @@
 :root[data-theme="dark"] {
   --bg: #131414; --panel: #18191a; --raise: #202122; --ink: #e6e7e8; --ink-2: #9a9da0; --line: #2e3031;
   --viewport: #151617; --mat: #34373a; --mat-line: #8b9095; --foam: #9a4e4e; --body: #d8d4cd; --surface: #3d3f41; --tire: #101112;
-  --accent: #ff7638; --on-accent: #1a120d; --accent-ink: #ff9a68;
+  --accent: #ff7638; --on-accent: #1a120d; --accent-ink: #ff9a68; --slider: #b45c5c;
   --good: #52c283; --warn: #e3ad42; --bad: #f2705c; --good-bg: #183026; --warn-bg: #362c13; --bad-bg: #3a1d18;
   color-scheme: dark;
 }
@@ -147,7 +148,7 @@ button { cursor: pointer; }
 .big { font-family: var(--font-display); font-stretch: 80%; font-weight: 700; font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; }
 .big small { font: 500 12px var(--font-mono); color: var(--ink-2); margin-left: 3px; }
 .mono { font: 500 13px var(--font-mono); font-variant-numeric: tabular-nums; }
-input[type="range"] { width: 100%; height: 28px; margin: 0; accent-color: var(--accent); }
+input[type="range"] { width: 100%; height: 28px; margin: 0; accent-color: var(--slider); } /* sliders in the product's fire brick */
 .ticks { display: flex; gap: 6px; flex-wrap: wrap; }
 .ticks button { height: 28px; padding: 0 9px; border: 1px solid var(--line); border-radius: 5px; background: var(--raise); font: 500 12px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink-2); }
 .ticks button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent-ink); }
