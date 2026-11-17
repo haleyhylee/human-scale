@@ -136,6 +136,7 @@ button { cursor: pointer; }
 .seg button:disabled { opacity: 0.4; cursor: default; }
 .seg.full { display: flex; }
 .seg.full button { flex: 1 1 0; padding: 0 4px; }
+#shapeSeg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 #placeSeg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); } /* the places in two rows */
 #placeSeg button { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 34px; }
 #placeSeg button[hidden] { display: none; }
@@ -206,9 +207,13 @@ input:disabled { opacity: 0.55; }
 .dimrow { display: grid; grid-template-columns: 52px minmax(0, 1fr) 76px; gap: 10px; align-items: center; }
 .dimrow label { font: 500 12px var(--font-mono); color: var(--ink-2); white-space: nowrap; }
 .dimrow input[type="number"] { height: 34px; padding: 0 8px; }
-.presets { display: flex; flex-direction: column; gap: 10px; }
-.pgroup { display: flex; flex-direction: column; gap: 6px; }
-.pgroup > span { font-size: 11.5px; color: var(--ink-2); }
+.presets { display: flex; flex-direction: column; gap: 14px; }
+.pgroup { display: flex; flex-direction: column; gap: 7px; }
+.pgroup > .gname { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.pgroup > .field-sub { margin-top: 2px; }
+.setfor { display: flex; align-items: baseline; gap: 8px; font-size: 13px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.setfor b { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.setfor .reset { margin-left: auto; flex: 0 0 auto; }
 .seg.lang button { padding: 0 10px; font-size: 12px; }
 .measure { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 .measure rect { fill: color-mix(in srgb, var(--accent) 10%, transparent); stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 6 4; }
@@ -302,6 +307,7 @@ input:disabled { opacity: 0.55; }
     <div class="tabs" role="tablist" aria-label="설정 분류" data-en-aria="Settings sections">
       <button type="button" role="tab" id="tb-person" aria-controls="tab-person" aria-selected="true"><span data-en="Person">사람</span></button>
       <button type="button" role="tab" id="tb-product" aria-controls="tab-product" aria-selected="false"><span data-en="Product">제품</span></button>
+      <button type="button" role="tab" id="tb-set" aria-controls="tab-set" aria-selected="false"><span data-en="Settings">설정</span></button>
       <button type="button" role="tab" id="tb-check" aria-controls="tab-check" aria-selected="false"><span data-en="Checks">점검</span> <span class="lv info" id="tabPill">-</span></button>
     </div>
 
@@ -324,6 +330,7 @@ input:disabled { opacity: 0.55; }
         <div class="lrow"><label for="hIn" data-en="Height">키</label><button type="button" class="reset" id="hReset" data-en="Default">기본값</button><output class="big" id="hOut" for="hIn"></output></div>
         <input type="range" id="hIn" min="90" max="200" step="0.1">
         <div class="ticks" id="hTicks" aria-label="자주 쓰는 키" data-en-aria="Common heights"></div>
+        <p class="hint" id="hRange"></p>
       </div>
       <div class="field">
         <div class="lrow"><label for="wIn" data-en="Weight">몸무게</label><button type="button" class="reset" id="wReset" data-en="Default">기본값</button><output class="big" id="wOut" for="wIn"></output></div>
@@ -347,16 +354,35 @@ input:disabled { opacity: 0.55; }
         <p class="hint" id="aiStatus" data-en="AI estimates the real size and builds a plain mockup at that size. Check final numbers on the product page.">AI가 실제 치수를 추정해 그 크기의 단순한 목업을 만들어요. 최종 치수는 제품 페이지에서 확인하세요.</p>
       </form>
       <div class="field">
-        <div class="label" data-en="Examples">예시 제품</div>
+        <div class="label"><span data-en="Examples">예시 제품</span> <span class="muted" data-en="pick one, then fine-tune it in Settings">고른 뒤 설정 탭에서 다듬어요</span></div>
         <div class="presets" id="presetChips"></div>
         <div class="field-sub" id="variantField" hidden><div class="label" data-en="Size">크기</div><div class="seg full" id="variantSeg"></div></div>
       </div>
+      <div class="field">
+        <div class="label"><span data-en="Your own model">내 모델 넣기</span> <span class="muted">GLB · GLTF · OBJ · STL</span></div>
+        <div class="row2">
+          <label class="file"><input type="file" id="fileIn" accept=".glb,.gltf,.obj,.stl"><span data-en="Choose file">파일 선택</span></label>
+          <button type="button" class="btn" id="backToBox" hidden data-en="Back to mockup">박스 목업으로</button>
+        </div>
+        <div class="row2" id="modelOpts" hidden>
+          <label class="inline"><span data-en="Unit">단위</span> <select id="unitSel"><option value="0.001">mm</option><option value="0.01">cm</option><option value="1">m</option><option value="0.0254">inch</option></select></label>
+          <label class="check"><input type="checkbox" id="zupIn"> <span data-en="Z is up (CAD)">Z축이 위쪽 (CAD)</span></label>
+        </div>
+        <p class="hint" id="fileStatus" data-en="Export SolidWorks or Rhino models as STL or OBJ. The unit is guessed from the size.">SolidWorks·Rhino 모델은 STL이나 OBJ로 내보내면 들어가요. 단위는 크기를 보고 추정해요.</p>
+      </div>
+    </section>
+
+    <section class="tabpanel" id="tab-set" role="tabpanel" aria-labelledby="tb-set" hidden>
+      <div class="setfor"><span class="muted" data-en="Setting up">설정 중인 제품</span> <b id="setName"></b><button type="button" class="reset" id="toProducts" data-en="Change product">제품 바꾸기</button></div>
       <div class="field" id="shapeField">
         <div class="label" data-en="Shape">형태</div>
         <div class="seg" id="shapeSeg">
-          <button type="button" data-shape="box" aria-pressed="true" data-en="Box">박스</button>
+          <button type="button" data-shape="box" aria-pressed="true" data-en="Cube">큐브</button>
+          <button type="button" data-shape="frame" aria-pressed="false" data-en="Frame">프레임</button>
           <button type="button" data-shape="cyl" aria-pressed="false" data-en="Cylinder">원통</button>
           <button type="button" data-shape="sphere" aria-pressed="false" data-en="Sphere">구</button>
+          <button type="button" data-shape="cone" aria-pressed="false" data-en="Cone">원뿔</button>
+          <button type="button" data-shape="plate" aria-pressed="false" data-en="Plate">판</button>
         </div>
       </div>
       <div class="field" id="sizeField">
@@ -373,7 +399,7 @@ input:disabled { opacity: 0.55; }
         <p class="hint" id="dimStep"></p>
         <p class="hint" id="furnHint" hidden></p>
       </div>
-      <details class="field det" id="detField" hidden>
+      <details class="field det" id="detField" open hidden>
         <summary class="label"><span data-en="Detail sizes">세부 치수</span> <span class="muted" id="detSub"></span></summary>
         <div class="dimrows" id="detRows"></div>
         <p class="hint" id="detHint"></p>
@@ -394,7 +420,7 @@ input:disabled { opacity: 0.55; }
         <p class="hint" id="sDims"></p>
       </div>
       <div class="field" id="placeField">
-        <div class="label" data-en="Placed on">놓는 곳</div>
+        <div class="label"><span data-en="Placed on">놓는 곳</span><button type="button" class="reset" id="surfReset" hidden data-en="Default">기본값</button></div>
         <div class="seg full" id="placeSeg">
           <button type="button" data-place="floor" data-en="Floor">바닥</button>
           <button type="button" data-place="table" data-en="Table 72">테이블 72</button>
@@ -422,18 +448,6 @@ input:disabled { opacity: 0.55; }
           <div class="lrow"><label for="cIn" id="cLbl">조작부 높이 (제품 밑면에서)</label><button type="button" class="reset" id="cReset" data-en="Default">기본값</button><output class="mono" id="cOut" for="cIn"></output></div>
           <input type="range" id="cIn" min="0" max="400" step="5">
         </div>
-      </div>
-      <div class="field">
-        <div class="label"><span data-en="Your own model">내 모델 넣기</span> <span class="muted">GLB · GLTF · OBJ · STL</span></div>
-        <div class="row2">
-          <label class="file"><input type="file" id="fileIn" accept=".glb,.gltf,.obj,.stl"><span data-en="Choose file">파일 선택</span></label>
-          <button type="button" class="btn" id="backToBox" hidden data-en="Back to mockup">박스 목업으로</button>
-        </div>
-        <div class="row2" id="modelOpts" hidden>
-          <label class="inline"><span data-en="Unit">단위</span> <select id="unitSel"><option value="0.001">mm</option><option value="0.01">cm</option><option value="1">m</option><option value="0.0254">inch</option></select></label>
-          <label class="check"><input type="checkbox" id="zupIn"> <span data-en="Z is up (CAD)">Z축이 위쪽 (CAD)</span></label>
-        </div>
-        <p class="hint" id="fileStatus" data-en="Export SolidWorks or Rhino models as STL or OBJ. The unit is guessed from the size.">SolidWorks·Rhino 모델은 STL이나 OBJ로 내보내면 들어가요. 단위는 크기를 보고 추정해요.</p>
       </div>
     </section>
 
@@ -476,13 +490,13 @@ const L = (ko, en) => (LANG === 'en' ? en : ko);
 
 /* ---------- people and products ---------- */
 const PERSONAS = {
-  adultF: { label: '성인 여성', en: 'Adult woman', h: 159.6, bmi: 22.6, sex: 'F', heads: 7.25, leg: 0.458, ticks: [150, 155, 160, 165, 170] },
-  adultM: { label: '성인 남성', en: 'Adult man', h: 172.5, bmi: 24.5, sex: 'M', heads: 7.25, leg: 0.453, ticks: [165, 170, 175, 180, 185] },
-  teen: { label: '청소년', en: 'Teen', h: 162, bmi: 20.5, sex: 'N', heads: 7.0, leg: 0.455, kind: 'teen', ticks: [150, 155, 160, 165, 170] },
-  child: { label: '어린이', en: 'Child', h: 122, bmi: 16, sex: 'N', heads: 6.0, leg: 0.43, kind: 'child', ticks: [100, 110, 120, 130, 140] },
-  elderF: { label: '노인 여성', en: 'Older woman', h: 152, bmi: 23.5, sex: 'F', heads: 7.1, leg: 0.45, stoop: 10, maxFlex: 40, kind: 'elder', ticks: [145, 150, 155, 160] },
-  elderM: { label: '노인 남성', en: 'Older man', h: 165, bmi: 23.5, sex: 'M', heads: 7.1, leg: 0.448, stoop: 8, maxFlex: 40, kind: 'elder', ticks: [155, 160, 165, 170] },
-  wheel: { label: '휠체어 사용자', en: 'Wheelchair user', h: 165, bmi: 23, sex: 'N', heads: 7.25, leg: 0.455, seated: true, maxFlex: 25, kind: 'wheel', ticks: [150, 160, 170, 180] },
+  adultF: { label: '성인 여성', en: 'Adult woman', h: 159.6, bmi: 22.6, hr: [135, 190], br: [16, 40], sex: 'F', heads: 7.25, leg: 0.458, ticks: [150, 155, 160, 165, 170] },
+  adultM: { label: '성인 남성', en: 'Adult man', h: 172.5, bmi: 24.5, hr: [145, 200], br: [16, 40], sex: 'M', heads: 7.25, leg: 0.453, ticks: [165, 170, 175, 180, 185] },
+  teen: { label: '청소년', en: 'Teen', h: 162, bmi: 20.5, hr: [135, 195], br: [15, 35], sex: 'N', heads: 7.0, leg: 0.455, kind: 'teen', ticks: [150, 155, 160, 165, 170] },
+  child: { label: '어린이', en: 'Child', h: 122, bmi: 16, hr: [90, 165], br: [12, 30], sex: 'N', heads: 6.0, leg: 0.43, kind: 'child', ticks: [100, 110, 120, 130, 140] },
+  elderF: { label: '노인 여성', en: 'Older woman', h: 152, bmi: 23.5, hr: [130, 180], br: [16, 40], sex: 'F', heads: 7.1, leg: 0.45, stoop: 10, maxFlex: 40, kind: 'elder', ticks: [145, 150, 155, 160] },
+  elderM: { label: '노인 남성', en: 'Older man', h: 165, bmi: 23.5, hr: [140, 190], br: [16, 40], sex: 'M', heads: 7.1, leg: 0.448, stoop: 8, maxFlex: 40, kind: 'elder', ticks: [155, 160, 165, 170] },
+  wheel: { label: '휠체어 사용자', en: 'Wheelchair user', h: 165, bmi: 23, hr: [130, 200], br: [16, 40], sex: 'N', heads: 7.25, leg: 0.455, seated: true, maxFlex: 25, kind: 'wheel', ticks: [150, 160, 170, 180] },
 };
 const ORDER = ['adultF', 'adultM', 'teen', 'child', 'elderF', 'elderM', 'wheel'];
 const pLabel = (p) => L(p.label, p.en);
@@ -493,6 +507,7 @@ const PRESETS = {
   coffee: { name: '커피머신', en: 'Coffee machine', shape: 'box', look: 'coffee', w: 240, d: 400, h: 330, place: 'counter', face: 'top', ctrl: 160, action: 'dispense', noHand: true }, // button on top, cup on the drip tray
   air: { name: '공기청정기', en: 'Air purifier', shape: 'box', look: 'airpurifier', w: 300, d: 300, h: 720, place: 'floor', face: 'top', ctrl: 720, action: 'press', noHand: true },
   tumbler: { name: '텀블러', en: 'Tumbler', shape: 'cyl', look: 'tumbler', w: 72, d: 72, h: 190, place: 'hand', face: 'front', ctrl: 120, action: 'press' },
+  phonemini: { name: '스마트폰 5.4인치', en: 'Smartphone 5.4"', shape: 'box', w: 64, d: 7, h: 131, place: 'hand', face: 'front', ctrl: 65, action: 'press', screen: true },
   phone: { name: '스마트폰 6.3인치', en: 'Smartphone 6.3"', shape: 'box', w: 72, d: 8, h: 150, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true },
   galaxy: { name: '대화면 스마트폰 6.9인치', en: 'Large smartphone 6.9"', shape: 'box', w: 78, d: 8, h: 163, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true },
   ipadmini: { name: '태블릿 8.3인치', en: 'Tablet 8.3"', shape: 'box', w: 135, d: 6, h: 195, place: 'hand', face: 'front', ctrl: 100, action: 'press', screen: true },
@@ -504,9 +519,10 @@ const PRESETS = {
   mug: { name: '머그컵', en: 'Mug', shape: 'cup', style: 'mug', w: 82, d: 82, h: 95, place: 'hand', face: 'front', ctrl: 60, action: 'press' },
   glass: { name: '유리잔', en: 'Glass', shape: 'cup', style: 'glass', w: 72, d: 72, h: 110, place: 'hand', face: 'front', ctrl: 60, action: 'press' },
   latte: { name: '라떼잔', en: 'Latte cup', shape: 'cup', style: 'latte', w: 110, d: 110, h: 70, place: 'hand', face: 'front', ctrl: 40, action: 'press' },
-  a4: { name: 'A4 용지', en: 'A4 sheet', shape: 'box', look: 'paper', w: 210, d: 1, h: 297, place: 'hand', face: 'front', ctrl: 150, action: 'press' },
+  a4: { name: 'A4 용지', en: 'A4 sheet', shape: 'box', look: 'paper', w: 210, d: 1, h: 297, place: 'plinth', face: 'front', ctrl: 150, action: 'press' },
   backpack: { name: '백팩', en: 'Backpack', shape: 'box', look: 'backpack', w: 300, d: 160, h: 450, place: 'back', face: 'front', ctrl: 400, action: 'press' }, // a 20 L daypack, worn
-  pouch: { name: '파우치', en: 'Pouch', shape: 'box', look: 'pouch', w: 200, d: 50, h: 130, place: 'hand', face: 'front', ctrl: 100, action: 'press' },
+  pouch13: { name: '노트북 파우치 13인치', en: 'Laptop sleeve 13"', shape: 'box', look: 'pouch', w: 335, d: 25, h: 245, place: 'hand', face: 'front', ctrl: 120, action: 'press' },
+  pouch16: { name: '노트북 파우치 16인치', en: 'Laptop sleeve 16"', shape: 'box', look: 'pouch', w: 385, d: 28, h: 275, place: 'hand', face: 'front', ctrl: 140, action: 'press' },
   floorlamp: { name: '스탠드 조명', en: 'Floor lamp', shape: 'box', look: 'floorlamp', w: 420, d: 420, h: 1600, place: 'floor', face: 'front', ctrl: 1050, action: 'press', noHand: true }, // pull switch under the shade
   tablelamp: { name: '테이블 조명', en: 'Table lamp', shape: 'box', look: 'tablelamp', w: 300, d: 300, h: 450, place: 'desk', face: 'front', ctrl: 20, action: 'press', noHand: true }, // switch on the base
   lug20: { name: '캐리어 20인치', en: 'Suitcase 20"', shape: 'box', look: 'luggage', w: 360, d: 230, h: 550, place: 'floor', face: 'top', ctrl: 950, action: 'press', noHand: true }, // carry-on, with wheels
@@ -514,8 +530,8 @@ const PRESETS = {
   lug26: { name: '캐리어 26인치', en: 'Suitcase 26"', shape: 'box', look: 'luggage', w: 450, d: 280, h: 700, place: 'floor', face: 'top', ctrl: 1020, action: 'press', noHand: true },
   lug28: { name: '캐리어 28인치', en: 'Suitcase 28"', shape: 'box', look: 'luggage', w: 490, d: 300, h: 760, place: 'floor', face: 'top', ctrl: 1050, action: 'press', noHand: true },
   lug30: { name: '캐리어 30인치', en: 'Suitcase 30"', shape: 'box', look: 'luggage', w: 520, d: 310, h: 800, place: 'floor', face: 'top', ctrl: 1080, action: 'press', noHand: true },
-  objet: { name: '오브제', en: 'Object', shape: 'box', w: 80, d: 80, h: 80, place: 'hand', face: 'front', ctrl: 40, action: 'press' }, // cube or sphere
-  ring: { name: '반지', en: 'Ring', shape: 'ring', w: 3, d: 1.6, h: 5, size: 11, place: 'hand', face: 'front', ctrl: 0, action: 'press' }, // band width, band thickness, stone (mm)
+  objet: { name: '오브제', en: 'Object', shape: 'box', w: 80, d: 80, h: 80, place: 'plinth', face: 'front', ctrl: 40, action: 'press' }, // cube or sphere
+  ring: { name: '반지', en: 'Ring', shape: 'ring', w: 3, d: 1.6, h: 5, size: 11, place: 'plinth', face: 'front', ctrl: 0, action: 'press' }, // band width, band thickness, stone (mm)
   desk: FURN({ name: '컴퓨터 책상', en: 'Computer desk', shape: 'desk', style: 'desk', w: 1200, d: 600, h: 740, posture: 'sit' }),
   standing: FURN({ name: '스탠딩 책상', en: 'Standing desk', shape: 'desk', style: 'standing', w: 1200, d: 700, h: 1000, posture: 'stand' }), // electric legs, 62–127 cm
   dining: FURN({ name: '식탁', en: 'Dining table', shape: 'desk', style: 'dining', w: 1400, d: 800, h: 740, posture: 'sit' }),
@@ -536,18 +552,22 @@ const PRESETS = {
 };
 /* one product, several sizes: the product is picked first, then its size */
 const FAMILIES = {
-  phone: { ko: '스마트폰', en: 'Smartphone', sizes: [['phone', '6.3인치', '6.3"'], ['galaxy', '6.9인치', '6.9"']] },
-  tablet: { ko: '태블릿', en: 'Tablet', sizes: [['ipadmini', '8.3인치', '8.3"'], ['ipadair', '11인치', '11"']] },
+  phone: { ko: '스마트폰', en: 'Smartphone', sizes: [['phonemini', '5.4인치 미니', '5.4" mini'], ['phone', '6.3인치', '6.3"'], ['galaxy', '6.9인치', '6.9"']] },
+  tablet: { ko: '태블릿', en: 'Tablet', sizes: [['ipadmini', '8.3인치 미니', '8.3" mini'], ['ipadair', '11인치', '11"']] },
   sofa: { ko: '소파', en: 'Sofa', sizes: [['armchair', '1인', '1-seat'], ['sofa2', '2인', '2-seat'], ['sofa', '3인', '3-seat'], ['sofa4', '4인', '4-seat']] },
+  pouch: { ko: '노트북 파우치', en: 'Laptop sleeve', sizes: [['pouch13', '13인치', '13"'], ['pouch16', '16인치', '16"']] },
   luggage: { ko: '캐리어', en: 'Suitcase', sizes: [['lug20', '20인치', '20"'], ['lug24', '24인치', '24"'], ['lug26', '26인치', '26"'], ['lug28', '28인치', '28"'], ['lug30', '30인치', '30"']] },
 };
 const familyOf = (k) => Object.keys(FAMILIES).find((f) => FAMILIES[f].sizes.some((x) => x[0] === k)) || null;
+/* the plain object's forms, each with its own starting size (W, D, H mm) */
+const FORMS = { box: [80, 80, 80], frame: [200, 200, 200], cyl: [80, 80, 150], sphere: [100, 100, 100], cone: [100, 100, 150], plate: [100, 100, 5] };
+const roundBase = (sh = S.shape) => sh === 'cyl' || sh === 'cup' || sh === 'cone'; // W = D
 const PRESET_GROUPS = [
+  [['목업·소품', 'Mockup & objects'], ['objet', 'a4', 'ring']],
   [['생활 제품', 'Appliances'], ['purifier', 'coffee', 'air', 'floorlamp', 'tablelamp']],
   [['전자제품', 'Electronics'], ['fam:phone', 'fam:tablet', 'macbook', 'airbuds', 'airpods', 'airmax']],
-  [['가방·캐리어', 'Bags & luggage'], ['backpack', 'pouch', 'fam:luggage']],
+  [['가방·캐리어', 'Bags & luggage'], ['backpack', 'fam:pouch', 'fam:luggage']],
   [['컵', 'Cups'], ['tumbler', 'mug', 'glass', 'latte']],
-  [['목업·소품', 'Mockup & objects'], ['a4', 'objet', 'ring']],
   [['가구', 'Furniture'], ['desk', 'standing', 'dining', 'living', 'bar', 'sink', 'drawer', 'wardrobe', 'chair', 'pstool', 'office', 'stool', 'fam:sofa', 'beanbag']],
 ];
 /* ring sizes (Korean 호 = Japanese 号): inner diameter 13.0 mm at size 1, +1/3 mm per size */
@@ -575,9 +595,9 @@ const EDGE = 0.05; // front edge of a table or counter (product front face sits 
 const S = {
   mode: 'use', view: 'third', guides: true, lens: 35, lensFP: 20, posture: 'stand',
   persona: 'adultF', height: 159.6, bmi: 22.6,
-  source: 'box', preset: 'purifier', pkey: 'purifier', name: '슬림 정수기', shape: 'box', style: null, w: 180, d: 420, h: 380, scale: 1, base: { w: 180, d: 420, h: 380 }, screen: false,
-  seatMode: 'fixed', seatH: 450, lift: 0, look: null, ringSize: 11, noHand: true, ghost: true,
-  place: 'counter', face: 'front', ctrl: 230, action: 'dispense',
+  source: 'box', preset: 'objet', pkey: 'objet', name: '오브제', shape: 'box', style: null, w: 80, d: 80, h: 80, scale: 1, base: { w: 80, d: 80, h: 80 }, screen: false, det: {},
+  seatMode: 'fixed', seatH: 450, lift: 0, look: null, ringSize: 11, noHand: false, ghost: true,
+  place: 'plinth', face: 'front', ctrl: 40, action: 'press',
   model: null, unit: 0.001, zup: false,
   A: null, E: null, plan: null, handRest: null, pressLocal: null, cupLocal: null,
 };
@@ -1471,9 +1491,9 @@ let modelInner = null, modelRaw = null;
 
 function dims() {
   if (S.source === 'model' && S.model) return { W: (S.model.w / 1000) * S.scale, D: (S.model.d / 1000) * S.scale, H: (S.model.h / 1000) * S.scale };
-  if (S.shape === 'ring') { const o = (ringD(S.ringSize) + 2 * S.d) / 1000; return deskItem() ? { W: o, D: o + S.h / 1000, H: S.w / 1000 } : { W: o, D: S.w / 1000, H: o + S.h / 1000 }; } // set down: lying flat
-  const W = (S.w / 1000) * S.scale, D = ((S.shape === 'cyl' ? S.w : S.d) / 1000) * S.scale, H = (S.h / 1000) * S.scale;
-  return deskItem() ? { W, D: H, H: D } : { W, D, H }; // a sheet set down on the desk lies flat
+  if (S.shape === 'ring') { const o = (ringD(S.ringSize) + 2 * S.d) / 1000; return laidFlat() ? { W: o, D: o + S.h / 1000, H: S.w / 1000 } : { W: o, D: S.w / 1000, H: o + S.h / 1000 }; } // set down: lying flat
+  const W = (S.w / 1000) * S.scale, D = ((roundBase() ? S.w : S.d) / 1000) * S.scale, H = (S.h / 1000) * S.scale;
+  return laidFlat() ? { W, D: H, H: D } : { W, D, H }; // a sheet set down on the desk or a plinth lies flat
 }
 const ctrlM = () => (S.ctrl / 1000) * S.scale;
 /* filling a cup: held under the outlet when the control is on the front (water purifier),
@@ -1497,7 +1517,7 @@ const PLACE_OK = { luggage: ['floor', 'air'], pack: ['back', 'floor', 'air'], la
 const placeOk = (p) => (kind() === 'free' ? !(p === 'hand' && S.noHand) && p !== 'back' : PLACE_OK[kind()].includes(p));
 const canDispense = () => kind() === 'free' || kind() === 'dispenser';
 const hasControls = () => ['free', 'dispenser', 'floor', 'lamp'].includes(kind()); // the others are simply held, worn, typed on or looked at
-const lookOnly = () => deskItem() || (kind() === 'small' && S.place !== 'hand') || (kind() === 'pack' && S.place !== 'back'); // set down just to be looked at: no reaching or pressing
+const lookOnly = () => laidFlat() || (kind() === 'small' && S.place !== 'hand') || (kind() === 'pack' && S.place !== 'back'); // set down just to be looked at: no reaching or pressing
 const isDispense = () => S.action === 'dispense' && !isFurniture() && S.place !== 'hand' && canDispense();
 const cupInHand = () => isDispense() && S.face === 'front';
 const cupOnTray = () => isDispense() && S.face === 'top';
@@ -1506,6 +1526,7 @@ const plinthSize = () => ({ w: ((S.surf && S.surf.plinthW) || 400) / 1000, d: ((
 const carried = () => S.place === 'hand' || S.place === 'head' || S.place === 'back'; // held in the hands, or worn on the head or the back
 const setDown = () => S.source === 'box' && (S.shape === 'ring' || S.look === 'paper' || S.screen); // things that are held, or laid flat on the desk: a ring, a sheet, a phone, a tablet
 const deskItem = () => atDesk() && setDown();
+const laidFlat = () => setDown() && (atDesk() || S.place === 'plinth'); // a sheet, a ring, a phone or a tablet lies flat on the desk or a plinth
 const tableTop = () => dims().H + (furn() === 'coffee' ? S.lift * LIFT_RISE * S.scale : 0); // a lift-up top counts where it is
 /* the computer desk a product can sit on (place 'desk'): the person sits at the keyboard in front of a 24-inch monitor and the product
    stands to the right of the monitor, past the mouse (a laptop goes in front of them instead, below the monitor). Desk frame: centred
@@ -1554,11 +1575,13 @@ const DETAIL = {
   stool: [DR('seatT', '좌판 두께', 'Seat thickness', 15, 90, 50), DR('legT', '다리 굵기', 'Leg thickness', 15, 60, 26), { ...MAT_ROW, ko: '좌판 재질', en: 'Seat material' }],
   drawer: [{ k: 'casters', ko: '바퀴', en: 'Casters', opts: [[0, '없음', 'None'], [1, '있음', 'On']], def: 0 }, DR('caster', '바퀴 지름', 'Caster diameter', 30, 100, 50, 5)],
   desk: TABLE_ROWS(25, 22, '옆판 두께', 'Side panel thickness'), standing: TABLE_ROWS(25, 70, '기둥 굵기', 'Column thickness'), dining: TABLE_ROWS(30, 55), bar: TABLE_ROWS(35, 44), coffee: TABLE_ROWS(30, 50, '발 굵기', 'Foot thickness'),
+  frame: [DR('frameT', '프레임 두께', 'Frame thickness', 2, 100, 10)],
   headphone: [DR('cupH', '귀마개 높이', 'Ear cushion height', 60, 130, () => Math.round(clamp(0.5 * S.h, 75, 115))), DR('cupL', '귀마개 폭', 'Ear cushion width', 50, 115, () => Math.round(clamp(0.88 * S.d, 58, 95))), DR('cupT', '귀마개 두께', 'Ear cup thickness', 12, 45, () => Math.round(clamp(0.13 * S.w, 17, 30))), DR('bandW', '머리띠 폭', 'Headband width', 12, 45, 29)],
 };
 function detKind() {
   if (S.source !== 'box') return null;
   if (S.shape === 'headphone') return 'headphone';
+  if (S.shape === 'frame') return 'frame';
   return isFurniture() && DETAIL[furn()] ? furn() : null;
 }
 const detSpec = () => DETAIL[detKind()] || [];
@@ -1965,6 +1988,7 @@ function earbudGeo(group, W, D, H) {
     const C = new V3(s * EAR_CANAL.x * hh, EAR_CANAL.y * hh, EAR_CANAL.z * hh), out = new V3(s, 0, 0);
     const bc = C.clone().addScaledVector(out, 7.2 * mm * sx).add(new V3(0, 1.5 * mm * sy, -2.5 * mm * sz));
     add(body, mats.foam, bc);
+    (group.userData.focusPts ||= []).push(bc.clone().add(new V3(0, -6 * mm * sy, 0))); // zoom closes on one ear: the body and its stem
     const td = new V3(-s, 0.06, 0.2).normalize(), qt = new THREE.Quaternion().setFromUnitVectors(UP, td); // the tip points into the canal
     add(nozzle, mats.trim, C.clone().addScaledVector(td, -2.6 * mm), qt);
     add(tipGeo, mats.pad, C.clone().addScaledVector(td, -3.6 * mm), qt);
@@ -2264,6 +2288,7 @@ function lampGeo(group, W, D, H, floor) {
   const own = meshIn(group), cz = -D / 2, R = W / 2;
   if (floor) {
     const shH = Math.min(0.3, H * 0.2), br = Math.min(0.16, R * 0.75);
+    group.userData.focus = new V3(0, H - shH / 2, cz); // zoom closes on the shade
     own(new THREE.CylinderGeometry(br * 0.92, br, 0.025, 48).translate(0, 0.0125, cz), mats.frame);
     own(new THREE.CylinderGeometry(0.011, 0.011, H - shH * 0.6, 20).translate(0, (H - shH * 0.6) / 2, cz), mats.frame);
     own(new THREE.CylinderGeometry(R, R * 1.02, shH, 64, 1, true).translate(0, H - shH / 2, cz), lampShade);
@@ -2272,6 +2297,7 @@ function lampGeo(group, W, D, H, floor) {
     return;
   }
   const br = Math.min(0.085, R * 0.55), sh = H * 0.42;
+  group.userData.focus = new V3(0, H - sh * 0.45, cz); // zoom closes on the shade, the bulb in it
   own(new THREE.CylinderGeometry(br * 0.9, br, 0.03, 48).translate(0, 0.015, cz), mats.foam);
   own(new THREE.CylinderGeometry(0.012, 0.012, H - sh * 0.7, 16).translate(0, (H - sh * 0.7) / 2, cz), mats.frame);
   own(new THREE.CylinderGeometry(R * 0.6, R, sh, 64, 1, true).translate(0, H - sh / 2, cz), lampShade);
@@ -2281,7 +2307,7 @@ function lampGeo(group, W, D, H, floor) {
 function buildProduct() {
   disposeGroup(holder);
   holder.userData = {};
-  const W = S.w / 1000, D = (S.shape === 'cyl' || S.shape === 'cup' ? S.w : S.d) / 1000, Hh = S.h / 1000;
+  const W = S.w / 1000, D = (roundBase() ? S.w : S.d) / 1000, Hh = S.h / 1000;
   if (S.source === 'model' && modelInner) holder.add(modelInner);
   else if (isFurniture()) {
     DET_ON = true;
@@ -2305,8 +2331,15 @@ function buildProduct() {
   else if (S.look === 'coffee' && S.shape === 'box') coffeeGeo(holder, W, D, Hh);
   else if (S.look === 'airpurifier' && S.shape === 'box') airPurifierGeo(holder, W, D, Hh);
   else if (S.look === 'tumbler' && S.shape === 'cyl') tumblerGeo(holder, W, Hh);
+  else if (S.shape === 'frame') { // a hollow cube: twelve square bars, their thickness set on its own
+    const t = Math.min(dv('frameT') / 1000, W / 2, D / 2, Hh / 2), bars = [];
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) bars.push([new THREE.BoxGeometry(t, Hh, t), new THREE.Matrix4().makeTranslation(sx * (W - t) / 2, Hh / 2, -D / 2 + sz * (D - t) / 2)]);
+    for (const y of [t / 2, Hh - t / 2]) { for (const sz of [-1, 1]) bars.push([new THREE.BoxGeometry(W - 2 * t, t, t), new THREE.Matrix4().makeTranslation(0, y, -D / 2 + sz * (D - t) / 2)]); for (const sx of [-1, 1]) bars.push([new THREE.BoxGeometry(t, t, D - 2 * t), new THREE.Matrix4().makeTranslation(sx * (W - t) / 2, y, -D / 2)]); }
+    meshIn(holder)(mergeGeo(bars), mats.foam);
+  }
   else {
     const geo = S.shape === 'cyl' ? new THREE.CylinderGeometry(W / 2, W / 2, Hh, 56).translate(0, Hh / 2, -D / 2)
+      : S.shape === 'cone' ? new THREE.CylinderGeometry(0.0002, W / 2, Hh, 56).translate(0, Hh / 2, -D / 2)
       : S.shape === 'sphere' ? new THREE.SphereGeometry(0.5, 48, 32).scale(W, Hh, D).translate(0, Hh / 2, -D / 2)
       : new RoundedBoxGeometry(W, Hh, D, 3, Math.min(0.016, Math.min(W, D, Hh) * 0.12)).translate(0, Hh / 2, -D / 2);
     const m = new THREE.Mesh(geo, S.look === 'paper' ? mats.paper : mats.foam);
@@ -2359,7 +2392,7 @@ function layoutHuman() {
   let z;
   if (st) {
     if (A.seated) z = A.chair === 'wheel' ? (st === 'sink' || st === 'coffee' ? A.thigh + 0.16 : 0.22) : { desk: 0.2, standing: 0.2, dining: 0.2, bar: 0.26, coffee: 0.38 + A.seatEdge }[st] ?? 0.2;
-    else z = { desk: 0.05 + toe, standing: 0.05 + toe, dining: 0.05 + toe, bar: 0.04 + toe, coffee: 0.28 + toe, sink: toe - 0.03, drawer: 0.16 + toe }[st] ?? 0.05 + toe;
+    else z = { desk: 0.05 + toe, standing: 0.05 + toe, dining: 0.05 + toe, bar: 0.04 + toe, coffee: 0.28 + toe, sink: toe - 0.03, drawer: 0.16 + toe, wardrobe: 0.3 + toe }[st] ?? 0.05 + toe;
   } else if (A.seated) {
     const front = A.thigh + 0.14;
     z = S.place === 'table' ? EDGE + 0.22 : S.place === 'counter' ? EDGE + front + 0.02 : 0.15 + front;
@@ -2375,10 +2408,10 @@ function layoutProduct() {
   holder.position.set(0, 0, 0);
   if (!carried()) {
     product.position.set(0, SURF[S.place], 0); product.rotation.set(0, 0, 0); holder.scale.setScalar(S.scale);
-    if (deskItem() && S.shape === 'ring') { const o = (ringD(S.ringSize) + 2 * S.d) / 1000; holder.position.set(0, S.w / 2000, -(o / 2 + S.h / 1000)); } // lying on its side, stone toward the person
-    else if (deskItem()) { product.rotation.x = -Math.PI / 2; product.position.y += dims().H; } // the sheet lies flat, its short edge toward the person
+    if (laidFlat() && S.shape === 'ring') { const o = (ringD(S.ringSize) + 2 * S.d) / 1000; holder.position.set(0, S.w / 2000, -(o / 2 + S.h / 1000)); } // lying on its side, stone toward the person
+    else if (laidFlat()) { product.rotation.x = -Math.PI / 2; product.position.y += dims().H; } // the sheet lies flat, its short edge toward the person
   }
-  const show = !carried() && !isFurniture() && S.shape !== 'laptop' && !deskItem();
+  const show = !carried() && !isFurniture() && S.shape !== 'laptop' && !laidFlat();
   marker.visible = show && hasControls() && !lookOnly();
   spout.visible = show && isDispense();
   tray.visible = show && cupOnTray();
@@ -2595,6 +2628,13 @@ function planHands() {
     const at = human.worldToLocal(bar.clone());
     S.plan = { kind: 'pull', hp, F, W: at.clone().sub(inHand(F, c)) };
     S.pressLocal = at;
+  } else if (st === 'wardrobe') { // the right door's long bar handle in a sideways fist: palm toward the bar, fingers round it, thumb up
+    const k = S.scale, bar = human.worldToLocal(product.localToWorld(new V3(0.04 * k, Math.min(1.1, (S.h / 1000) * 0.5) * k, 0.014 * k))), rr = 0.006 * k;
+    const F = handFrame(new V3(1, 0, 0), new V3(0, 0, 1)), c = new V3(HD.palmT / 2 + rr + 0.002, 0.58 * HD.palmLen, 0);
+    const shape = { kind: 'c', cx: c.x, cy: c.y, r: rr, z0: -0.08, z1: 0.08 };
+    const hp = { f: HD.fingers.map((g) => solve(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85])), tm: new V3(0.45, 0.35, -0.82).normalize(), tq: new V3(0, 1, 0), t: [deg(8), deg(12)] };
+    S.plan = { kind: 'bar', hp, F, W: bar.clone().sub(inHand(F, c)) };
+    S.pressLocal = bar;
   } else if (isFurniture()) {
     S.plan = { kind: 'flat', hp: flatPose() };
     S.pressLocal = human.worldToLocal(furnPoint(true));
@@ -2635,6 +2675,7 @@ function handGoal(plan, s, P, sh) {
       return { F, W: S.pressLocal.clone().add(new V3(0, A.hd.palmT / 2 + 0.003, 0)).addScaledVector(F.y, -0.5 * A.hd.palmLen), pole: new V3(-0.55, -1, -0.35), hp: plan.hp };
     }
     case 'pull': { if (!right) return null; const dr = holder.userData.drawers, dz = dr ? anim.open * dr.travel * S.scale : 0; return { F: plan.F, W: plan.W.clone().add(new V3(0, 0, -dz)), pole: new V3(-0.5, -1, -0.4), hp: plan.hp }; }
+    case 'bar': return right ? { F: plan.F, W: plan.W, pole: new V3(-0.7, -1, -0.15), hp: plan.hp } : null;
     case 'clutch': { if (right) return null; /* the left hand */ const W = restWrist(A, P, s), rc = armIK(sh, W, A, new V3(s * 0.25, -0.3, -1)); return { F: handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)), W, pole: new V3(s * 0.25, -0.3, -1), hp: plan.hp }; }
     case 'palm': return right ? { F: handFrame(UP.clone(), new V3(0.25, 0.12, 1)), W: new V3(P.shR.x + 0.3 * A.forearm, P.shR.y - A.upperArm + 0.2 * A.forearm, P.shR.z + 0.93 * A.forearm), pole: new V3(-0.4, -1, -0.5), hp: plan.hp } : null;
     case 'handle': return right ? sip(plan, { F: handFrame(new V3(1, 0, 0), new V3(0.25, 0, 1)), W: holdWrist(A, P), pole: new V3(-0.35, -1, -0.6), hp: plan.hp }, P) : null;
@@ -2798,7 +2839,7 @@ function gripCheck(P, A) {
       apply: () => {
         const k = tmm / mmi(g);
         if (S.source === 'model') S.scale *= k;
-        else if (S.shape === 'cyl' || S.shape === 'cup') { S.w = Math.round(S.w * k); S.d = S.w; }
+        else if (roundBase()) { S.w = Math.round(S.w * k); S.d = S.w; }
         else if (flat) { if (S.w >= S.d) S.w = Math.round(S.w * k); else S.d = Math.round(S.d * k); }
         else { S.w = Math.round(S.w * k); S.d = Math.round(S.d * k); }
       },
@@ -3057,7 +3098,7 @@ function setDimEffective(field, mm) {
   if (S.source === 'model' && S.model) { S.scale = clamp(mm / S.model[field], 0.2, 5); return; }
   const v = clamp(Math.round(mm / S.scale), 1, 3000);
   S[field] = v;
-  if ((S.shape === 'cyl' || S.shape === 'cup') && (field === 'w' || field === 'd')) { S.w = v; S.d = v; }
+  if (roundBase() && (field === 'w' || field === 'd')) { S.w = v; S.d = v; }
   if (field === 'h') S.ctrl = Math.min(S.ctrl, v);
   S.preset = null;
 }
@@ -3251,6 +3292,8 @@ function refresh(o = {}) {
   if (lookOnly()) { if (S.mode !== 'compare') { S.itemMode = S.mode; S.mode = 'compare'; } } else if (S.itemMode) { S.mode = S.itemMode; S.itemMode = null; } // only looked at; the mode comes back after
   for (const [k, d] of [['table', 720], ['desk', 740], ['counter', 850], ['plinth', 900], ['air', 1000]]) SURF[k] = ((S.surf && S.surf[k]) || d) / 1000; // the table, desk or counter it stands on, at its set height
   { const key = [S.pkey, S.place, S.mode, S.persona, S.posture, S.source].join('|'); if (key !== anim.key) { anim.key = key; anim.played = false; } } // a new setup starts at rest
+  if (S.place !== S.pvPlace) { S.pvPlace = S.place; S.pv = null; } // a new place: the person shown as that place has it
+  S.height = clamp(S.height, p.hr[0], p.hr[1]); S.bmi = clamp(S.bmi, p.br[0], p.br[1]); // within the real range for this kind of person
   S.A = anthro(p, S.height, S.bmi);
   if (detKind() === 'office') { const lo = dv('gasMin'), hi = Math.max(dv('gasMax'), lo), want = clamp(Math.round(((S.A.popliteal + 0.01) / S.scale) * 200) * 5, lo, hi); if (want !== S.h) { S.h = want; o = { ...o, rebuild: true }; } } // the gas lift set for this person, within its range
   seatSetup(p);
@@ -3363,7 +3406,9 @@ const furnHintText = () => ({
 function syncUI() {
   const p = PERSONAS[S.persona], A = S.A, ring = S.shape === 'ring' && S.source === 'box';
   for (const b of $('personaChips').children) b.setAttribute('aria-pressed', String(b.dataset.persona === S.persona));
+  if (+$('hIn').min !== p.hr[0] || +$('hIn').max !== p.hr[1]) { $('hIn').min = p.hr[0]; $('hIn').max = p.hr[1]; }
   $('hIn').value = S.height;
+  $('hRange').textContent = L(`키 범위 ${p.hr[0]}~${p.hr[1]}cm · ${pLabel(p)}의 실제 분포 안에서 골라요`, `Heights ${p.hr[0]}–${p.hr[1]} cm, the real-world range for this person`);
   $('hOut').innerHTML = `${fmtH(S.height)}<small>cm</small>`;
   const ticks = $('hTicks');
   if (ticks.dataset.p !== S.persona) {
@@ -3377,6 +3422,7 @@ function syncUI() {
   }
   for (const b of ticks.children) b.setAttribute('aria-pressed', String(Math.abs(+b.dataset.v - S.height) < 0.05));
   const kg = weightKg();
+  { const h2 = (S.height / 100) ** 2; $('wIn').min = Math.ceil(p.br[0] * h2 * 2) / 2; $('wIn').max = Math.floor(p.br[1] * h2 * 2) / 2; } // a build range, not any number
   $('wIn').value = kg.toFixed(1);
   $('wOut').innerHTML = `${Math.round(kg)}<small>kg</small>`;
   $('bmiOut').textContent = L(`BMI ${S.bmi.toFixed(1)} · ${bodyLabel(S.bmi, p)} · 몸 두께가 체형에 맞춰 바뀌어요`, `BMI ${S.bmi.toFixed(1)} · ${bodyLabel(S.bmi, p)} · body girth follows the build`);
@@ -3384,22 +3430,24 @@ function syncUI() {
   const fam = S.source === 'box' ? familyOf(S.pkey) : null; // a product with sizes: its chip lit, and its sizes to pick from
   for (const b of $('presetChips').querySelectorAll('[data-family]')) b.setAttribute('aria-pressed', String(b.dataset.family === fam));
   $('variantField').hidden = !fam;
+  syncExamples();
+  $('setName').textContent = prodName();
   if (fam) { FAMILIES[fam].last = S.pkey; $('variantSeg').replaceChildren(...FAMILIES[fam].sizes.map(([k, ko, en]) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.size = k; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(S.pkey === k)); return b; })); }
   segSet('shapeSeg', 'shape', S.shape); segSet('placeSeg', 'place', S.place); segSet('faceSeg', 'face', S.face); segSet('actSeg', 'act', S.action); segSet('modeSeg', 'mode', S.mode); segSet('langSeg', 'lang', LANG);
   const isModel = S.source === 'model', fixedForm = isFurniture() || ring || ['cup', 'laptop', 'headphone', 'earbud'].includes(S.shape) || S.look === 'paper' || kind() !== 'free'; // these come only from the examples
   $('shapeField').hidden = isModel || fixedForm; $('sizeField').hidden = isModel;
   if (!isModel) {
-    const big = Math.max(S.w, S.shape === 'cyl' ? S.w : S.d, S.h), key = S.name + '|' + S.shape;
+    const big = Math.max(S.w, roundBase() ? S.w : S.d, S.h), key = S.name + '|' + S.shape;
     if (!dimR || big > dimR.max || dimR.key !== key) dimR = { ...dimScale(big), key }; // kept steady while a slider is dragged
     const labels = ring ? [L('밴드 폭', 'Band'), L('두께', 'Thick'), L('보석', 'Stone')] : [L('W 폭', 'W width'), L('D 깊이', 'D depth'), L('H 높이', 'H height')];
-    for (const [i, id, rid, k, v] of [[0, 'pW', 'rW', 'w', S.w], [1, 'pD', 'rD', 'd', S.shape === 'cyl' || S.shape === 'cup' ? S.w : S.d], [2, 'pH', 'rH', 'h', S.h]]) {
+    for (const [i, id, rid, k, v] of [[0, 'pW', 'rW', 'w', S.w], [1, 'pD', 'rD', 'd', roundBase() ? S.w : S.d], [2, 'pH', 'rH', 'h', S.h]]) {
       setNum(id, v);
       const r = $(rid), rg = ring ? RING_DIMS[k] : dimR;
       r.min = rg.min; r.max = rg.max; r.step = rg.step; r.value = v;
       $(id).step = ring ? rg.step : 1;
       $(id).previousElementSibling.previousElementSibling.textContent = labels[i];
     }
-    $('pD').disabled = $('rD').disabled = S.shape === 'cyl' || S.shape === 'cup';
+    $('pD').disabled = $('rD').disabled = roundBase();
     $('ringRow').hidden = !ring;
     if (ring) { $('ringIn').value = S.ringSize; $('ringOut').textContent = L(`${S.ringSize}호 · 안지름 ${ringD(S.ringSize).toFixed(1)}mm`, `size ${S.ringSize} · ${ringD(S.ringSize).toFixed(1)} mm inside`); }
     $('dimStep').textContent = ring ? L('반지는 0.1mm 단위 · 보석 0이면 민반지', 'Rings use 0.1 mm steps · stone 0 means a plain band') : L(`슬라이더 ${dimR.min}~${dimR.max}mm · ${dimR.step}mm 단위 · 숫자 칸은 1mm 단위로 입력`, `Slider ${dimR.min}–${dimR.max} mm in ${dimR.step} mm steps · type exact mm in the boxes`);
@@ -3409,7 +3457,7 @@ function syncUI() {
   $('sOut').innerHTML = `${Math.round(S.scale * 100)}<small>%</small>`;
   const P = dims();
   $('sDims').textContent = L(`${isModel ? '모델' : '목업'} 실제 크기 ${mmi(P.W)} × ${mmi(P.D)} × ${mmi(P.H)} mm`, `${isModel ? 'Model' : 'Mockup'} actual size ${mmi(P.W)} × ${mmi(P.D)} × ${mmi(P.H)} mm`);
-  $('ctrlField').hidden = carried() || isFurniture() || S.shape === 'laptop' || deskItem() || !hasControls();
+  $('ctrlField').hidden = carried() || isFurniture() || S.shape === 'laptop' || laidFlat() || !hasControls();
   $('placeField').hidden = isFurniture() || S.place === 'head';
   for (const b of $('placeSeg').children) { b.disabled = !placeOk(b.dataset.place); if (b.dataset.place === 'back') b.hidden = kind() !== 'pack'; } // nobody carries a coffee machine around; a tablet is held or laid on the desk; an air purifier stands on the floor
   for (const b of $('actSeg').children) b.disabled = (b.dataset.act === 'dispense' && !canDispense()) || (b.dataset.act === 'press' && kind() === 'dispenser'); // only a dispenser fills a cup
@@ -3422,6 +3470,7 @@ function syncUI() {
     const NM = { table: ['테이블', 'Table'], desk: ['책상', 'Desk'], counter: ['조리대', 'Counter'], plinth: ['단상 H', 'Plinth H'], air: ['공중 높이', 'Height'] };
     const on = !!NM[S.place] && !isFurniture(), mm = Math.round(SURF[S.place] * 1000), lim = S.place === 'air' ? [0, 2000] : S.place === 'plinth' ? [50, 1500] : [400, 1200];
     $('surfRow').hidden = !on;
+    $('surfReset').hidden = !on; $('surfReset').disabled = !(S.surf && (S.surf[S.place] != null || (S.place === 'plinth' && (S.surf.plinthW != null || S.surf.plinthD != null))));
     if (on) { $('surfLab').textContent = L(...NM[S.place]); for (const id of ['surfIn', 'surfNum']) { $(id).min = lim[0]; $(id).max = lim[1]; if (document.activeElement !== $(id)) $(id).value = mm; } }
     const pl = S.place === 'plinth' && !isFurniture();
     $('plinthRows').hidden = !pl;
@@ -3449,9 +3498,9 @@ function syncUI() {
   $('modelOpts').hidden = !isModel; $('backToBox').hidden = !isModel;
   $('btnPlay').disabled = handKind() === 'clutch' || (S.mode === 'compare' && S.place !== 'hand') || A.chair === 'product' || S.place === 'head' || S.place === 'back';
   const fpBtn = $('views').querySelector('[data-view="first"]'); // worn things can't be seen from your own eyes
-  fpBtn.disabled = S.place === 'head';
+  fpBtn.disabled = S.place === 'head' || S.place === 'back';
   fpBtn.title = S.place === 'head' ? L('머리에 쓰는 제품은 1인칭으로 볼 수 없어요', "Worn on the head, so there's nothing to see from the eyes") : '';
-  if (S.place === 'head' && S.view === 'first') setView('third');
+  if ((S.place === 'head' || S.place === 'back') && S.view === 'first') setView('third');
   syncGhostBtn(); syncBodyVis();
   segSet('postureSeg', 'posture', A.seated ? 'sit' : 'stand');
   const st = furn(), noSit = st === 'sink' || st === 'drawer' || st === 'wardrobe';
@@ -3540,7 +3589,8 @@ function overlayInsets() {
   return { h, top: clamp(top + 8, 0, h * 0.42), bot: clamp(sr.bottom - hudTop + 6, 0, h * 0.42) };
 }
 function fitView() {
-  const box3 = S.view === 'third' && S.place === 'hand' ? handBox() : S.view === 'third' && S.place === 'head' ? new THREE.Box3().expandByObject(R.head).expandByObject(holder).expandByScalar(0.08) : sceneBox(), c = box3.getCenter(new V3()), s = box3.getSize(new V3());
+  queueGhostCheck();
+  const box3 = S.view === 'third' && S.place === 'hand' ? handBox() : S.place === 'head' && S.view !== 'bird' ? new THREE.Box3().expandByObject(R.head).expandByObject(holder).expandByScalar(0.08) /* worn on the head: the head fills the view */ : sceneBox(), c = box3.getCenter(new V3()), s = box3.getSize(new V3());
   const w = stage.clientWidth || 1, h = stage.clientHeight || 1, aspect = w / h;
   const ins = overlayInsets();
   const f = clamp((ins.h - ins.top - ins.bot) / ins.h, 0.45, 1); // share of the height left free
@@ -3553,7 +3603,7 @@ function fitView() {
     else { ww = s.x; hh = s.z; up = new V3(0, 0, -1); }
     const half = Math.max(hh / (2 * f), ww / (2 * aspect)) * 1.12 + 0.03;
     const cc = c.clone().addScaledVector(up, off * 2 * half);
-    const pos = S.view === 'front' ? new V3(cc.x, cc.y, box3.max.z + 5) : S.view === 'side' ? new V3(box3.max.x + 5, cc.y, cc.z) : new V3(cc.x, box3.max.y + 5, cc.z);
+    const pos = S.view === 'front' ? new V3(cc.x, cc.y, S.place === 'back' ? box3.min.z - 5 : box3.max.z + 5) /* worn on the back: its own front, from behind */ : S.view === 'side' ? new V3(box3.max.x + 5, cc.y, cc.z) : new V3(cc.x, box3.max.y + 5, cc.z);
     Object.assign(orthoCam, { left: -half * aspect, right: half * aspect, top: half, bottom: -half, zoom: 1 });
     orthoCam.up.copy(up); orthoCam.position.copy(pos); orthoCam.lookAt(cc);
     orthoCam.updateProjectionMatrix();
@@ -3564,7 +3614,7 @@ function fitView() {
     perspCam.aspect = aspect; perspCam.updateProjectionMatrix();
     if (S.view === 'first') return;
     // 3인칭 looks from the side at eye level, 버드뷰 from high above
-    const dir = S.view === 'bird' ? new V3(0.42, 1.9, 0.75) : S.place === 'head' ? new V3(1, 0.12, 0.55) : carried() ? new V3(0.6, 0.12, 1) : atDesk() ? new V3(0.85, 0.42, 0.85) : S.mode === 'use' ? new V3(1, 0.1, S.A.chair === 'product' ? 0.9 : 0.32) : new V3(0.3, 0.08, 1);
+    const dir = S.view === 'bird' ? new V3(0.42, 1.9, S.place === 'back' ? -0.75 : 0.75) : S.place === 'back' ? new V3(0.75, 0.15, -1) /* a backpack: from behind */ : laidFlat() && S.place === 'plinth' ? new V3(0.9, 0.75, 0.75) /* a sheet or a ring lying on the plinth: from above enough to see it */ : S.place === 'head' ? new V3(1, 0.12, 0.55) : carried() ? new V3(0.6, 0.12, 1) : atDesk() ? new V3(0.85, 0.42, 0.85) : S.mode === 'use' ? new V3(1, 0.1, S.A.chair === 'product' ? 0.9 : 0.32) : new V3(0.3, 0.08, 1);
     dir.normalize();
     const tv = Math.tan(deg(perspCam.fov) / 2);
     const vEff = 2 * Math.atan(f * tv), hf = 2 * Math.atan(tv * aspect);
@@ -3612,8 +3662,10 @@ function syncBodyVis() {
   for (const m of R.legs.flatMap((l) => [l.up, l.lo, l.kn, l.an, l.foot])) m.visible = !fp || lap;
 }
 const frontUse = () => S.view === 'front' && S.mode === 'use' && !carried();
-const ghostWanted = () => !!S.seeThru || (frontUse() && S.ghost);
-function syncGhostBtn() { $('btnGhost').hidden = false; $('btnGhost').setAttribute('aria-pressed', String(ghostWanted())); }
+/* the person: shown, see-through or hidden — the viewer's pick, else hidden for a product floating in midair, see-through in the front view in use */
+const personVis = () => S.pv || (S.place === 'air' ? 'off' : (frontUse() && S.ghost) || S.autoGhost ? 'ghost' : 'on');
+const PV_LABEL = { on: ['사람 O', 'Person'], ghost: ['사람 반투명', 'See-through'], off: ['사람 X', 'No person'] };
+function syncGhostBtn() { const v = personVis(), b = $('btnGhost'), [ko, en] = PV_LABEL[v]; b.hidden = false; b.dataset.ko = ko; b.dataset.en = en; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(v !== 'on')); }
 function setView(v) {
   S.view = v;
   syncGhostBtn();
@@ -3639,22 +3691,81 @@ function visBox(obj) { // the box round what is actually drawn (hidden spouts, t
   obj.traverseVisible((m) => { if (!m.isMesh || !m.geometry) return; if (!m.geometry.boundingBox) m.geometry.computeBoundingBox(); b.union(t.copy(m.geometry.boundingBox).applyMatrix4(m.matrixWorld)); });
   return b;
 }
-const zoomFocus = () => { const b = visBox(product); return b.isEmpty() ? product.getWorldPosition(new V3()) : b.getCenter(new V3()); };
+/* what zooming in closes on: the product as drawn. A big piece (a table, a cabinet, a floor lamp) closes on the part that is used —
+   the keyboard, the door handle, the switch under the shade — not on the empty middle of its box. In first person, the part being used;
+   sitting on it, the seat's front edge by the knees. */
+function zoomFocus() {
+  const u = holder.userData, b = visBox(product);
+  if (b.isEmpty()) return product.getWorldPosition(new V3());
+  if (u.focusPts) { // earbuds: the one nearer the camera (the far one is behind the head)
+    const cp = cam.getWorldPosition(new V3()), dir = cam.getWorldDirection(new V3()), depth = (p) => p.clone().sub(cp).dot(dir);
+    return u.focusPts.map((p) => holder.localToWorld(p.clone())).sort((a, c) => depth(a) - depth(c) || a.x - c.x)[0];
+  }
+  if (u.focus) return holder.localToWorld(u.focus.clone()); // a lamp: its shade
+  if (S.view === 'first' && S.A.chair === 'product') return new V3(0, 0.3 * dims().H, 0); // sitting on it: its front, between the shins
+  if (S.view === 'first' && isFurniture()) return controlWorld();
+  if (isFurniture() && S.shape !== 'chair' && !isOrtho()) { const c = controlWorld(); if (b.clone().expandByScalar(0.05).containsPoint(c)) return c; } // a table or a cabinet: the part in use
+  if (isFurniture() && S.shape === 'desk' && !['drawer', 'wardrobe'].includes(furn()) && S.view !== 'top') { const c = b.getCenter(new V3()); c.y = Math.min(b.max.y, dims().H) - 0.03; return c; } // a table, flat on: its top (not a monitor or tap on it, not the empty space between the legs)
+  return b.getCenter(new V3());
+}
+/* the person in the way: seen from the camera, is most of the product behind the body? then the person turns see-through by itself
+   (only while you have not picked 사람 O / 반투명 / X yourself) — checked a few frames after the view, the zoom or a drag changes */
+let ghostWait = 0;
+const queueGhostCheck = (n = 3) => { ghostWait = Math.max(ghostWait, n); };
+function hiddenByPerson() {
+  if (S.pv || !human.visible) return false;
+  const b = visBox(product); if (b.isEmpty()) return false;
+  human.updateMatrixWorld(true); product.updateMatrixWorld(true); cam.updateMatrixWorld();
+  const pts = [], hm = [];
+  product.traverseVisible((m) => { if (!m.isMesh || !m.geometry || !m.geometry.attributes.position) return; const pos = m.geometry.attributes.position, step = Math.max(1, Math.floor(pos.count / 24)); for (let i = 0; i < pos.count; i += step) pts.push(new V3().fromBufferAttribute(pos, i).applyMatrix4(m.matrixWorld)); });
+  human.traverseVisible((m) => { if (m.isMesh) hm.push(m); });
+  const rc = new THREE.Raycaster(), every = Math.max(1, Math.floor(pts.length / 90));
+  let any = 0, blocked = 0;
+  for (let i = 0; i < pts.length; i += every) {
+    const p = pts[i], q = p.clone().project(cam); if (Math.abs(q.x) > 1 || Math.abs(q.y) > 1 || q.z > 1) continue; // off screen
+    rc.setFromCamera(new THREE.Vector2(q.x, q.y), cam);
+    const far = p.clone().sub(rc.ray.origin).dot(rc.ray.direction), hh = rc.intersectObjects(hm, false)[0];
+    any++; if (hh && hh.distance < far - 0.01) blocked++;
+  }
+  return any >= 6 && blocked / any > 0.6;
+}
+controlsP.addEventListener('end', () => queueGhostCheck(20)); controlsO.addEventListener('end', () => queueGhostCheck(20));
+const ZOOM_PULL = 0.45; // each click in moves the view this far toward the product
+/* how much of the screen the product (one earbud, for a pair) takes, 0–1 */
+function productShare() {
+  const u = holder.userData, b = u.focusPts ? new THREE.Box3().setFromCenterAndSize(zoomFocus(), new V3(0.04, 0.04, 0.04)) : visBox(product);
+  if (b.isEmpty()) return 1;
+  cam.updateMatrixWorld(); let x0 = 9, x1 = -9, y0 = 9, y1 = -9;
+  for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const p = new V3(x, y, z).project(cam); x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+  return Math.max(x1 - x0, y1 - y0) / 2;
+}
 function zoomView(f) {
+  queueGhostCheck();
+  if (f < 1 && productShare() < 0.12) f *= f; // a small thing far off: bigger steps until it fills a good part of the view
   if (isOrtho()) {
-    const z0 = orthoCam.zoom, z1 = clamp(z0 / f, 0.2, 15), k = z0 / z1, c = zoomFocus(), t = controlsO.target, mv = c.clone().add(t.clone().sub(c).multiplyScalar(k < 1 ? k * k : k)).sub(t);
+    const z0 = orthoCam.zoom, z1 = clamp(z0 / f, 0.2, 15), k = z0 / z1, c = zoomFocus(), t = controlsO.target, mv = c.clone().add(t.clone().sub(c).multiplyScalar(k < 1 ? 1 - ZOOM_PULL : k)).sub(t);
     orthoCam.zoom = z1; orthoCam.updateProjectionMatrix();
     t.add(mv); orthoCam.position.add(mv); controlsO.update();
     return;
   }
-  if (S.view === 'first') { perspCam.fov = clamp(perspCam.fov * f, 8, 100); perspCam.updateProjectionMatrix(); return; }
+  if (S.view === 'first') { // narrower, and the gaze turns toward the product (not when sitting on it, or wearing it)
+    perspCam.fov = clamp(perspCam.fov * f, 8, 100); perspCam.updateProjectionMatrix();
+    if (f < 1 && fpState.eye) {
+      const d = zoomFocus().sub(fpState.eye); if (d.lengthSq() < 0.01) return; d.normalize();
+      const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+      fpLook.yaw += wrap(Math.atan2(d.x, d.z) - fpState.yaw) * ZOOM_PULL;
+      fpLook.pitch += (Math.asin(clamp(d.y, -1, 1)) - fpState.pitch) * ZOOM_PULL;
+    }
+    return;
+  }
   const t = controlsP.target, v = perspCam.position.clone().sub(t);
-  if (f < 1) t.lerp(zoomFocus(), 1 - f); // in: the view slides toward the product as it closes in
+  if (f < 1) t.lerp(zoomFocus(), ZOOM_PULL); // in: the view slides toward the product as it closes in
   v.setLength(clamp(v.length() * f, controlsP.minDistance, controlsP.maxDistance));
   perspCam.position.copy(t).add(v);
   controlsP.update();
 }
 function resetView() { fpLook.yaw = 0; fpLook.pitch = 0; fitView(); }
+const fpState = { eye: null, yaw: 0, pitch: 0 }; // the first-person gaze as last drawn
 function firstPerson(pose) {
   const eye = human.localToWorld(pose.P.eye.clone()), P = dims();
   let look;
@@ -3671,6 +3782,7 @@ function firstPerson(pose) {
   else look = product.localToWorld(new V3(0, P.H / 2, -P.D / 2));
   const d0 = look.sub(eye).normalize(); // default gaze, then the viewer's drag on top
   const yaw = Math.atan2(d0.x, d0.z) + fpLook.yaw, pitch = clamp(Math.asin(clamp(d0.y, -1, 1)) * (S.place === 'hand' ? 1 : 0.85) + fpLook.pitch, -1.45, 1.45); // eyes drop more than the head
+  fpState.eye = eye.clone(); fpState.yaw = yaw; fpState.pitch = pitch;
   perspCam.position.copy(eye);
   perspCam.up.set(0, 1, 0);
   perspCam.lookAt(eye.clone().add(new V3(Math.cos(pitch) * Math.sin(yaw), Math.sin(pitch), Math.cos(pitch) * Math.cos(yaw))));
@@ -3687,7 +3799,7 @@ function updateOverlay(pose) {
     if (s.ok) el.style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) ${anchor}`;
   };
   const P = dims(), A = S.A;
-  put($('t-human'), human.localToWorld(pose.P.headCenter.clone().add(new V3(0, A.headH * 0.62, 0))), S.guides && S.view !== 'first', 'translate(-50%, calc(-100% - 4px))');
+  put($('t-human'), human.localToWorld(pose.P.headCenter.clone().add(new V3(0, A.headH * 0.62, 0))), S.guides && S.view !== 'first' && personVis() !== 'off', 'translate(-50%, calc(-100% - 4px))');
   const ru = rowUnits() && S.row.length > 1 ? S.row : null, ro = ru ? rowOffsets() : null;
   put($('t-prod'), product.localToWorld(new V3(ru ? (((rowSpan().right - rowSpan().left) / 2) / 1000) * S.scale : 0, ru ? (Math.max(...ru.map((u) => u.h)) / 1000) * S.scale : P.H, -P.D / 2)), S.guides, 'translate(-50%, calc(-100% - 8px))');
   for (let i = 0; i < 3; i++) { // each unit's name and size on its front, just under the top
@@ -3704,7 +3816,7 @@ function updateOverlay(pose) {
   else $('g-tg').hidden = true;
   for (const [id, y, label] of rows) {
     const el = $(id);
-    if (!lines) { el.hidden = true; continue; }
+    if (!lines || (id !== 'g-tg' && personVis() === 'off')) { el.hidden = true; continue; }
     const s = proj(id === 'g-tg' ? new V3(0, y, 0) : new V3(base.x, y, base.z));
     el.hidden = false;
     el.style.transform = `translateY(${s.y.toFixed(1)}px)`;
@@ -3782,7 +3894,7 @@ function setGhost(on) {
 
 const clock = new THREE.Clock();
 function tick() {
-  setGhost(ghostWanted()); syncGhostBtn();
+  const pv = personVis(); setGhost(pv === 'ghost'); human.visible = pv !== 'off'; syncGhostBtn();
   stepAnim(Math.min(clock.getDelta(), 0.05));
   human.updateMatrixWorld(true);
   const pose = poseNow();
@@ -3792,6 +3904,7 @@ function tick() {
   else (isOrtho() ? controlsO : controlsP).update();
   renderer.render(scene, cam);
   updateOverlay(pose);
+  if (ghostWait && !--ghostWait) S.autoGhost = hiddenByPerson();
 }
 
 /* the detail-size rows for the current chair, table or headphones: built when the kind changes, values kept in step on every refresh */
@@ -3846,9 +3959,10 @@ function buildChips() {
     b.addEventListener('click', () => setPersona(k));
     return b;
   }));
-  $('presetChips').replaceChildren(...PRESET_GROUPS.map(([[ko, en], keys]) => {
-    const g = document.createElement('div'), t = document.createElement('span'), row = document.createElement('div');
-    g.className = 'pgroup'; t.textContent = L(ko, en); row.className = 'chips';
+  const vf = $('variantField'); $('presetChips').after(vf); // kept aside while the groups are rebuilt
+  $('presetChips').replaceChildren(...PRESET_GROUPS.map(([[ko, en], keys], gi) => {
+    const g = document.createElement('div'), t = document.createElement('div'), row = document.createElement('div');
+    g.className = 'pgroup'; g.dataset.pg = gi; t.className = 'gname'; t.textContent = L(ko, en); row.className = 'chips';
     row.append(...keys.map((k) => {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'chip';
@@ -3859,11 +3973,19 @@ function buildChips() {
     g.append(t, row);
     return g;
   }));
+  syncExamples();
 }
+/* a product that comes in sizes: its size picker sits right under its group's chips */
+function syncExamples() {
+  const vf = $('variantField'), f = S.source === 'box' ? familyOf(S.pkey) : null;
+  const gi = f ? PRESET_GROUPS.findIndex(([, keys]) => keys.includes(`fam:${f}`)) : -1, g = gi >= 0 && $('presetChips').querySelector(`.pgroup[data-pg="${gi}"]`);
+  if (g && vf.parentNode !== g) g.append(vf);
+}
+$('toProducts').addEventListener('click', () => $('tb-product').click());
 buildChips();
 $('variantSeg').addEventListener('click', (e) => { const b = e.target.closest('[data-size]'); if (b) applyPreset(b.dataset.size); });
 $('hIn').addEventListener('input', (e) => { S.height = +e.target.value; refresh(); });
-$('wIn').addEventListener('input', (e) => { S.bmi = clamp(+e.target.value / (S.height / 100) ** 2, 11, 45); refresh(); });
+$('wIn').addEventListener('input', (e) => { const br = PERSONAS[S.persona].br; S.bmi = clamp(+e.target.value / (S.height / 100) ** 2, br[0], br[1]); refresh(); });
 const dimRound = (v) => (S.shape === 'ring' ? Math.round(v * 10) / 10 : Math.round(v)); // rings in 0.1 mm
 const dimMin = (key) => (S.shape === 'ring' ? (key === 'h' ? 0 : 0.5) : 1);
 for (const [id, key] of [['pW', 'w'], ['pD', 'd'], ['pH', 'h']]) {
@@ -3876,7 +3998,7 @@ $('sIn').addEventListener('input', (e) => { S.scale = +e.target.value / 100; ref
 $('cIn').addEventListener('input', (e) => { S.ctrl = +e.target.value; refresh(); });
 $('ringIn').addEventListener('input', (e) => { S.ringSize = +e.target.value; refresh({ rebuild: true }); });
 /* 형태 changes only the form of a plain mockup (box, cylinder, sphere); furniture, cups and rings come from the examples */
-segBind('shapeSeg', 'shape', (v) => { S.shape = v; S.style = null; if (v === 'cyl') S.d = S.w; S.screen = S.screen && v === 'box'; S.preset = null; refresh({ rebuild: true, refit: true }); });
+segBind('shapeSeg', 'shape', (v) => { S.shape = v; S.style = null; if (FORMS[v] && S.source === 'box') { [S.w, S.d, S.h] = FORMS[v]; S.base = { w: S.w, d: S.d, h: S.h }; S.ctrl = Math.round(S.h * 0.5); } if (roundBase(v)) S.d = S.w; S.screen = S.screen && v === 'box'; S.preset = null; refresh({ rebuild: true, refit: true }); }); // each form starts at its own size
 segBind('placeSeg', 'place', (v) => { const was = S.place; S.place = v; if (v === 'desk') deskSeat(); else if (was === 'desk' && S.preDesk) { S.posture = S.preDesk; S.preDesk = null; } refresh({ refit: true }); }); // leaving the desk gives back the posture from before it
 /* at the desk the person sits on an office chair: a seat height left at another seat's default becomes the office chair's */
 function deskSeat() { if (!S.preDesk) S.preDesk = S.posture; S.posture = 'sit'; if (S.seatMode === 'fixed' && Object.values(PROPS).some((p) => p.h === S.seatH)) S.seatH = PROPS.office.h; }
@@ -3911,9 +4033,9 @@ const setMsg = (id, text) => { const el = $(id); el.textContent = text; el.datas
 segBind('actSeg', 'act', (v) => { S.action = v; refresh(); });
 segBind('modeSeg', 'mode', (v) => { S.mode = v; refresh({ refit: true }); });
 for (const b of $('views').querySelectorAll('[data-view]')) b.addEventListener('click', () => { if (!b.disabled) setView(b.dataset.view); });
-for (const t of document.querySelectorAll('[role="tab"]')) {
+for (const t of document.querySelectorAll('[role="tab"][aria-controls]')) { // the panel tabs (the example tabs have their own)
   t.addEventListener('click', () => {
-    for (const u of document.querySelectorAll('[role="tab"]')) {
+    for (const u of document.querySelectorAll('[role="tab"][aria-controls]')) {
       const on = u === t;
       u.setAttribute('aria-selected', String(on));
       $(u.getAttribute('aria-controls')).hidden = !on;
@@ -3934,6 +4056,7 @@ function addUnit(left) {
 $('unitAddL').addEventListener('click', () => addUnit(true));
 function setSurf(v, key) { const k = key || S.place, lim = k === 'air' ? [0, 2000] : k === 'plinth' || k === 'plinthW' || k === 'plinthD' ? [50, 1500] : [400, 1200]; if (!['table', 'desk', 'counter', 'plinth', 'air', 'plinthW', 'plinthD'].includes(k) || !(v >= lim[0] && v <= lim[1])) return; S.surf = { ...(S.surf || {}), [k]: Math.round(v) }; refresh({ rebuild: true, refit: true }); }
 $('surfIn').addEventListener('input', (e) => setSurf(+e.target.value));
+$('surfReset').addEventListener('click', () => { if (!S.surf) return; const n = { ...S.surf }; delete n[S.place]; if (S.place === 'plinth') { delete n.plinthW; delete n.plinthD; } S.surf = n; refresh({ rebuild: true, refit: true }); }); // the table, desk, counter, plinth or height back to its default
 $('surfNum').addEventListener('change', (e) => setSurf(+e.target.value));
 for (const [id, k] of [['plW', 'plinthW'], ['plD', 'plinthD']]) { $(id).addEventListener('input', (e) => setSurf(+e.target.value, k)); $(id + 'n').addEventListener('change', (e) => setSurf(+e.target.value, k)); }
 /* detail sizes: a slider or a number sets one part; a button picks a material or armrests on/off */
@@ -3954,7 +4077,7 @@ $('unitSeg').addEventListener('click', (e) => {
   S.row = S.row.map((u, j) => (j === S.pick ? { ...u, w: S.w, d: S.d, h: S.h } : u)); S.pick = i; Object.assign(S, { w: S.row[i].w, d: S.row[i].d, h: S.row[i].h });
   refresh({ rebuild: true, refit: true });
 });
-$('btnGhost').addEventListener('click', () => { if (ghostWanted()) { S.seeThru = false; if (frontUse()) S.ghost = false; } else S.seeThru = true; syncUI(); }); // the person see-through in any view (on by itself in the front view while in use)
+$('btnGhost').addEventListener('click', () => { S.pv = { on: 'ghost', ghost: 'off', off: 'on' }[personVis()]; syncUI(); }); // person shown, see-through, hidden, in turn
 
 /* ---------- your own model ---------- */
 const gltfLoader = new GLTFLoader(), objLoader = new OBJLoader(), stlLoader = new STLLoader();
@@ -4139,12 +4262,12 @@ $('btnAI').addEventListener('click', async () => {
 /* ---------- size sliders ---------- */
 function setDimRaw(key, v) {
   S[key] = v;
-  if ((S.shape === 'cyl' || S.shape === 'cup') && (key === 'w' || key === 'd')) { S.w = v; S.d = v; }
+  if (roundBase() && (key === 'w' || key === 'd')) { S.w = v; S.d = v; }
   if (key === 'h' && S.shape !== 'ring') S.ctrl = Math.min(S.ctrl, v);
   S.preset = null;
 }
 for (const [id, key] of [['rW', 'w'], ['rD', 'd'], ['rH', 'h']]) $(id).addEventListener('input', (e) => { setDimRaw(key, dimRound(+e.target.value)); refresh({ rebuild: true }); });
-$('dimReset').addEventListener('click', () => { if (!S.base) return; Object.assign(S, S.base); if (S.shape === 'cyl' || S.shape === 'cup') S.d = S.w; S.ctrl = Math.min(S.ctrl, S.h); refresh({ rebuild: true }); });
+$('dimReset').addEventListener('click', () => { if (!S.base) return; Object.assign(S, S.base); if (roundBase()) S.d = S.w; S.ctrl = Math.min(S.ctrl, S.h); refresh({ rebuild: true }); });
 
 /* ---------- lens, posture, history, resets, 1-person look ---------- */
 for (const b of $('lensSeg').querySelectorAll('button')) b.addEventListener('click', () => {
