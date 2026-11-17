@@ -10,9 +10,9 @@
   --ink-2: #5c5f62;
   --line: #d0d1d1;
   --viewport: #dfe0e1;
-  --mat: #8d9195;
-  --mat-line: #e4e6e8;
-  --foam: #4b84c3;
+  --mat: #d2d3d4;
+  --mat-line: #9a9da1;
+  --foam: #723838;
   --body: #eeebe6;
   --surface: #efeee9;
   --tire: #2c2e30;
@@ -32,7 +32,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #131414; --panel: #18191a; --raise: #202122; --ink: #e6e7e8; --ink-2: #9a9da0; --line: #2e3031;
-    --viewport: #151617; --mat: #34373a; --mat-line: #8b9095; --foam: #5a92d2; --body: #d8d4cd; --surface: #3d3f41; --tire: #101112;
+    --viewport: #151617; --mat: #34373a; --mat-line: #8b9095; --foam: #9a4e4e; --body: #d8d4cd; --surface: #3d3f41; --tire: #101112;
     --accent: #ff7638; --on-accent: #1a120d; --accent-ink: #ff9a68;
     --good: #52c283; --warn: #e3ad42; --bad: #f2705c; --good-bg: #183026; --warn-bg: #362c13; --bad-bg: #3a1d18;
     color-scheme: dark;
@@ -40,7 +40,7 @@
 }
 :root[data-theme="dark"] {
   --bg: #131414; --panel: #18191a; --raise: #202122; --ink: #e6e7e8; --ink-2: #9a9da0; --line: #2e3031;
-  --viewport: #151617; --mat: #34373a; --mat-line: #8b9095; --foam: #5a92d2; --body: #d8d4cd; --surface: #3d3f41; --tire: #101112;
+  --viewport: #151617; --mat: #34373a; --mat-line: #8b9095; --foam: #9a4e4e; --body: #d8d4cd; --surface: #3d3f41; --tire: #101112;
   --accent: #ff7638; --on-accent: #1a120d; --accent-ink: #ff9a68;
   --good: #52c283; --warn: #e3ad42; --bad: #f2705c; --good-bg: #183026; --warn-bg: #362c13; --bad-bg: #3a1d18;
   color-scheme: dark;
@@ -76,6 +76,13 @@ button { cursor: pointer; }
 .chip:disabled { opacity: 0.4; cursor: default; border-color: var(--line); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .unit-acts { margin-top: 8px; }
+.det summary { cursor: pointer; list-style: revert; }
+.det .dimrows { margin-top: 8px; }
+.det .dimrow { grid-template-columns: minmax(0, 1fr) 76px; row-gap: 2px; }
+.det .dimrow label { grid-column: 1 / -1; font-size: 12px; color: var(--ink-2); }
+.det .dimrow input[type=number] { width: 100%; min-width: 0; box-sizing: border-box; }
+.det .dimrows, .det .dimrow { min-width: 0; max-width: 100%; }
+.det .seg { grid-column: 1 / -1; }
 .tag.unit { font-weight: 600; }
 .toast { pointer-events: auto; align-self: center; width: min(480px, 100%); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; background: var(--raise); border: 1px solid var(--line); border-radius: 8px; padding: 10px 10px 10px 12px; box-shadow: 0 6px 20px rgb(0 0 0 / 0.12); animation: rise 0.22s ease-out; }
 .toast .kicker { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; }
@@ -358,6 +365,11 @@ input:disabled { opacity: 0.55; }
         <p class="hint" id="dimStep"></p>
         <p class="hint" id="furnHint" hidden></p>
       </div>
+      <details class="field det" id="detField" hidden>
+        <summary class="label"><span data-en="Detail sizes">세부 치수</span> <span class="muted" id="detSub"></span></summary>
+        <div class="dimrows" id="detRows"></div>
+        <p class="hint" id="detHint"></p>
+      </details>
       <div class="field" id="unitField" hidden>
         <div class="label"><span data-en="Units side by side">유닛 이어 붙이기</span> <span class="muted" data-en="up to 3, 1 mm apart · the size is the picked unit's">최대 3개 · 1mm 간격 · 크기는 고른 유닛 것</span></div>
         <div class="seg" id="unitSeg" role="group" aria-label="사람이 쓸 유닛" data-en-aria="Unit the person uses"></div>
@@ -1483,42 +1495,74 @@ function stoolRing(H, W, y) {
   return { y: ry, r: 0.95 * R + (0.6 * R - 0.95 * R) * k + 0.014 };
 }
 /* seats: H is the top of the seat */
+/* ---------- detail sizes: each part of a chair, a table or headphones set on its own (mm, tilt in degrees) ----------
+   The H field stays the overall height (for an office chair: its seat, set by the gas lift between lowest and highest to suit the person).
+   Only the product being checked takes them; a desk under someone's laptop keeps the defaults. */
+const TOP_MAT = { wood: new THREE.MeshStandardMaterial({ color: 0x9c6b43, roughness: 0.72 }), glass: new THREE.MeshStandardMaterial({ color: 0xcfe2e4, roughness: 0.06, transparent: true, opacity: 0.4, depthWrite: false }), metal: new THREE.MeshStandardMaterial({ color: 0xa6abb0, roughness: 0.3, metalness: 0.85 }) };
+const MAT_ROW = { k: 'mat', ko: '재질', en: 'Material', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['glass', '유리', 'Glass'], ['metal', '철제', 'Metal']], def: 'solid' };
+const DR = (k, ko, en, min, max, def, step = 1, unit = 'mm') => ({ k, ko, en, min, max, def, step, unit });
+const TABLE_ROWS = (t, leg, legKo = '다리 굵기', legEn = 'Leg thickness') => [DR('topT', '상판 두께', 'Top thickness', 12, 80, t), DR('legT', legKo, legEn, 15, 120, leg), { ...MAT_ROW, ko: '상판 재질', en: 'Top material' }];
+const DETAIL = {
+  office: [DR('backH', '등받이 높이', 'Backrest height', 250, 850, 500, 5), DR('backW', '등받이 폭', 'Backrest width', 280, 650, () => Math.round(S.w * 0.9), 5), DR('backT', '등받이 기울기', 'Backrest tilt', 0, 30, 10, 1, '°'),
+    { k: 'arm', ko: '팔걸이', en: 'Armrests', opts: [[1, '있음', 'On'], [0, '없음', 'Off']], def: 1 }, DR('armH', '팔걸이 높이(좌면 위)', 'Armrest above seat', 120, 350, 235, 5), DR('armGap', '팔걸이 안쪽 간격', 'Between armrests', 380, 700, () => S.w - 15, 5), DR('armL', '팔걸이 길이', 'Armrest length', 120, 380, 250, 5),
+    DR('gasMin', '좌면 최저', 'Lowest seat', 330, 560, 400, 5), DR('gasMax', '좌면 최고', 'Highest seat', 380, 700, 520, 5), DR('wheel', '바퀴 지름', 'Caster diameter', 35, 80, 50, 5)],
+  chair: [DR('backH', '등받이 높이(좌면 위)', 'Backrest above seat', 150, 600, 400, 5), DR('seatT', '좌판 두께', 'Seat thickness', 12, 80, 30), DR('legT', '다리 굵기', 'Leg thickness', 15, 70, 32), { ...MAT_ROW, ko: '좌판 재질', en: 'Seat material' }],
+  pstool: [DR('seatT', '좌판 두께', 'Seat thickness', 15, 90, 40), DR('legT', '다리 굵기', 'Leg thickness', 15, 60, 28), { ...MAT_ROW, ko: '좌판 재질', en: 'Seat material' }],
+  stool: [DR('seatT', '좌판 두께', 'Seat thickness', 15, 90, 50), DR('legT', '다리 굵기', 'Leg thickness', 15, 60, 26), { ...MAT_ROW, ko: '좌판 재질', en: 'Seat material' }],
+  desk: TABLE_ROWS(25, 22, '옆판 두께', 'Side panel thickness'), standing: TABLE_ROWS(25, 70, '기둥 굵기', 'Column thickness'), dining: TABLE_ROWS(30, 55), bar: TABLE_ROWS(35, 44), coffee: TABLE_ROWS(30, 50, '발 굵기', 'Foot thickness'),
+  headphone: [DR('cupH', '귀마개 높이', 'Ear cushion height', 60, 130, () => Math.round(clamp(0.5 * S.h, 75, 115))), DR('cupL', '귀마개 폭', 'Ear cushion width', 50, 115, () => Math.round(clamp(0.88 * S.d, 58, 95))), DR('cupT', '귀마개 두께', 'Ear cup thickness', 12, 45, () => Math.round(clamp(0.13 * S.w, 17, 30))), DR('bandW', '머리띠 폭', 'Headband width', 12, 45, 29)],
+};
+function detKind() {
+  if (S.source !== 'box') return null;
+  if (S.shape === 'headphone') return 'headphone';
+  return isFurniture() && DETAIL[furn()] ? furn() : null;
+}
+const detSpec = () => DETAIL[detKind()] || [];
+function dv(k) { const sp = detSpec().find((x) => x.k === k); if (!sp) return undefined; const v = S.det && S.det[k] != null ? S.det[k] : sp.def; return typeof v === 'function' ? v() : v; }
+let DET_ON = false; // set while the product itself is being built
+const q = (k, d) => { if (!DET_ON) return d; const v = dv(k); return v == null ? d : v / 1000; };
+const topMat = (mat) => (DET_ON && dv('mat') && dv('mat') !== 'solid' ? TOP_MAT[dv('mat')] : mat);
 function seatGeo(group, kind, W, D, H, mat, ringY, frame = mats.frame) {
-  const K = kit(group, mat), X = kit(group, frame), cz = -D / 2;
+  const K = kit(group, mat), X = kit(group, frame), S2 = kit(group, topMat(mat)), cz = -D / 2;
   if (kind === 'stool') {
-    const R = W / 2, ring = stoolRing(H, W, ringY);
-    K.cyl(R, R * 0.96, 0.05, 0, H - 0.025, cz, 40);
+    const R = W / 2, ring = stoolRing(H, W, ringY), st = q('seatT', 0.05), lr = q('legT', 0.026) / 2;
+    S2.cyl(R, R * 0.96, st, 0, H - st / 2, cz, 40);
     for (let i = 0; i < 4; i++) {
       const a = Math.PI / 4 + (i * Math.PI) / 2, c = Math.cos(a), s = Math.sin(a);
-      K.rod(new V3(c * R * 0.6, H - 0.05, cz + s * R * 0.6), new V3(c * R * 0.95, 0, cz + s * R * 0.95), 0.013);
+      K.rod(new V3(c * R * 0.6, H - st, cz + s * R * 0.6), new V3(c * R * 0.95, 0, cz + s * R * 0.95), lr);
     }
     K.mesh(new THREE.TorusGeometry(ring.r, 0.009, 10, 48), 0, ring.y, cz).rotation.x = Math.PI / 2; // footrest ring
     return;
   }
   if (kind === 'office') {
+    const wr = q('wheel', 0.05) / 2, lift = wr * 2 - 0.05; // bigger casters raise the base, not the seat
     K.box(W, 0.075, D, 0, H - 0.0375, cz, 0, 0.03); // cushion
     X.box(W * 0.62, 0.03, D * 0.62, 0, H - 0.09, cz);
-    X.cyl(0.032, 0.032, 0.13, 0, 0.165, cz, 20); // gas lift
-    X.cyl(0.022, 0.022, Math.max(0.02, H - 0.335), 0, (H - 0.105 + 0.23) / 2, cz, 16);
-    X.cyl(0.045, 0.05, 0.05, 0, 0.1, cz, 20);
+    X.cyl(0.032, 0.032, 0.13, 0, 0.165 + lift, cz, 20); // gas lift
+    X.cyl(0.022, 0.022, Math.max(0.02, H - 0.335 - lift), 0, (H - 0.105 + 0.23 + lift) / 2, cz, 16);
+    X.cyl(0.045, 0.05, 0.05, 0, 0.1 + lift, cz, 20);
     for (let i = 0; i < 5; i++) { // five-star base on casters
-      const a = (i * 2 * Math.PI) / 5, e = new V3(0.3 * Math.sin(a), 0.06, cz + 0.3 * Math.cos(a));
-      X.rod(new V3(0, 0.095, cz), e, 0.017);
-      K.cyl(0.026, 0.026, 0.028, e.x, 0.028, e.z, 16).rotation.z = Math.PI / 2;
+      const a = (i * 2 * Math.PI) / 5, e = new V3(0.3 * Math.sin(a), 0.06 + lift, cz + 0.3 * Math.cos(a));
+      X.rod(new V3(0, 0.095 + lift, cz), e, 0.017);
+      K.cyl(wr, wr, 0.028, e.x, wr + 0.003, e.z, 20).rotation.z = Math.PI / 2;
     }
+    const bh = q('backH', 0.5), bw = q('backW', W * 0.9), bt = deg(DET_ON ? dv('backT') : 10), by = H + 0.11 + (bh / 2) * Math.cos(bt);
     X.rod(new V3(0, H - 0.09, -D + 0.06), new V3(0, H + 0.14, -D - 0.035), 0.018);
-    K.box(W * 0.9, 0.5, 0.06, 0, H + 0.36, -D - 0.06, deg(-10), 0.025); // backrest leaning back
-    for (const sx of [-1, 1]) {
-      X.rod(new V3(sx * W * 0.28, H - 0.09, cz - 0.02), new V3(sx * (W / 2 + 0.03), H - 0.09, cz - 0.02), 0.012);
-      X.rod(new V3(sx * (W / 2 + 0.03), H - 0.09, cz - 0.02), new V3(sx * (W / 2 + 0.03), H + 0.21, cz - 0.02), 0.013);
-      K.box(0.075, 0.028, 0.25, sx * (W / 2 + 0.03), H + 0.222, cz + 0.01, 0, 0.012); // armrest, top at H + 0.236
+    K.box(bw, bh, 0.06, 0, by, -D - 0.035 - (bh / 2) * Math.sin(bt), -bt, 0.025); // backrest leaning back
+    if (!DET_ON || dv('arm')) {
+      const ah = q('armH', 0.235), ax = (q('armGap', W - 0.015) + 0.075) / 2, al = q('armL', 0.25);
+      for (const sx of [-1, 1]) {
+        X.rod(new V3(sx * W * 0.28, H - 0.09, cz - 0.02), new V3(sx * ax, H - 0.09, cz - 0.02), 0.012);
+        X.rod(new V3(sx * ax, H - 0.09, cz - 0.02), new V3(sx * ax, H + ah - 0.026, cz - 0.02), 0.013);
+        K.box(0.075, 0.028, al, sx * ax, H + ah - 0.014, cz + 0.01, 0, 0.012); // armrest, its top armH above the seat
+      }
     }
     return;
   }
   if (kind === 'pstool') { // plain stool: round seat on four legs with a low ring, no backrest
-    const R = W / 2, ry = Math.min(0.2, H * 0.4), rr = R * 0.85 + (R * 0.62 - R * 0.85) * (ry / Math.max(H - 0.04, 0.1)) + 0.01;
-    K.cyl(R, R * 0.97, 0.04, 0, H - 0.02, cz, 40);
-    for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + (i * Math.PI) / 2, c = Math.cos(a), s = Math.sin(a); K.rod(new V3(c * R * 0.62, H - 0.04, cz + s * R * 0.62), new V3(c * R * 0.85, 0, cz + s * R * 0.85), 0.014); }
+    const R = W / 2, st = q('seatT', 0.04), ry = Math.min(0.2, H * 0.4), rr = R * 0.85 + (R * 0.62 - R * 0.85) * (ry / Math.max(H - st, 0.1)) + 0.01;
+    S2.cyl(R, R * 0.97, st, 0, H - st / 2, cz, 40);
+    for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + (i * Math.PI) / 2, c = Math.cos(a), s = Math.sin(a); K.rod(new V3(c * R * 0.62, H - st, cz + s * R * 0.62), new V3(c * R * 0.85, 0, cz + s * R * 0.85), q('legT', 0.028) / 2); }
     K.mesh(new THREE.TorusGeometry(rr, 0.008, 8, 40), 0, ry, cz).rotation.x = Math.PI / 2;
     return;
   }
@@ -1550,25 +1594,26 @@ function seatGeo(group, kind, W, D, H, mat, ringY, frame = mats.frame) {
     K.box(W, 0.52, 0.12, 0, H + 0.14, -D - bk + 0.06, 0, 0.03);
     return;
   }
-  const t = 0.03, lg = 0.032, ins = 0.03; // plain chair
-  K.box(W, t, D, 0, H - t / 2, cz, 0, 0.008);
+  const t = q('seatT', 0.03), lg = q('legT', 0.032), ins = Math.max(0.03, lg / 2 + 0.012), bh = q('backH', 0.4); // plain chair
+  S2.box(W, t, D, 0, H - t / 2, cz, 0, Math.min(0.008, t / 3));
   for (const sx of [-1, 1]) {
     for (const sz of [0, 1]) K.box(lg, H - t, lg, sx * (W / 2 - ins), (H - t) / 2, -ins - sz * (D - 2 * ins));
-    K.box(lg, 0.42, lg, sx * (W / 2 - ins), H + 0.21, -D + ins);
+    K.box(lg, bh + 0.02, lg, sx * (W / 2 - ins), H + (bh + 0.02) / 2, -D + ins);
   }
-  K.box(W, 0.2, 0.022, 0, H + 0.3, -D + 0.012, deg(-6));
+  K.box(W, Math.min(0.2, bh * 0.5), 0.022, 0, H + bh - Math.min(0.1, bh * 0.25), -D + 0.012, deg(-6));
 }
 /* tables: H is the top (the counter for a sink, the lowered top for a lift-up table) */
 const SINK = (W, D) => { const bw = Math.min(0.76, W - 0.2), bd = Math.min(0.44, D - 0.15); return { bw, bd, fr: 0.07, depth: 0.2, bz: -(0.07 + bd / 2) }; };
 function tableGeo(group, style, W, D, H, mat, keys = true) {
   const K = kit(group, mat), X = kit(group, mats.frame), T = kit(group, mats.tire);
+  const TP = kit(group, topMat(mat));
   if (style === 'desk' || style === 'standing') {
-    const t = 0.025, pt = 0.022;
-    K.box(W, t, D, 0, H - t / 2, -D / 2, 0, 0.004);
+    const t = q('topT', 0.025), pt = q('legT', 0.022), cw = q('legT', 0.07);
+    TP.box(W, t, D, 0, H - t / 2, -D / 2, 0, Math.min(0.004, t / 3));
     if (style === 'standing') { // electric sit-stand frame: telescopic columns on T-feet
       for (const sx of [-1, 1]) {
         const x = sx * (W / 2 - 0.12), colH = Math.max(0.05, H - t - 0.055);
-        X.box(0.07, colH, 0.05, x, 0.03 + colH / 2, -D / 2, 0, 0.004);
+        X.box(cw, colH, cw * 0.72, x, 0.03 + colH / 2, -D / 2, 0, 0.004);
         X.box(0.06, 0.03, D - 0.08, x, 0.015, -D / 2, 0, 0.008);
         X.box(0.05, 0.025, D - 0.12, x, H - t - 0.0125, -D / 2);
       }
@@ -1590,8 +1635,8 @@ function tableGeo(group, style, W, D, H, mat, keys = true) {
     return;
   }
   if (style === 'dining') {
-    const t = 0.03, lg = 0.055, ins = 0.05, ap = 0.08, lx = W / 2 - ins - lg / 2, z0 = -(ins + lg / 2), z1 = -D + ins + lg / 2;
-    K.box(W, t, D, 0, H - t / 2, -D / 2, 0, 0.006);
+    const t = q('topT', 0.03), lg = q('legT', 0.055), ins = 0.05, ap = 0.08, lx = W / 2 - ins - lg / 2, z0 = -(ins + lg / 2), z1 = -D + ins + lg / 2;
+    TP.box(W, t, D, 0, H - t / 2, -D / 2, 0, Math.min(0.006, t / 3));
     for (const sx of [-1, 1]) for (const z of [z0, z1]) K.box(lg, H - t, lg, sx * lx, (H - t) / 2, z);
     for (const z of [z0, z1]) K.box(2 * lx, ap, 0.02, 0, H - t - ap / 2, z);
     for (const sx of [-1, 1]) K.box(0.02, ap, z0 - z1, sx * lx, H - t - ap / 2, (z0 + z1) / 2);
@@ -1599,25 +1644,25 @@ function tableGeo(group, style, W, D, H, mat, keys = true) {
     return;
   }
   if (style === 'bar') {
-    const t = 0.035, ix = W / 2 - 0.07, z0 = -0.07, z1 = -D + 0.07;
-    K.box(W, t, D, 0, H - t / 2, -D / 2, 0, 0.006);
-    for (const sx of [-1, 1]) for (const z of [z0, z1]) K.rod(new V3(sx * ix, 0, z), new V3(sx * ix, H - t, z), 0.022);
+    const t = q('topT', 0.035), ix = W / 2 - 0.07, z0 = -0.07, z1 = -D + 0.07;
+    TP.box(W, t, D, 0, H - t / 2, -D / 2, 0, Math.min(0.006, t / 3));
+    for (const sx of [-1, 1]) for (const z of [z0, z1]) K.rod(new V3(sx * ix, 0, z), new V3(sx * ix, H - t, z), q('legT', 0.044) / 2);
     for (const z of [z0, z1]) K.rod(new V3(-ix, 0.3, z), new V3(ix, 0.3, z), 0.014); // foot bars
     for (const sx of [-1, 1]) K.rod(new V3(sx * ix, 0.3, z0), new V3(sx * ix, 0.3, z1), 0.014);
     return;
   }
   if (style === 'coffee') {
-    const t = 0.03, legH = 0.05, pw = W * 0.62, pd = D * 0.88, side = (W - pw) / 2, edge = (D - pd) / 2, top0 = H - t, fl = Math.max(legH + 0.03, top0 - 0.15);
+    const t = q('topT', 0.03), legH = 0.05, ft = q('legT', 0.05), pw = W * 0.62, pd = D * 0.88, side = (W - pw) / 2, edge = (D - pd) / 2, top0 = H - t, fl = Math.max(legH + 0.03, top0 - 0.15);
     K.box(W, fl - legH, D, 0, legH + (fl - legH) / 2, -D / 2, 0, 0.006); // body under the storage well
     for (const sx of [-1, 1]) K.box(side, top0 - fl, D, sx * (W / 2 - side / 2), fl + (top0 - fl) / 2, -D / 2);
     for (const z of [-edge / 2, -D + edge / 2]) K.box(pw, top0 - fl, edge, 0, fl + (top0 - fl) / 2, z);
     T.box(pw - 0.004, 0.006, pd - 0.004, 0, fl + 0.003, -D / 2); // the well's floor, 15 cm down
-    for (const sx of [-1, 1]) for (const sz of [0, 1]) K.box(0.05, legH, 0.05, sx * (W / 2 - 0.05), legH / 2, -0.05 - sz * (D - 0.1));
-    for (const sx of [-1, 1]) K.box(side, t, D, sx * (W / 2 - side / 2), H - t / 2, -D / 2);
-    for (const z of [-edge / 2, -D + edge / 2]) K.box(pw, t, edge, 0, H - t / 2, z);
+    for (const sx of [-1, 1]) for (const sz of [0, 1]) K.box(ft, legH, ft, sx * (W / 2 - 0.05), legH / 2, -0.05 - sz * (D - 0.1));
+    for (const sx of [-1, 1]) TP.box(side, t, D, sx * (W / 2 - side / 2), H - t / 2, -D / 2);
+    for (const z of [-edge / 2, -D + edge / 2]) TP.box(pw, t, edge, 0, H - t / 2, z);
     const lp = new THREE.Group();
     group.add(lp);
-    kit(lp, mat).box(pw - 0.006, t, pd - 0.006, 0, 0, 0, 0, 0.004);
+    kit(lp, topMat(mat)).box(pw - 0.006, t, pd - 0.006, 0, 0, 0, 0, Math.min(0.004, t / 3));
     const zb2 = Math.min(0, D / 2 - LIFT.L - 0.03), arms = [];
     for (const sx of [-1, 1]) for (const zb of [zb2 - 0.15, zb2]) { // two parallel arms a side keep the top level
       const B0 = new V3(sx * (pw / 2 - 0.05), H - t - 0.03, -D / 2 + zb);
@@ -1805,7 +1850,7 @@ function sweepGeo(path, prof, scale = () => 1) {
    W sets how thick the cups are, D their front-to-back length, H their height (half of H) and the band-height check */
 function headphoneGeo(group, W, D, H) {
   const A = S.A, hh = A.headH, ear = EAR.clone().multiplyScalar(hh), own = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; m.userData.own = true; group.add(m); return m; };
-  const cupH = clamp(0.5 * H, 0.075, 0.115), cupL = clamp(0.88 * D, 0.058, 0.095), shell = clamp(0.13 * W, 0.017, 0.03), pad = 0.017;
+  const cupH = q('cupH', clamp(0.5 * H, 0.075, 0.115)), cupL = q('cupL', clamp(0.88 * D, 0.058, 0.095)), shell = q('cupT', clamp(0.13 * W, 0.017, 0.03)), pad = 0.017, bandW = q('bandW', 0.029);
   const sideX = eggRay(1, 0, 0) * hh * 0.985, tiltZ = deg(10), tiltY = deg(5); // the cushion rests on the side of the head, the cups lean in at the top and the front
   const ends = [];
   for (const s of [-1, 1]) {
@@ -1830,13 +1875,13 @@ function headphoneGeo(group, W, D, H) {
     const r = headR(phi) + off; path.push(new V3(C0.x + r * Math.cos(phi), C0.y + r * Math.sin(phi), ear.z));
   }
   const cut = Math.round(N * 0.12); // the outer twelfth at each end is the slider, slimmer and smoother than the band
-  own(sweepGeo(path.slice(cut - 1, N - cut + 2), rrectProfile(bt / 2, 0.0145, 0.0034), (f) => 1 - 0.06 * smooth01((Math.abs(f - 0.5) / 0.5 - 0.9) / 0.1)), mats.foam);
+  own(sweepGeo(path.slice(cut - 1, N - cut + 2), rrectProfile(bt / 2, bandW / 2, 0.0034), (f) => 1 - 0.06 * smooth01((Math.abs(f - 0.5) / 0.5 - 0.9) / 0.1)), mats.foam);
   for (const [i0, i1] of [[0, cut + 1], [N - cut - 1, N]]) own(sweepGeo(path.slice(i0, i1 + 1), rrectProfile(0.0032, 0.0105, 0.0024)), mats.trim);
   const padPath = []; // the pad under the middle of the band
   for (let i = Math.round(N * 0.24); i <= Math.round(N * 0.76); i++) { const t = path[i + 1].clone().sub(path[i - 1]).normalize(); padPath.push(path[i].clone().add(new V3(t.y, -t.x, 0).multiplyScalar(bt / 2 + pt / 2 - 0.0006))); }
-  own(sweepGeo(padPath, rrectProfile(pt / 2, 0.0125, 0.0034), (f) => 0.6 + 0.4 * smooth01(Math.min(f, 1 - f) / 0.14)), mats.pad);
+  own(sweepGeo(padPath, rrectProfile(pt / 2, bandW * 0.43, 0.0034), (f) => 0.6 + 0.4 * smooth01(Math.min(f, 1 - f) / 0.14)), mats.pad);
   const yTop = path[N / 2].y + bt / 2;
-  group.userData.wear = { cupH, need: yTop - (ear.y - cupH / 2), have: H }; // band height the head needs vs the headphones' height
+  group.userData.wear = { hole: cupH * 0.64, cupH, need: yTop - (ear.y - cupH / 2), have: H }; // band height the head needs vs the headphones' height
 }
 /* wireless earbuds in both ears: the body sits in the concha with its soft tip in the ear canal, a short stem runs down toward the earlobe.
    W = front to back, D = across (body and tip), H = top of the body to the end of the stem (typical: 19 x 27 x 31 mm) */
@@ -2095,14 +2140,15 @@ function buildProduct() {
   const W = S.w / 1000, D = (S.shape === 'cyl' || S.shape === 'cup' ? S.w : S.d) / 1000, Hh = S.h / 1000;
   if (S.source === 'model' && modelInner) holder.add(modelInner);
   else if (isFurniture()) {
-    (S.shape === 'chair' ? seatGeo : tableGeo)(holder, furn(), W, D, Hh, mats.foam);
+    DET_ON = true;
+    try { (S.shape === 'chair' ? seatGeo : tableGeo)(holder, furn(), W, D, Hh, mats.foam); } finally { DET_ON = false; }
     const r = rowUnits();
     if (r && r.length > 1) { const off = rowOffsets(); r.forEach((u, i) => { if (i === S.pick) return; const g = new THREE.Group(); g.position.x = off[i] / 1000; g.userData.own = true; holder.add(g); tableGeo(g, 'drawer', u.w / 1000, u.d / 1000, u.h / 1000, mats.foam); }); }
   }
   else if (S.shape === 'cup') cupGeo(holder, S.style, W, Hh);
   else if (S.shape === 'ring') ringGeo(holder, S.w, S.d, S.h, S.ringSize);
   else if (S.shape === 'laptop') laptopGeo(holder, W, D, Hh);
-  else if (S.shape === 'headphone') headphoneGeo(holder, W, D, Hh);
+  else if (S.shape === 'headphone') { DET_ON = true; try { headphoneGeo(holder, W, D, Hh); } finally { DET_ON = false; } }
   else if (S.shape === 'earbud') earbudGeo(holder, S.w, S.d, S.h);
   else if (S.screen && S.shape === 'box') phoneGeo(holder, W, D, Hh);
   else if (S.look === 'case' && S.shape === 'box') caseGeo(holder, W, D, Hh);
@@ -2646,6 +2692,8 @@ function evaluate() {
     if (S.shape === 'headphone' && w) {
       const over = w.cupH >= earLen + 0.01, gap = w.have - w.need;
       add(L('이어컵', 'Ear cups'), over ? L(`높이 ${cm1(w.cupH)}cm · 귀(약 ${cm1(earLen)}cm)를 감싸요`, `${cm1(w.cupH)} cm tall · covers the ear (about ${cm1(earLen)} cm)`) : L(`높이 ${cm1(w.cupH)}cm · 귀보다 작아 귀 위에 얹혀요`, `${cm1(w.cupH)} cm tall · smaller than the ear, it sits on it`), over ? 'good' : 'info');
+      const hole = w.hole, hlv = hole >= earLen + 0.004 ? 'good' : hole >= earLen - 0.008 ? 'warn' : 'bad';
+      add(L('귀 구멍', 'Ear opening'), L(`쿠션 안쪽 ${cm1(hole)}cm · 귀 ${cm1(earLen)}cm`, `${cm1(hole)} cm inside the cushion · ear ${cm1(earLen)} cm`) + (hlv === 'good' ? L(' · 귀가 눌리지 않고 들어가요', ', the ear fits without pressure') : hlv === 'warn' ? L(' · 빠듯해 귀 끝이 쿠션에 닿아요', ', tight, the ear touches the cushion') : L(' · 작아서 귀가 눌려요', ', too small, the ear is pressed')), hlv);
       add(L('헤드밴드', 'Headband'), Math.abs(gap) <= 0.025 ? L(`높이 ${cm1(w.have)}cm · 이 머리에 맞아요`, `${cm1(w.have)} cm tall · fits this head`) : gap > 0 ? L(`${cm1(gap)}cm 남아 밴드를 줄여 써요`, `${cm1(gap)} cm to spare, shorten the band`) : L(`${cm1(-gap)}cm 모자라 밴드를 늘려야 해요`, `${cm1(-gap)} cm short, extend the band`), Math.abs(gap) <= 0.025 ? 'good' : gap > 0.05 ? 'warn' : gap < 0 ? 'warn' : 'info');
       add(L('머리 폭', 'Head width'), L(`머리 폭 ${cm1(headW)}cm · 헤드폰 폭 ${cm1(P.W)}cm`, `Head ${cm1(headW)} cm wide · headphones ${cm1(P.W)} cm`), 'info');
     } else add(L('착용', 'Worn'), L(`귀에 꽂아요 · 본체 ${mmi(P.W)}×${mmi(P.D)}×${mmi(P.H)}mm · 귀 길이(약 ${cm1(earLen)}cm)의 ${Math.round((P.H / earLen) * 100)}%`, `In the ear · ${mmi(P.W)}×${mmi(P.D)}×${mmi(P.H)} mm · ${Math.round((P.H / earLen) * 100)}% of the ear's length (about ${cm1(earLen)} cm)`), 'info');
@@ -2879,7 +2927,7 @@ function furnitureChecks(out, add, push, b0) {
     if (deskLike(st)) {
       elbowCheck(top);
       if (st === 'standing') { const lo = 0.62, hi = 1.27, fit = clamp(Lm.elY - 0.02, lo, hi); add(L('높이 조절', 'Height range'), L(`62~127cm 전동 조절 · 이 사람은 ${A.seated ? '앉아서' : '서서'} ${cmi(fit)}cm가 맞아요`, `Motorized 62–127 cm · ${cmi(fit)} cm suits this person ${A.seated ? 'seated' : 'standing'}`), 'info'); }
-      if (A.seated) kneeCheck(top - 0.025 * S.scale);
+      if (A.seated) kneeCheck(top - (dv('topT') / 1000) * S.scale);
       else if (st === 'desk') add(L('자세', 'Posture'), L('서서 쓰는 높이로 점검했어요. 서서 일하려면 스탠딩 책상을 골라 보세요.', 'Checked standing. For standing work, try the standing desk.'), 'info');
       const md = top + 0.42 * S.scale - Lm.eyeY, mlv = md > 0.02 || md < -0.15 ? 'warn' : 'good';
       add(L('모니터', 'Monitor'), md > 0.02 ? L(`윗선이 눈보다 ${cmi(md)}cm 높아 고개를 들어요`, `Top edge ${cmi(md)} cm above the eyes, head tilts up`) : md < -0.15 ? L(`윗선이 눈보다 ${cmi(-md)}cm 낮아 고개를 숙여요`, `Top edge ${cmi(-md)} cm below the eyes, head tilts down`) : L(`24인치 윗선이 눈높이보다 ${cmi(-md)}cm 아래 · 보기 편해요`, `24-inch top edge ${cmi(-md)} cm below eye level, easy to view`), mlv);
@@ -2890,7 +2938,7 @@ function furnitureChecks(out, add, push, b0) {
         const sitH = b0.headCenter.y + 0.5 * A.headH - A.seatTop, ideal = sitH / 3, gap = top - A.seatTop, d = gap - ideal, lv = Math.abs(d) <= 0.03 ? 'good' : 'warn';
         add(L('식탁 높이', 'Table height'), L(`좌면~상판 ${cmi(gap)}cm · 앉은키의 1/3은 ${cmi(ideal)}cm`, `Seat to top ${cmi(gap)} cm · a third of sitting height is ${cmi(ideal)} cm`) + (lv === 'good' ? L(' · 알맞아요', ', about right') : ` · ${above(d)}`), lv);
         if (lv !== 'good') push(`dine-h:${S.persona}:${mmi(top)}`, 'warn', L(`상판을 ${mmi(A.seatTop + ideal)}mm로 하면 좌면과의 차이(차척)가 앉은키의 1/3이 돼요.`, `At ${mmi(A.seatTop + ideal)} mm the seat-to-top gap is a third of the sitting height.`), ok, () => setDimEffective('h', mmi(A.seatTop + ideal)));
-        kneeCheck(top - 0.11 * S.scale);
+        kneeCheck(top - (dv('topT') / 1000 + 0.08) * S.scale);
         ownSeat();
       } else elbowCheck(top);
       const n = P.W >= 1.8 ? 6 : P.W >= 1.2 ? 4 : 2, per = P.W / (n / 2);
@@ -2900,7 +2948,7 @@ function furnitureChecks(out, add, push, b0) {
       if (A.seated) {
         add(L('상판 높이', 'Top height'), `${cmi(top)}cm · ${L('앉은 팔꿈치', 'seated elbow')} ${cmi(Lm.elY)}cm · ${above(d)}`, d > 0.08 ? 'bad' : d > 0.05 || d < -0.04 ? 'warn' : 'good');
         if (A.chair === 'prop') { const gap = top - A.seatTop; add(L('의자 차이', 'Stool gap'), L(`상판과 바 의자 차이 ${cmi(gap)}cm · 보통 25~35cm`, `Top to stool ${cmi(gap)} cm, usually 25–35 cm`), gap < 0.22 || gap > 0.38 ? 'warn' : 'good'); }
-        kneeCheck(top - 0.035 * S.scale);
+        kneeCheck(top - (dv('topT') / 1000) * S.scale);
         ownSeat();
       } else add(L('상판 높이', 'Top height'), `${cmi(top)}cm · ${L('선 팔꿈치', 'standing elbow')} ${cmi(Lm.elY)}cm · ${d <= 0.06 && d >= -0.12 ? L('서서 기대기 좋아요', 'good for leaning on') : above(d)}`, d <= 0.06 && d >= -0.12 ? 'good' : 'warn');
     } else if (st === 'coffee') {
@@ -2941,12 +2989,22 @@ function furnitureChecks(out, add, push, b0) {
       const ring = stoolRing(S.h / 1000, S.w / 1000), ry = ring.y * S.scale, dd = seat - ry - pop;
       add(L('좌면 높이', 'Seat height'), L(`${cmi(seat)}cm · 바 테이블(102~107cm)엔 71~84cm, 아일랜드 식탁(86~91cm)엔 61~69cm가 맞아요`, `${cmi(seat)} cm · bar tables (102–107 cm) take 71–84 cm, counters (86–91 cm) 61–69 cm`), 'info');
       add(L('발받침', 'Footrest'), `${cmi(ry)}cm · ` + (dd > 0.06 ? L(`오금보다 ${cmi(dd)}cm 멀어 발끝만 닿아요`, `${cmi(dd)} cm too far down, only the toes reach`) : dd < -0.1 ? L('가까워서 무릎이 많이 굽어요', 'close, so the knees bend a lot') : L('발을 편하게 올려요', 'feet rest comfortably')), dd > 0.06 ? 'warn' : dd < -0.1 ? 'info' : 'good');
-    } else if (st === 'office') {
-      const lo = seat - 0.04, hi = seat + 0.06, fits = pop >= lo - 0.01 && pop <= hi + 0.01;
-      add(L('좌면 높이', 'Seat height'), L(`${cmi(seat)}cm (조절 ${cmi(lo)}~${cmi(hi)}cm) · 오금 높이 ${cmi(pop)}cm`, `${cmi(seat)} cm (adjusts ${cmi(lo)}–${cmi(hi)} cm) · knee crease ${cmi(pop)} cm`)
-        + (pop < lo - 0.01 ? L(` · 가장 낮춰도 ${cmi(lo - pop)}cm 높아 발받침이 필요해요`, `, ${cmi(lo - pop)} cm high even at its lowest — needs a footrest`) : pop > hi + 0.01 ? L(` · 가장 높여도 ${cmi(pop - hi)}cm 낮아요`, `, ${cmi(pop - hi)} cm low even at its highest`) : L(' · 조절해서 맞출 수 있어요', ', adjustable to fit')), fits ? 'good' : 'warn');
-      const arm = seat + 0.236 * S.scale, ad = arm - Lm.elY;
-      add(L('팔걸이', 'Armrests'), `${cmi(arm)}cm · ` + (Math.abs(ad) <= 0.03 ? L('앉은 팔꿈치 높이와 맞아요', 'level with the seated elbow') : ad > 0 ? L(`앉은 팔꿈치보다 ${cmi(ad)}cm 높아 어깨가 들려요`, `${cmi(ad)} cm above the seated elbow, lifts the shoulders`) : L(`앉은 팔꿈치보다 ${cmi(-ad)}cm 낮아요`, `${cmi(-ad)} cm below the seated elbow`)), Math.abs(ad) <= 0.03 ? 'good' : ad > 0.06 ? 'warn' : 'info');
+    } else if (st === 'office') { // the gas lift's range, the armrests and the backrest against this person
+      const k = S.scale, lo = (dv('gasMin') / 1000) * k, hi = (Math.max(dv('gasMax'), dv('gasMin')) / 1000) * k, want = pop + 0.01;
+      add(L('좌면 높이', 'Seat height'), L(`${cmi(seat)}cm (가스 실린더 ${cmi(lo)}~${cmi(hi)}cm) · 오금 높이 ${cmi(pop)}cm`, `${cmi(seat)} cm (gas lift ${cmi(lo)}–${cmi(hi)} cm) · knee crease ${cmi(pop)} cm`)
+        + (want < lo - 0.005 ? L(` · 가장 낮춰도 ${cmi(lo - want)}cm 높아 발받침이 필요해요`, `, ${cmi(lo - want)} cm high even at its lowest — needs a footrest`) : want > hi + 0.005 ? L(` · 가장 높여도 ${cmi(want - hi)}cm 낮아요`, `, ${cmi(want - hi)} cm low even at its highest`) : L(' · 이 사람에게 맞춰 조절했어요', ' · set to suit this person')),
+        want < lo - 0.005 ? (want < lo - 0.05 ? 'bad' : 'warn') : want > hi + 0.005 ? 'warn' : 'good');
+      if (want < lo - 0.005) push(`gas-lo:${S.persona}:${dv('gasMin')}`, 'warn', L(`좌면 최저를 ${dv('gasMin')}→${Math.round((want / k) * 200) * 5}mm로 낮추면 ${who} 발이 바닥에 닿아요.`, `A ${Math.round((want / k) * 200) * 5} mm lowest seat (now ${dv('gasMin')}) puts this ${whoEn}'s feet on the floor.`), ok, () => { S.det = { ...S.det, gasMin: Math.round((want / k) * 200) * 5 }; });
+      if (want > hi + 0.005) push(`gas-hi:${S.persona}:${dv('gasMax')}`, 'warn', L(`좌면 최고를 ${dv('gasMax')}→${Math.round((want / k) * 200) * 5}mm로 올리면 ${who}에게 맞아요.`, `A ${Math.round((want / k) * 200) * 5} mm highest seat (now ${dv('gasMax')}) suits this ${whoEn}.`), ok, () => { S.det = { ...S.det, gasMax: Math.round((want / k) * 200) * 5 }; });
+      if (dv('arm')) {
+        const arm = seat + (dv('armH') / 1000) * k, ad = arm - Lm.elY, alv = Math.abs(ad) <= 0.03 ? 'good' : Math.abs(ad) <= 0.06 ? 'warn' : 'bad';
+        add(L('팔걸이 높이', 'Armrest height'), `${cmi(arm)}cm · ` + (alv === 'good' ? L('앉은 팔꿈치 높이와 맞아요', 'level with the seated elbow') : ad > 0 ? L(`앉은 팔꿈치보다 ${cmi(ad)}cm 높아 어깨가 들려요`, `${cmi(ad)} cm above the seated elbow, lifts the shoulders`) : L(`앉은 팔꿈치보다 ${cmi(-ad)}cm 낮아 팔이 안 닿아요`, `${cmi(-ad)} cm below the seated elbow, the arms don't rest on it`)), alv);
+        if (alv !== 'good') { const v = clamp(Math.round(((Lm.elY - seat) / k) * 200) * 5, 120, 350); push(`arm-h:${S.persona}:${dv('armH')}`, alv, L(`팔걸이를 좌면 위 ${dv('armH')}→${v}mm로 하면 ${who} 팔꿈치가 편히 놓여요.`, `Armrests ${v} mm above the seat (now ${dv('armH')}) rest this ${whoEn}'s elbows.`), ok, () => { S.det = { ...S.det, armH: v }; }); }
+        const gap = (dv('armGap') / 1000) * k, hipW = A.hipW * 1.1, gd = gap - hipW, glv = gd < 0 ? 'bad' : gd < 0.04 ? 'warn' : gap - A.shoulderHalf * 2 > 0.12 ? 'info' : 'good';
+        add(L('팔걸이 간격', 'Between armrests'), `${cmi(gap)}cm · ` + (gd < 0 ? L(`앉은 엉덩이 폭(${cmi(hipW)}cm)보다 ${cmi(-gd)}cm 좁아 끼어요`, `${cmi(-gd)} cm narrower than the seated hips (${cmi(hipW)} cm), a squeeze`) : gd < 0.04 ? L(`엉덩이 폭에 꼭 맞아 빠듯해요`, 'a tight fit at the hips') : glv === 'info' ? L('넓어서 팔을 옆으로 벌려야 닿아요', 'wide, the arms reach out to it') : L('엉덩이 폭보다 넉넉하고 팔이 편하게 닿아요', 'clear of the hips, the arms rest easily')), glv);
+      } else add(L('팔걸이', 'Armrests'), L('없음 · 책상에 가까이 붙일 수 있어요', 'none · slides close to a desk'), 'info');
+      const bt = deg(dv('backT')), backTop = seat + 0.11 * k + (dv('backH') / 1000) * k * Math.cos(bt), shY = Lm.shY, blade = shY - 0.08, bd = backTop - blade;
+      add(L('등받이', 'Backrest'), `${L('윗끝', 'top')} ${cmi(backTop)}cm · ${L('기울기', 'tilt')} ${dv('backT')}° · ` + (bd < -0.12 ? L('허리만 받쳐요 · 날개뼈 아래에서 끝나요', 'supports the lower back only, ends below the shoulder blades') : bd > 0.12 ? L('어깨 위까지 올라와 머리받침 높이예요', 'rises past the shoulders, headrest height') : L('날개뼈까지 받쳐요', 'supports up to the shoulder blades')), bd < -0.12 ? 'warn' : 'good');
     } else if (st === 'beanbag') {
       add(L('앉는 높이', 'Seat height'), L(`${cmi(seat)}cm · 오금 높이 ${cmi(pop)}cm보다 낮아 무릎이 올라와요 · 기대 앉는 자세예요`, `${cmi(seat)} cm · below the knee crease (${cmi(pop)} cm), knees up — a lounging posture`), 'info');
       if (p.kind === 'elder') add(L('일어나기', 'Getting up'), L('낮고 푹 꺼져서 노인은 일어나기 어려워요', 'Low and soft — hard for older people to get up'), 'warn');
@@ -2989,6 +3047,7 @@ function refresh(o = {}) {
   if (rowUnits() && S.row[S.pick] && (S.row[S.pick].w !== S.w || S.row[S.pick].d !== S.d || S.row[S.pick].h !== S.h)) S.row = S.row.map((u, i) => (i === S.pick ? { ...u, w: S.w, d: S.d, h: S.h } : u)); // the size fields are the picked unit's
   if (lookOnly()) { if (S.mode !== 'compare') { S.itemMode = S.mode; S.mode = 'compare'; } } else if (S.itemMode) { S.mode = S.itemMode; S.itemMode = null; } // only looked at; the mode comes back after
   S.A = anthro(p, S.height, S.bmi);
+  if (detKind() === 'office') { const lo = dv('gasMin'), hi = Math.max(dv('gasMax'), lo), want = clamp(Math.round(((S.A.popliteal + 0.01) / S.scale) * 200) * 5, lo, hi); if (want !== S.h) { S.h = want; o = { ...o, rebuild: true }; } } // the gas lift set for this person, within its range
   seatSetup(p);
   buildBody(S.A, p);
   if (o.rebuild) { anim.fill = 0; anim.open = 0; }
@@ -3148,6 +3207,8 @@ function syncUI() {
   if (isFurniture()) $('furnHint').textContent = furnHintText();
   $('liftField').hidden = furn() !== 'coffee';
   $('unitField').hidden = !rowOn();
+  syncDetail();
+  for (const id of ['rH', 'pH']) $(id).disabled = detKind() === 'office';
   if (rowOn()) {
     const r = S.row || [{ n: 'A', w: S.w, d: S.d, h: S.h }], seg = $('unitSeg');
     seg.replaceChildren(...r.map((u, i) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.unit = i; b.textContent = `${u.n} ${u.w}`; b.setAttribute('aria-pressed', String(i === (S.pick || 0))); return b; }));
@@ -3498,13 +3559,48 @@ function tick() {
   updateOverlay(pose);
 }
 
+/* the detail-size rows for the current chair, table or headphones: built when the kind changes, values kept in step on every refresh */
+let detKey = '';
+function syncDetail() {
+  const k = detKind(), box = $('detField');
+  box.hidden = !k;
+  if (!k) { detKey = ''; return; }
+  const spec = detSpec(), key = `${k}|${LANG}`;
+  if (key !== detKey) {
+    detKey = key;
+    $('detRows').replaceChildren(...spec.map((sp) => {
+      const row = document.createElement('div'); row.className = 'dimrow';
+      const lab = document.createElement('label'); lab.textContent = L(sp.ko, sp.en) + (sp.unit === '°' ? ' °' : ''); row.append(lab);
+      if (sp.opts) {
+        const seg = document.createElement('div'); seg.className = 'seg'; seg.dataset.det = sp.k;
+        for (const [v, ko, en] of sp.opts) { const b = document.createElement('button'); b.type = 'button'; b.dataset.v = v; b.textContent = L(ko, en); seg.append(b); }
+        row.append(seg);
+      } else {
+        const r = document.createElement('input'); r.type = 'range'; r.min = sp.min; r.max = sp.max; r.step = sp.step; r.dataset.det = sp.k; r.setAttribute('aria-label', L(sp.ko, sp.en));
+        const n = document.createElement('input'); n.type = 'number'; n.min = sp.min; n.max = sp.max; n.step = sp.step; n.dataset.det = sp.k; n.inputMode = 'decimal';
+        row.append(r, n);
+      }
+      return row;
+    }));
+  }
+  for (const sp of spec) {
+    const v = dv(sp.k);
+    if (sp.opts) for (const b of $('detRows').querySelectorAll(`[data-det="${sp.k}"] button`)) b.setAttribute('aria-pressed', String(String(v) === b.dataset.v));
+    else for (const el of $('detRows').querySelectorAll(`input[data-det="${sp.k}"]`)) if (document.activeElement !== el) el.value = v;
+  }
+  $('detSub').textContent = k === 'office' ? L(`좌면 ${S.h}mm`, `seat ${S.h} mm`) : '';
+  $('detHint').textContent = k === 'office' ? L('좌면 높이(H)는 가스 실린더 최저~최고 안에서 이 사람에게 맞게 정해져요. 바퀴가 커지면 다리만 올라가요.', 'The seat (H) is set for this person within the gas lift’s lowest to highest. Bigger casters raise only the base.')
+    : k === 'headphone' ? L('W·D·H는 전체 크기, 여기서는 귀마개와 머리띠를 따로 정해요.', 'W, D and H are the overall size; set the ear cushions and the headband here.')
+    : L('다리 높이는 전체 높이(H)에서 상판 두께를 뺀 값이에요.', 'The legs are the overall height (H) less the top.');
+}
+
 /* ---------- controls ---------- */
 function segBind(id, key, fn) { for (const b of $(id).children) b.addEventListener('click', () => { if (!b.disabled) fn(b.dataset[key]); }); }
 function setPersona(k) { const p = PERSONAS[k]; S.persona = k; S.height = p.h; S.bmi = p.bmi; refresh({ refit: true }); }
 function applyPreset(k) {
   const pr = PRESETS[k];
   Object.assign(S, { source: 'box', preset: k, pkey: k, name: pr.name, shape: pr.shape, style: pr.style || null, look: pr.look || null, noHand: !!pr.noHand, w: pr.w, d: pr.d, h: pr.h, place: pr.place, face: pr.face, ctrl: pr.ctrl, action: pr.action, scale: 1, posture: pr.posture || 'stand', base: { w: pr.w, d: pr.d, h: pr.h }, screen: !!pr.screen, lift: 0, ringSize: pr.size || S.ringSize });
-  S.seatMode = 'fixed'; S.seatH = PROPS[propKind()].h; S.preDesk = null; S.row = null; S.pick = 0;
+  S.seatMode = 'fixed'; S.seatH = PROPS[propKind()].h; S.preDesk = null; S.row = null; S.pick = 0; S.det = {};
   anim.lift = 0; anim.fill = 0;
   refresh({ rebuild: true, refit: true });
 }
@@ -3599,6 +3695,11 @@ function addUnit(left) {
   refresh({ rebuild: true, refit: true });
 }
 $('unitAddL').addEventListener('click', () => addUnit(true));
+/* detail sizes: a slider or a number sets one part; a button picks a material or armrests on/off */
+function setDet(k, v) { const sp = detSpec().find((x) => x.k === k); if (!sp) return; if (!sp.opts) v = clamp(Math.round(+v / sp.step) * sp.step, sp.min, sp.max); else v = sp.opts.find((o) => String(o[0]) === String(v))[0]; S.det = { ...(S.det || {}), [k]: v }; refresh({ rebuild: true }); }
+$('detRows').addEventListener('input', (e) => { const el = e.target; if (el.dataset.det && el.value !== '' && (el.type === 'range' || !isNaN(+el.value))) { if (el.type === 'number' && (+el.value < +el.min || +el.value > +el.max)) return; setDet(el.dataset.det, el.value); } });
+$('detRows').addEventListener('change', (e) => { const el = e.target; if (el.type === 'number' && el.dataset.det) setDet(el.dataset.det, el.value); });
+$('detRows').addEventListener('click', (e) => { const b = e.target.closest('button[data-v]'); if (b) setDet(b.parentElement.dataset.det, b.dataset.v); });
 $('unitAddR').addEventListener('click', () => addUnit(false));
 $('unitDel').addEventListener('click', () => {
   const r = S.row; if (!r || r.length < 2 || r[S.pick].n === 'A') return;
@@ -3821,7 +3922,7 @@ $('wReset').addEventListener('click', () => { S.bmi = PERSONAS[S.persona].bmi; r
 $('sReset').addEventListener('click', () => { S.scale = 1; refresh({ rebuild: true }); });
 $('cReset').addEventListener('click', () => { S.ctrl = ctrlDefault(); refresh(); });
 
-const HKEYS = ['row', 'pick', 'persona', 'height', 'bmi', 'posture', 'source', 'preset', 'pkey', 'name', 'shape', 'style', 'look', 'noHand', 'w', 'd', 'h', 'scale', 'place', 'face', 'ctrl', 'action', 'mode', 'base', 'screen', 'seatMode', 'seatH', 'lift', 'ringSize'];
+const HKEYS = ['det', 'row', 'pick', 'persona', 'height', 'bmi', 'posture', 'source', 'preset', 'pkey', 'name', 'shape', 'style', 'look', 'noHand', 'w', 'd', 'h', 'scale', 'place', 'face', 'ctrl', 'action', 'mode', 'base', 'screen', 'seatMode', 'seatH', 'lift', 'ringSize'];
 const hist = { list: [], i: -1, timer: 0 };
 const snap = () => Object.fromEntries(HKEYS.map((k) => [k, S[k]]));
 function commit() {
