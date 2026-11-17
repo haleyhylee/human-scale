@@ -530,7 +530,11 @@ const PRESETS = {
   lug26: { name: '캐리어 26인치', en: 'Suitcase 26"', shape: 'box', look: 'luggage', w: 450, d: 280, h: 700, place: 'floor', face: 'top', ctrl: 1020, action: 'press', noHand: true },
   lug28: { name: '캐리어 28인치', en: 'Suitcase 28"', shape: 'box', look: 'luggage', w: 490, d: 300, h: 760, place: 'floor', face: 'top', ctrl: 1050, action: 'press', noHand: true },
   lug30: { name: '캐리어 30인치', en: 'Suitcase 30"', shape: 'box', look: 'luggage', w: 520, d: 310, h: 800, place: 'floor', face: 'top', ctrl: 1080, action: 'press', noHand: true },
-  objet: { name: '오브제', en: 'Object', shape: 'box', w: 80, d: 80, h: 80, place: 'plinth', face: 'front', ctrl: 40, action: 'press' }, // cube or sphere
+  cube: { name: '큐브', en: 'Cube', shape: 'box', w: 80, d: 80, h: 80, place: 'plinth', face: 'front', ctrl: 40, action: 'press', forms: ['box', 'frame'] }, // solid, or a frame of square bars
+  cyl: { name: '원통', en: 'Cylinder', shape: 'cyl', w: 80, d: 80, h: 150, place: 'plinth', face: 'front', ctrl: 75, action: 'press' },
+  plate: { name: '판', en: 'Plate', shape: 'plate', w: 100, d: 100, h: 5, place: 'plinth', face: 'top', ctrl: 5, action: 'press' }, // an acrylic-like sheet
+  sphere: { name: '구', en: 'Sphere', shape: 'sphere', w: 100, d: 100, h: 100, place: 'plinth', face: 'front', ctrl: 50, action: 'press' },
+  cone: { name: '원뿔', en: 'Cone', shape: 'cone', w: 100, d: 100, h: 150, place: 'plinth', face: 'front', ctrl: 75, action: 'press' },
   ring: { name: '반지', en: 'Ring', shape: 'ring', w: 3, d: 1.6, h: 5, size: 11, place: 'hand', face: 'front', ctrl: 0, action: 'press' }, // band width, band thickness, stone (mm); worn on the ring finger
   desk: FURN({ name: '컴퓨터 책상', en: 'Computer desk', shape: 'desk', style: 'desk', w: 1200, d: 600, h: 740, posture: 'sit' }),
   standing: FURN({ name: '스탠딩 책상', en: 'Standing desk', shape: 'desk', style: 'standing', w: 1200, d: 700, h: 1000, posture: 'stand' }), // electric legs, 62–127 cm
@@ -563,7 +567,7 @@ const familyOf = (k) => Object.keys(FAMILIES).find((f) => FAMILIES[f].sizes.some
 const FORMS = { box: [80, 80, 80], frame: [200, 200, 200], cyl: [80, 80, 150], sphere: [100, 100, 100], cone: [100, 100, 150], plate: [100, 100, 5] };
 const roundBase = (sh = S.shape) => sh === 'cyl' || sh === 'cup' || sh === 'cone'; // W = D
 const PRESET_GROUPS = [
-  [['목업·소품', 'Mockup & objects'], ['objet', 'a4', 'ring']],
+  [['목업·소품', 'Mockup & objects'], ['cube', 'cyl', 'sphere', 'cone', 'plate', 'a4', 'ring']],
   [['생활 제품', 'Appliances'], ['purifier', 'coffee', 'air', 'floorlamp', 'tablelamp']],
   [['전자제품', 'Electronics'], ['fam:phone', 'fam:tablet', 'macbook', 'airbuds', 'airpods', 'airmax']],
   [['가방·캐리어', 'Bags & luggage'], ['backpack', 'fam:pouch', 'fam:luggage']],
@@ -595,7 +599,7 @@ const EDGE = 0.05; // front edge of a table or counter (product front face sits 
 const S = {
   mode: 'use', view: 'third', guides: true, lens: 35, lensFP: 20, posture: 'stand',
   persona: 'adultF', height: 159.6, bmi: 22.6,
-  source: 'box', preset: 'objet', pkey: 'objet', name: '오브제', shape: 'box', style: null, w: 80, d: 80, h: 80, scale: 1, base: { w: 80, d: 80, h: 80 }, screen: false, det: {},
+  source: 'box', preset: 'cube', pkey: 'cube', name: '큐브', shape: 'box', style: null, w: 80, d: 80, h: 80, scale: 1, base: { w: 80, d: 80, h: 80 }, screen: false, det: {},
   seatMode: 'fixed', seatH: 450, lift: 0, look: null, ringSize: 11, noHand: false, ghost: true,
   place: 'plinth', face: 'front', ctrl: 40, action: 'press',
   model: null, unit: 0.001, zup: false,
@@ -3435,7 +3439,16 @@ function syncUI() {
   if (fam) { FAMILIES[fam].last = S.pkey; $('variantSeg').replaceChildren(...FAMILIES[fam].sizes.map(([k, ko, en]) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.size = k; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(S.pkey === k)); return b; })); }
   segSet('shapeSeg', 'shape', S.shape); segSet('placeSeg', 'place', S.place); segSet('faceSeg', 'face', S.face); segSet('actSeg', 'act', S.action); segSet('modeSeg', 'mode', S.mode); segSet('langSeg', 'lang', LANG);
   const isModel = S.source === 'model', fixedForm = isFurniture() || ring || ['cup', 'laptop', 'headphone', 'earbud'].includes(S.shape) || S.look === 'paper' || kind() !== 'free'; // these come only from the examples
-  $('shapeField').hidden = isModel || fixedForm; $('sizeField').hidden = isModel;
+  // the forms an example comes in (the cube: solid or frame; the object: sphere or cone); the plain box mockup, all of them
+  const forms = !isModel && !fixedForm ? (PRESETS[S.pkey] && PRESETS[S.pkey].forms) || (S.pkey === 'box' ? Object.keys(FORMS) : null) : null;
+  $('shapeField').hidden = !forms; $('sizeField').hidden = isModel;
+  if (forms) {
+    for (const b of $('shapeSeg').children) {
+      b.hidden = !forms.includes(b.dataset.shape);
+      if (b.dataset.shape === 'box') { const solid = forms.includes('frame') && forms.length === 2; b.dataset.ko = solid ? '솔리드' : '큐브'; b.dataset.en = solid ? 'Solid' : 'Cube'; b.textContent = L(b.dataset.ko, b.dataset.en); }
+    }
+    $('shapeSeg').style.gridTemplateColumns = `repeat(${Math.min(3, forms.length)}, minmax(0, 1fr))`;
+  }
   if (!isModel) {
     const big = Math.max(S.w, roundBase() ? S.w : S.d, S.h), key = S.name + '|' + S.shape;
     if (!dimR || big > dimR.max || dimR.key !== key) dimR = { ...dimScale(big), key }; // kept steady while a slider is dragged
@@ -3998,7 +4011,15 @@ $('sIn').addEventListener('input', (e) => { S.scale = +e.target.value / 100; ref
 $('cIn').addEventListener('input', (e) => { S.ctrl = +e.target.value; refresh(); });
 $('ringIn').addEventListener('input', (e) => { S.ringSize = +e.target.value; refresh({ rebuild: true }); });
 /* 형태 changes only the form of a plain mockup (box, cylinder, sphere); furniture, cups and rings come from the examples */
-segBind('shapeSeg', 'shape', (v) => { S.shape = v; S.style = null; if (FORMS[v] && S.source === 'box') { [S.w, S.d, S.h] = FORMS[v]; S.base = { w: S.w, d: S.d, h: S.h }; S.ctrl = Math.round(S.h * 0.5); } if (roundBase(v)) S.d = S.w; S.screen = S.screen && v === 'box'; S.preset = null; refresh({ rebuild: true, refit: true }); }); // each form starts at its own size
+segBind('shapeSeg', 'shape', (v) => {
+  const own = S.source === 'box' && PRESETS[S.pkey] && PRESETS[S.pkey].forms; // an example's own forms keep its size: the same cube, solid or as a frame
+  S.shape = v; S.style = null;
+  if (!own && FORMS[v] && S.source === 'box') { [S.w, S.d, S.h] = FORMS[v]; S.base = { w: S.w, d: S.d, h: S.h }; S.ctrl = Math.round(S.h * 0.5); } // the plain box mockup: each form at its own size
+  if (roundBase(v)) S.d = S.w;
+  S.screen = S.screen && v === 'box';
+  if (!own) S.preset = null;
+  refresh({ rebuild: true, refit: true });
+});
 segBind('placeSeg', 'place', (v) => { const was = S.place; S.place = v; if (v === 'desk') deskSeat(); else if (was === 'desk' && S.preDesk) { S.posture = S.preDesk; S.preDesk = null; } refresh({ refit: true }); }); // leaving the desk gives back the posture from before it
 /* at the desk the person sits on an office chair: a seat height left at another seat's default becomes the office chair's */
 function deskSeat() { if (!S.preDesk) S.preDesk = S.posture; S.posture = 'sit'; if (S.seatMode === 'fixed' && Object.values(PROPS).some((p) => p.h === S.seatH)) S.seatH = PROPS.office.h; }
