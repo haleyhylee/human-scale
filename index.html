@@ -18,7 +18,7 @@
   --tire: #2c2e30;
   --accent: #e0561a;
   --slider: #723838;
-  --on-accent: #1a120d;
+  --on-accent: #ffffff;
   --accent-ink: #ad400c;
   --good: #2a7f4f;
   --warn: #9a6a08;
@@ -34,7 +34,7 @@
   :root:not([data-theme="light"]) {
     --bg: #131414; --panel: #18191a; --raise: #202122; --ink: #e6e7e8; --ink-2: #9a9da0; --line: #2e3031;
     --viewport: #151617; --mat: #34373a; --mat-line: #8b9095; --foam: #9a4e4e; --body: #d8d4cd; --surface: #3d3f41; --tire: #101112;
-    --accent: #ff7638; --on-accent: #1a120d; --accent-ink: #ff9a68; --slider: #b45c5c; --slider: #b45c5c;
+    --accent: #ff7638; --on-accent: #ffffff; --accent-ink: #ff9a68; --slider: #b45c5c; --slider: #b45c5c;
     --good: #52c283; --warn: #e3ad42; --bad: #f2705c; --good-bg: #183026; --warn-bg: #362c13; --bad-bg: #3a1d18;
     color-scheme: dark;
   }
@@ -42,7 +42,7 @@
 :root[data-theme="dark"] {
   --bg: #131414; --panel: #18191a; --raise: #202122; --ink: #e6e7e8; --ink-2: #9a9da0; --line: #2e3031;
   --viewport: #151617; --mat: #34373a; --mat-line: #8b9095; --foam: #9a4e4e; --body: #d8d4cd; --surface: #3d3f41; --tire: #101112;
-  --accent: #ff7638; --on-accent: #1a120d; --accent-ink: #ff9a68; --slider: #b45c5c;
+  --accent: #ff7638; --on-accent: #ffffff; --accent-ink: #ff9a68; --slider: #b45c5c;
   --good: #52c283; --warn: #e3ad42; --bad: #f2705c; --good-bg: #183026; --warn-bg: #362c13; --bad-bg: #3a1d18;
   color-scheme: dark;
 }
@@ -77,6 +77,8 @@ button { cursor: pointer; }
 .chip:disabled { opacity: 0.4; cursor: default; border-color: var(--line); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .unit-acts { margin-top: 8px; }
+.surfrow { margin-top: 8px; grid-template-columns: 64px minmax(0, 1fr) 76px; }
+.surfrow input[type=number] { box-sizing: border-box; width: 100%; }
 .det summary { cursor: pointer; list-style: revert; }
 .det .dimrows { margin-top: 8px; }
 .det .dimrow { grid-template-columns: minmax(0, 1fr) 76px; row-gap: 2px; }
@@ -90,7 +92,7 @@ button { cursor: pointer; }
 .toast p { margin: 0; font-size: 13.5px; line-height: 1.45; }
 .toast .acts { display: flex; gap: 6px; align-items: center; }
 /* the tip lets the scene show through, on every screen */
-.toast { background: color-mix(in srgb, var(--raise) 62%, transparent); border-color: color-mix(in srgb, var(--line) 55%, transparent); box-shadow: 0 2px 10px rgb(0 0 0 / 0.06); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.toast { background: color-mix(in srgb, var(--raise) 45%, transparent); border-color: color-mix(in srgb, var(--line) 55%, transparent); box-shadow: 0 2px 10px rgb(0 0 0 / 0.06); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 @keyframes rise { from { transform: translateY(-6px); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
 .lv { display: inline-block; font: 600 11px/1 var(--font-body); padding: 3px 6px; border-radius: 4px; white-space: nowrap; }
@@ -243,7 +245,6 @@ input:disabled { opacity: 0.55; }
         <div class="lens" id="lensSeg" role="group" aria-label="렌즈 초점거리" data-en-aria="Lens focal length"><span data-en="Lens mm">렌즈 mm</span><button type="button" data-lens="20">20</button><button type="button" data-lens="35">35</button><button type="button" data-lens="50">50</button><button type="button" data-lens="85">85</button></div>
         <span class="vsep" aria-hidden="true"></span>
         <button type="button" class="chip" id="btnMeasure" aria-pressed="false" data-en="Measure">치수 재기</button>
-        <button type="button" class="chip" id="btnGhost" aria-pressed="false" data-en="See-through person">사람 반투명</button>
       </div>
       <div class="toast" id="toast" role="status" hidden>
         <div>
@@ -266,7 +267,7 @@ input:disabled { opacity: 0.55; }
       <div class="hud-acts">
         <span class="vhint" id="vhint" hidden></span>
         <span class="scalebar" id="scalebar" hidden><i id="scalebarI"></i><span id="scalebarT"></span></span>
-        <button type="button" class="btn" id="btnGhost" aria-pressed="true" hidden data-en="See-through">사람 투명</button>
+        <button type="button" class="btn" id="btnGhost" aria-pressed="false" data-en="See-through">사람 반투명</button>
         <button type="button" class="btn" id="btnGuides" aria-pressed="true" data-en="Dimensions">치수 표시</button>
         <button type="button" class="btn" id="btnPlay" data-en="Play">동작 보기</button>
         <button type="button" class="btn accent" id="btnAI" hidden>AI 제안</button>
@@ -395,6 +396,7 @@ input:disabled { opacity: 0.55; }
           <button type="button" data-place="counter" data-en="Counter 85">조리대 85</button>
           <button type="button" data-place="hand" data-en="In hand">손에 들기</button>
         </div>
+        <div class="dimrow surfrow" id="surfRow" hidden><label for="surfIn" id="surfLab">높이</label><input type="range" id="surfIn" min="400" max="1200" step="5" aria-label="놓는 곳 높이" data-en-aria="Surface height"><input type="number" id="surfNum" inputmode="decimal" min="400" max="1200" step="1"></div>
       </div>
       <div class="field" id="ctrlField">
         <div class="label" data-en="Controls">조작부</div>
@@ -2173,7 +2175,7 @@ function buildSurface() {
   surface.userData.desk = null;
   const P = dims();
   if (S.place === 'counter') {
-    const w = Math.max(1.1, P.W + 0.6), d = Math.max(0.6, P.D + 0.12), h = 0.85;
+    const w = Math.max(1.1, P.W + 0.6), d = Math.max(0.6, P.D + 0.12), h = SURF.counter;
     box(surface, w, h - 0.13, d, 0, 0.1 + (h - 0.13) / 2, EDGE - d / 2, mats.surface);
     box(surface, w, 0.1, d - 0.07, 0, 0.05, EDGE - 0.07 - (d - 0.07) / 2, mats.surface);
     box(surface, w + 0.02, 0.03, d + 0.02, 0, h - 0.015, EDGE - d / 2 + 0.01, mats.surfaceTop);
@@ -2184,7 +2186,7 @@ function buildSurface() {
     surface.add(g);
     surface.userData.desk = g;
   } else if (S.place === 'table') {
-    const w = Math.max(1.0, P.W + 0.6), d = Math.max(0.7, P.D + 0.25), h = 0.72;
+    const w = Math.max(1.0, P.W + 0.6), d = Math.max(0.7, P.D + 0.25), h = SURF.table;
     box(surface, w, 0.03, d, 0, h - 0.015, EDGE - d / 2, mats.surfaceTop);
     for (const sx of [-1, 1]) for (const sz of [0, 1]) box(surface, 0.04, h - 0.03, 0.04, sx * (w / 2 - 0.05), (h - 0.03) / 2, EDGE - 0.05 - sz * (d - 0.1), mats.surface);
   }
@@ -2834,8 +2836,8 @@ function evaluate() {
       const lim = clamp(want, minCtl, Math.max(minCtl, P.H - 0.02));
       if (Math.abs(lim - cur) >= 0.02) push(`ctl:${S.persona}:${S.place}:${mmi(cur)}`, sugLv, L(`${nm} 높이를 ${mmi(cur)}→${mmi(lim)}mm로 ${lim > cur ? '올리면' : '내리면'} ${who}에게 편한 높이예요.`, `${lim > cur ? 'Raise' : 'Lower'} the ${nm.toLowerCase()} to ${mmi(lim)} mm (now ${mmi(cur)}) to suit this ${whoEn}.`), ok, () => { S.ctrl = Math.round((lim * 1000) / S.scale); });
       if (want > P.H + 0.02) {
-        if (S.place === 'floor' && P.H <= 0.45 && placeOk('table')) push(`up:${S.persona}`, 'warn', L('제품이 낮아요. 테이블(72cm) 위에 두면 덜 숙여요.', "It's low. On a 72 cm table you'd lean less."), L('테이블로', 'To table'), () => { S.place = 'table'; }, true); // only things small enough to live on a table
-        else if (S.place === 'table' && !p.seated && P.H <= 0.6 && placeOk('counter')) push(`up2:${S.persona}`, 'warn', L('조리대(85cm) 위에 두면 덜 숙여요.', "On an 85 cm counter you'd lean less."), L('조리대로', 'To counter'), () => { S.place = 'counter'; }, true);
+        if (S.place === 'floor' && P.H <= 0.45 && placeOk('table')) push(`up:${S.persona}`, 'warn', L(`제품이 낮아요. 테이블(${cmi(SURF.table)}cm) 위에 두면 덜 숙여요.`, `It's low. On a ${cmi(SURF.table)} cm table you'd lean less.`), L('테이블로', 'To table'), () => { S.place = 'table'; }, true); // only things small enough to live on a table
+        else if (S.place === 'table' && !p.seated && P.H <= 0.6 && placeOk('counter')) push(`up2:${S.persona}`, 'warn', L(`조리대(${cmi(SURF.counter)}cm) 위에 두면 덜 숙여요.`, `On an ${cmi(SURF.counter)} cm counter you'd lean less.`), L('조리대로', 'To counter'), () => { S.place = 'counter'; }, true);
       }
       if (want < minCtl - 0.04 && S.place !== 'floor' && !atDesk() && placeOk(S.place === 'counter' ? 'table' : 'floor')) push(`down:${S.persona}:${S.place}`, 'warn', L(`받침이 높아요. ${S.place === 'counter' ? '테이블(72cm)' : '바닥'}에 두면 어때요?`, `The stand is high. Try it on the ${S.place === 'counter' ? '72 cm table' : 'floor'}?`), L('바꾸기', 'Move'), () => { S.place = S.place === 'counter' ? 'table' : 'floor'; }, true);
     } else if (S.face === 'top' && cause !== 'low' && kind() !== 'dispenser' && clamp(goodHand - sy, 0.02, P.H - 0.02) >= 0.06) { // a dispenser keeps its cup flow; a front control a few cm off the base is no help
@@ -2844,7 +2846,7 @@ function evaluate() {
     } else if (S.face === 'top') {
       const newH = goodHand - sy - 0.012;
       if (newH > P.H + 0.04 && newH < 2.2) push(`h:${S.persona}:${S.place}:${mmi(P.H)}`, sugLv, L(`높이를 ${mmi(P.H)}→${mmi(newH)}mm로 키우면 윗면 버튼까지 덜 숙여요.`, `Make it ${mmi(newH)} mm tall (now ${mmi(P.H)}) and the top buttons need less bending.`), ok, () => setDimEffective('h', mmi(newH)));
-      if (S.place === 'floor' && P.H <= 0.45 && placeOk('table')) push(`up:${S.persona}`, 'warn', L('테이블(72cm) 위에 두면 덜 숙여요.', "On a 72 cm table you'd lean less."), L('테이블로', 'To table'), () => { S.place = 'table'; }, true);
+      if (S.place === 'floor' && P.H <= 0.45 && placeOk('table')) push(`up:${S.persona}`, 'warn', L(`테이블(${cmi(SURF.table)}cm) 위에 두면 덜 숙여요.`, `On a ${cmi(SURF.table)} cm table you'd lean less.`), L('테이블로', 'To table'), () => { S.place = 'table'; }, true);
     }
   }
   if (S.face === 'top' && eyeY - (sy + P.H) < 0.15 && !out.sug.some((s) => s.key.startsWith('face:')) && kind() !== 'dispenser' && clamp(goodHand - sy, 0.02, P.H - 0.02) >= 0.06) {
@@ -3047,6 +3049,7 @@ function refresh(o = {}) {
   if (k === 'dispenser') S.action = 'dispense';
   if (rowUnits() && S.row[S.pick] && (S.row[S.pick].w !== S.w || S.row[S.pick].d !== S.d || S.row[S.pick].h !== S.h)) S.row = S.row.map((u, i) => (i === S.pick ? { ...u, w: S.w, d: S.d, h: S.h } : u)); // the size fields are the picked unit's
   if (lookOnly()) { if (S.mode !== 'compare') { S.itemMode = S.mode; S.mode = 'compare'; } } else if (S.itemMode) { S.mode = S.itemMode; S.itemMode = null; } // only looked at; the mode comes back after
+  for (const [k, d] of [['table', 720], ['desk', 740], ['counter', 850]]) SURF[k] = ((S.surf && S.surf[k]) || d) / 1000; // the table, desk or counter it stands on, at its set height
   S.A = anthro(p, S.height, S.bmi);
   if (detKind() === 'office') { const lo = dv('gasMin'), hi = Math.max(dv('gasMax'), lo), want = clamp(Math.round(((S.A.popliteal + 0.01) / S.scale) * 200) * 5, lo, hi); if (want !== S.h) { S.h = want; o = { ...o, rebuild: true }; } } // the gas lift set for this person, within its range
   seatSetup(p);
@@ -3209,6 +3212,12 @@ function syncUI() {
   $('liftField').hidden = furn() !== 'coffee';
   $('unitField').hidden = !rowOn();
   syncDetail();
+  { // the surface's own height, for a product set on a table, desk or counter
+    const on = ['table', 'desk', 'counter'].includes(S.place) && !isFurniture(), mm = Math.round(SURF[S.place] * 1000);
+    $('surfRow').hidden = !on;
+    if (on) { $('surfLab').textContent = L({ table: '테이블', desk: '책상', counter: '조리대' }[S.place], { table: 'Table', desk: 'Desk', counter: 'Counter' }[S.place]); if (document.activeElement !== $('surfIn')) $('surfIn').value = mm; if (document.activeElement !== $('surfNum')) $('surfNum').value = mm; }
+    for (const b of $('placeSeg').children) { const k = b.dataset.place; if (!SURF[k]) continue; const c = Math.round(SURF[k] * 100); b.dataset.ko = `${{ table: '테이블', desk: '책상', counter: '조리대' }[k]} ${c}`; b.dataset.en = `${{ table: 'Table', desk: 'Desk', counter: 'Counter' }[k]} ${c}`; b.textContent = LANG === 'en' ? b.dataset.en : b.dataset.ko; }
+  }
   for (const id of ['rH', 'pH']) $(id).disabled = detKind() === 'office';
   if (rowOn()) {
     const r = S.row || [{ n: 'A', w: S.w, d: S.d, h: S.h }], seg = $('unitSeg');
@@ -3390,7 +3399,9 @@ function syncBodyVis() {
   for (const m of [torso, R.head, R.neck, chair, ...R.arms.flatMap((a) => [a.up, a.sh, a.el]), ...R.legs.map((l) => l.hip)]) m.visible = !fp; // from the eyes: forearms and hands
   for (const m of R.legs.flatMap((l) => [l.up, l.lo, l.kn, l.an, l.foot])) m.visible = !fp || lap;
 }
-function syncGhostBtn() { $('btnGhost').hidden = !(S.view === 'front' && S.mode === 'use' && !carried()); $('btnGhost').setAttribute('aria-pressed', String(S.ghost)); }
+const frontUse = () => S.view === 'front' && S.mode === 'use' && !carried();
+const ghostWanted = () => !!S.seeThru || (frontUse() && S.ghost);
+function syncGhostBtn() { $('btnGhost').hidden = false; $('btnGhost').setAttribute('aria-pressed', String(ghostWanted())); }
 function setView(v) {
   S.view = v;
   syncGhostBtn();
@@ -3548,7 +3559,7 @@ function setGhost(on) {
 
 const clock = new THREE.Clock();
 function tick() {
-  setGhost(!!S.seeThru || (S.view === 'front' && S.mode === 'use' && !carried() && S.ghost));
+  setGhost(ghostWanted()); syncGhostBtn();
   stepAnim(Math.min(clock.getDelta(), 0.05));
   human.updateMatrixWorld(true);
   const pose = poseNow();
@@ -3696,6 +3707,9 @@ function addUnit(left) {
   refresh({ rebuild: true, refit: true });
 }
 $('unitAddL').addEventListener('click', () => addUnit(true));
+function setSurf(v) { const k = S.place; if (!['table', 'desk', 'counter'].includes(k) || !(v >= 400 && v <= 1200)) return; S.surf = { ...(S.surf || {}), [k]: Math.round(v) }; refresh({ rebuild: true, refit: true }); }
+$('surfIn').addEventListener('input', (e) => setSurf(+e.target.value));
+$('surfNum').addEventListener('change', (e) => setSurf(+e.target.value));
 /* detail sizes: a slider or a number sets one part; a button picks a material or armrests on/off */
 function setDet(k, v) { const sp = detSpec().find((x) => x.k === k); if (!sp) return; if (!sp.opts) v = clamp(Math.round(+v / sp.step) * sp.step, sp.min, sp.max); else v = sp.opts.find((o) => String(o[0]) === String(v))[0]; S.det = { ...(S.det || {}), [k]: v }; refresh({ rebuild: true }); }
 $('detRows').addEventListener('input', (e) => { const el = e.target; if (el.dataset.det && el.value !== '' && (el.type === 'range' || !isNaN(+el.value))) { if (el.type === 'number' && (+el.value < +el.min || +el.value > +el.max)) return; setDet(el.dataset.det, el.value); } });
@@ -3714,7 +3728,7 @@ $('unitSeg').addEventListener('click', (e) => {
   S.row = S.row.map((u, j) => (j === S.pick ? { ...u, w: S.w, d: S.d, h: S.h } : u)); S.pick = i; Object.assign(S, { w: S.row[i].w, d: S.row[i].d, h: S.row[i].h });
   refresh({ rebuild: true, refit: true });
 });
-$('btnGhost').addEventListener('click', () => { S.ghost = !S.ghost; syncUI(); }); // see the product through the person in the front view, or not
+$('btnGhost').addEventListener('click', () => { if (ghostWanted()) { S.seeThru = false; if (frontUse()) S.ghost = false; } else S.seeThru = true; syncUI(); }); // the person see-through in any view (on by itself in the front view while in use)
 
 /* ---------- your own model ---------- */
 const gltfLoader = new GLTFLoader(), objLoader = new OBJLoader(), stlLoader = new STLLoader();
@@ -3923,7 +3937,7 @@ $('wReset').addEventListener('click', () => { S.bmi = PERSONAS[S.persona].bmi; r
 $('sReset').addEventListener('click', () => { S.scale = 1; refresh({ rebuild: true }); });
 $('cReset').addEventListener('click', () => { S.ctrl = ctrlDefault(); refresh(); });
 
-const HKEYS = ['det', 'row', 'pick', 'persona', 'height', 'bmi', 'posture', 'source', 'preset', 'pkey', 'name', 'shape', 'style', 'look', 'noHand', 'w', 'd', 'h', 'scale', 'place', 'face', 'ctrl', 'action', 'mode', 'base', 'screen', 'seatMode', 'seatH', 'lift', 'ringSize'];
+const HKEYS = ['surf', 'det', 'row', 'pick', 'persona', 'height', 'bmi', 'posture', 'source', 'preset', 'pkey', 'name', 'shape', 'style', 'look', 'noHand', 'w', 'd', 'h', 'scale', 'place', 'face', 'ctrl', 'action', 'mode', 'base', 'screen', 'seatMode', 'seatH', 'lift', 'ringSize'];
 const hist = { list: [], i: -1, timer: 0 };
 const snap = () => Object.fromEntries(HKEYS.map((k) => [k, S[k]]));
 function commit() {
@@ -3971,7 +3985,6 @@ function setMeasure(on) {
   drawMeasure(); syncLens();
 }
 $('btnMeasure').addEventListener('click', () => setMeasure(!meas.on));
-$('btnGhost').addEventListener('click', () => { S.seeThru = !S.seeThru; $('btnGhost').setAttribute('aria-pressed', String(S.seeThru)); }); // the person see-through in every view, so the product shows behind or inside them
 const worldAt = (e) => { const r = canvas.getBoundingClientRect(); return new V3(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1, 0).unproject(orthoCam); };
 canvas.addEventListener('pointerdown', (e) => {
   if (!meas.on || !isOrtho()) return;
