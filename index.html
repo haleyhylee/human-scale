@@ -396,8 +396,14 @@ input:disabled { opacity: 0.55; }
           <button type="button" data-place="counter" data-en="Counter 85">조리대 85</button>
           <button type="button" data-place="hand" data-en="In hand">손에 들기</button>
           <button type="button" data-place="back" data-en="On the back" hidden>등에 메기</button>
+          <button type="button" data-place="plinth" data-en="Plinth 90">단상 90</button>
+          <button type="button" data-place="air" data-en="Midair 100">공중 100</button>
         </div>
         <div class="dimrow surfrow" id="surfRow" hidden><label for="surfIn" id="surfLab">높이</label><input type="range" id="surfIn" min="400" max="1200" step="5" aria-label="놓는 곳 높이" data-en-aria="Surface height"><input type="number" id="surfNum" inputmode="decimal" min="400" max="1200" step="1"></div>
+        <div id="plinthRows" hidden>
+          <div class="dimrow surfrow"><label for="plW" data-en="Plinth W">단상 W</label><input type="range" id="plW" min="100" max="1500" step="10"><input type="number" id="plWn" inputmode="decimal" min="100" max="1500" step="1"></div>
+          <div class="dimrow surfrow"><label for="plD" data-en="Plinth D">단상 D</label><input type="range" id="plD" min="100" max="1500" step="10"><input type="number" id="plDn" inputmode="decimal" min="100" max="1500" step="1"></div>
+        </div>
       </div>
       <div class="field" id="ctrlField">
         <div class="label" data-en="Controls">조작부</div>
@@ -497,6 +503,11 @@ const PRESETS = {
   pouch: { name: '파우치', en: 'Pouch', shape: 'box', look: 'pouch', w: 200, d: 50, h: 130, place: 'hand', face: 'front', ctrl: 100, action: 'press' },
   floorlamp: { name: '스탠드 조명', en: 'Floor lamp', shape: 'box', look: 'floorlamp', w: 420, d: 420, h: 1600, place: 'floor', face: 'front', ctrl: 1050, action: 'press', noHand: true }, // pull switch under the shade
   tablelamp: { name: '테이블 조명', en: 'Table lamp', shape: 'box', look: 'tablelamp', w: 300, d: 300, h: 450, place: 'desk', face: 'front', ctrl: 20, action: 'press', noHand: true }, // switch on the base
+  lug20: { name: '캐리어 20인치', en: 'Suitcase 20"', shape: 'box', look: 'luggage', w: 360, d: 230, h: 550, place: 'floor', face: 'top', ctrl: 950, action: 'press', noHand: true }, // carry-on, with wheels
+  lug24: { name: '캐리어 24인치', en: 'Suitcase 24"', shape: 'box', look: 'luggage', w: 420, d: 260, h: 650, place: 'floor', face: 'top', ctrl: 1000, action: 'press', noHand: true },
+  lug26: { name: '캐리어 26인치', en: 'Suitcase 26"', shape: 'box', look: 'luggage', w: 450, d: 280, h: 700, place: 'floor', face: 'top', ctrl: 1020, action: 'press', noHand: true },
+  lug28: { name: '캐리어 28인치', en: 'Suitcase 28"', shape: 'box', look: 'luggage', w: 490, d: 300, h: 760, place: 'floor', face: 'top', ctrl: 1050, action: 'press', noHand: true },
+  lug30: { name: '캐리어 30인치', en: 'Suitcase 30"', shape: 'box', look: 'luggage', w: 520, d: 310, h: 800, place: 'floor', face: 'top', ctrl: 1080, action: 'press', noHand: true },
   objet: { name: '오브제', en: 'Object', shape: 'box', w: 80, d: 80, h: 80, place: 'hand', face: 'front', ctrl: 40, action: 'press' }, // cube or sphere
   ring: { name: '반지', en: 'Ring', shape: 'ring', w: 3, d: 1.6, h: 5, size: 11, place: 'hand', face: 'front', ctrl: 0, action: 'press' }, // band width, band thickness, stone (mm)
   desk: FURN({ name: '컴퓨터 책상', en: 'Computer desk', shape: 'desk', style: 'desk', w: 1200, d: 600, h: 740, posture: 'sit' }),
@@ -505,8 +516,11 @@ const PRESETS = {
   living: FURN({ name: '거실 테이블', en: 'Coffee table', shape: 'desk', style: 'coffee', w: 1100, d: 550, h: 420, posture: 'sit' }), // lift-up top
   bar: FURN({ name: '바 테이블', en: 'Bar table', shape: 'desk', style: 'bar', w: 1200, d: 500, h: 1050, posture: 'sit' }),
   sink: FURN({ name: '싱크대', en: 'Kitchen sink', shape: 'desk', style: 'sink', w: 1000, d: 600, h: 850, posture: 'stand' }),
+  wardrobe: FURN({ name: '옷장', en: 'Wardrobe', shape: 'desk', style: 'wardrobe', w: 900, d: 600, h: 2000, posture: 'stand' }), // two doors, a hanging rail inside
   drawer: FURN({ name: '서랍장', en: 'Chest of drawers', shape: 'desk', style: 'drawer', w: 800, d: 450, h: 1000, posture: 'stand' }),
   armchair: FURN({ name: '1인 소파', en: 'Armchair', shape: 'chair', style: 'armchair', w: 850, d: 560, h: 420 }),
+  sofa: FURN({ name: '3인 소파', en: '3-seat sofa', shape: 'chair', style: 'sofa', w: 2000, d: 580, h: 420 }),
+  sofa4: FURN({ name: '4인 소파', en: '4-seat sofa', shape: 'chair', style: 'sofa', w: 2600, d: 600, h: 420 }),
   beanbag: FURN({ name: '빈백', en: 'Beanbag', shape: 'chair', style: 'beanbag', w: 900, d: 900, h: 220 }), // H = how high you sit once it gives way
   chair: FURN({ name: '의자', en: 'Chair', shape: 'chair', style: 'chair', w: 460, d: 420, h: 440 }),
   pstool: FURN({ name: '스툴', en: 'Stool', shape: 'chair', style: 'pstool', w: 350, d: 350, h: 450 }), // no backrest
@@ -515,10 +529,11 @@ const PRESETS = {
 };
 const PRESET_GROUPS = [
   [['생활 제품', 'Appliances'], ['purifier', 'coffee', 'air', 'floorlamp', 'tablelamp']],
-  [['가방', 'Bags'], ['backpack', 'pouch']],
+  [['전자제품', 'Electronics'], ['phone', 'galaxy', 'ipadmini', 'ipadair', 'macbook', 'airbuds', 'airpods', 'airmax']],
+  [['가방·캐리어', 'Bags & luggage'], ['backpack', 'pouch', 'lug20', 'lug24', 'lug26', 'lug28', 'lug30']],
   [['컵', 'Cups'], ['tumbler', 'mug', 'glass', 'latte']],
-  [['목업·소품', 'Mockup & objects'], ['a4', 'objet', 'ring', 'phone', 'galaxy', 'ipadmini', 'ipadair', 'macbook', 'airbuds', 'airpods', 'airmax']],
-  [['가구', 'Furniture'], ['desk', 'standing', 'dining', 'living', 'bar', 'sink', 'drawer', 'chair', 'pstool', 'office', 'stool', 'armchair', 'beanbag']],
+  [['목업·소품', 'Mockup & objects'], ['a4', 'objet', 'ring']],
+  [['가구', 'Furniture'], ['desk', 'standing', 'dining', 'living', 'bar', 'sink', 'drawer', 'wardrobe', 'chair', 'pstool', 'office', 'stool', 'armchair', 'sofa', 'sofa4', 'beanbag']],
 ];
 /* ring sizes (Korean 호 = Japanese 号): inner diameter 13.0 mm at size 1, +1/3 mm per size */
 const ringD = (n) => 13 + (n - 1) / 3;
@@ -535,8 +550,8 @@ const PROPS = {
 };
 const LIFT = { L: 0.23, phi: deg(62) }; // lift-up coffee table: parallel arms swing the top up and toward the sofa
 const LIFT_RISE = LIFT.L * Math.sin(LIFT.phi), LIFT_FWD = LIFT.L * (1 - Math.cos(LIFT.phi));
-const SURF = { floor: 0, table: 0.72, desk: 0.74, counter: 0.85, hand: 0, head: 0, back: 0 };
-const placeLabel = (k) => ({ floor: L('바닥', 'floor'), table: L('테이블', 'table'), desk: L('책상', 'desk'), counter: L('조리대', 'counter'), hand: L('손', 'hand'), head: L('머리', 'head'), back: L('등', 'back') })[k];
+const SURF = { floor: 0, table: 0.72, desk: 0.74, counter: 0.85, hand: 0, head: 0, back: 0, plinth: 0.9, air: 1 };
+const placeLabel = (k) => ({ floor: L('바닥', 'floor'), table: L('테이블', 'table'), desk: L('책상', 'desk'), counter: L('조리대', 'counter'), hand: L('손', 'hand'), head: L('머리', 'head'), back: L('등', 'back'), plinth: L('단상', 'plinth'), air: L('공중', 'midair') })[k];
 const PLACES = ['floor', 'table', 'desk', 'counter', 'hand'];
 const lvText = (k) => ({ good: L('편안', 'Good'), info: L('참고', 'Note'), warn: L('주의', 'Caution'), bad: L('문제', 'Problem') })[k];
 const RANK = { good: 0, info: 0, warn: 1, bad: 2 };
@@ -1336,7 +1351,7 @@ function handFrame(X, Y) {
 const inHand = (F, o) => F.x.clone().multiplyScalar(o.x).addScaledVector(F.y, o.y).addScaledVector(F.z, o.z);
 
 function poseNow() {
-  const A = S.A, p = PP(), E = S.E, k = anim.reach, plan = S.plan;
+  const A = S.A, p = PP(), E = S.E, plan = S.plan, k = furn() === 'coffee' && anim.phase === 'idle' ? 0 : anim.reach; // at a coffee table they sit back, and reach only while Play runs
   const using = S.mode === 'use' && !carried() && E && E.targetLocal;
   const P = basePose(A, p, using ? E.flex * k : 0);
   const arms = [];
@@ -1455,6 +1470,7 @@ function kind() {
   if (S.shape === 'headphone' || S.shape === 'earbud') return 'worn';
   if (S.screen || S.look === 'paper' || S.shape === 'ring') return 'flat';
   if (S.look === 'backpack') return 'pack';
+  if (S.look === 'luggage') return 'luggage';
   if (S.look === 'tablelamp') return 'lamp';
   if (S.shape === 'laptop') return 'laptop';
   if (S.shape === 'cup' || S.look === 'tumbler' || S.look === 'case' || S.look === 'pouch') return 'small';
@@ -1462,8 +1478,8 @@ function kind() {
   if (S.look === 'airpurifier' || S.look === 'floorlamp') return 'floor';
   return 'free';
 }
-const PLACE_OK = { pack: ['back', 'floor'], lamp: ['desk', 'table', 'counter'], worn: ['head'], flat: ['hand', 'desk'], laptop: ['table', 'desk'], small: ['hand', 'desk', 'table', 'counter'], dispenser: ['counter', 'table', 'desk'], floor: ['floor'] };
-const placeOk = (p) => (kind() === 'free' ? !(p === 'hand' && S.noHand) : PLACE_OK[kind()].includes(p));
+const PLACE_OK = { luggage: ['floor', 'air'], pack: ['back', 'floor', 'air'], lamp: ['desk', 'table', 'counter', 'plinth', 'air'], worn: ['head'], flat: ['hand', 'desk', 'plinth', 'air'], laptop: ['table', 'desk', 'air'], small: ['hand', 'desk', 'table', 'counter', 'plinth', 'air'], dispenser: ['counter', 'table', 'desk', 'air'], floor: ['floor', 'air'] }; // plinth: a plain cube to stand it on; air: floating at a set height
+const placeOk = (p) => (kind() === 'free' ? !(p === 'hand' && S.noHand) && p !== 'back' : PLACE_OK[kind()].includes(p));
 const canDispense = () => kind() === 'free' || kind() === 'dispenser';
 const hasControls = () => ['free', 'dispenser', 'floor', 'lamp'].includes(kind()); // the others are simply held, worn, typed on or looked at
 const lookOnly = () => deskItem() || (kind() === 'small' && S.place !== 'hand') || (kind() === 'pack' && S.place !== 'back'); // set down just to be looked at: no reaching or pressing
@@ -1471,6 +1487,7 @@ const isDispense = () => S.action === 'dispense' && !isFurniture() && S.place !=
 const cupInHand = () => isDispense() && S.face === 'front';
 const cupOnTray = () => isDispense() && S.face === 'top';
 const isCoffee = () => /커피|coffee|espresso|에스프레소|라떼|latte|캡슐|capsule/i.test(`${S.name} ${S.pkey || ''}`);
+const plinthSize = () => ({ w: ((S.surf && S.surf.plinthW) || 400) / 1000, d: ((S.surf && S.surf.plinthD) || 400) / 1000, h: SURF.plinth });
 const carried = () => S.place === 'hand' || S.place === 'head' || S.place === 'back'; // held in the hands, or worn on the head or the back
 const setDown = () => S.source === 'box' && (S.shape === 'ring' || S.look === 'paper' || S.screen); // things that are held, or laid flat on the desk: a ring, a sheet, a phone, a tablet
 const deskItem = () => atDesk() && setDown();
@@ -1518,8 +1535,9 @@ const DETAIL = {
     { k: 'arm', ko: '팔걸이', en: 'Armrests', opts: [[1, '있음', 'On'], [0, '없음', 'Off']], def: 1 }, DR('armH', '팔걸이 높이(좌면 위)', 'Armrest above seat', 120, 350, 235, 5), DR('armGap', '팔걸이 안쪽 간격', 'Between armrests', 380, 700, () => S.w - 15, 5), DR('armL', '팔걸이 길이', 'Armrest length', 120, 380, 250, 5),
     DR('gasMin', '좌면 최저', 'Lowest seat', 330, 560, 400, 5), DR('gasMax', '좌면 최고', 'Highest seat', 380, 700, 520, 5), DR('wheel', '바퀴 지름', 'Caster diameter', 35, 80, 50, 5)],
   chair: [DR('backH', '등받이 높이(좌면 위)', 'Backrest above seat', 150, 600, 400, 5), DR('seatT', '좌판 두께', 'Seat thickness', 12, 80, 30), DR('legT', '다리 굵기', 'Leg thickness', 15, 70, 32), { ...MAT_ROW, ko: '좌판 재질', en: 'Seat material' }],
-  pstool: [DR('seatT', '좌판 두께', 'Seat thickness', 15, 90, 40), DR('legT', '다리 굵기', 'Leg thickness', 15, 60, 28), { ...MAT_ROW, ko: '좌판 재질', en: 'Seat material' }],
+  pstool: [{ k: 'form', ko: '형태', en: 'Form', opts: [['legs', '다리', 'Legs'], ['cyl', '원기둥', 'Cylinder'], ['cube', '큐브', 'Cube']], def: 'legs' }, DR('seatT', '좌판 두께', 'Seat thickness', 15, 90, 40), DR('legT', '다리 굵기', 'Leg thickness', 15, 60, 28), { ...MAT_ROW, ko: '좌판 재질', en: 'Seat material' }],
   stool: [DR('seatT', '좌판 두께', 'Seat thickness', 15, 90, 50), DR('legT', '다리 굵기', 'Leg thickness', 15, 60, 26), { ...MAT_ROW, ko: '좌판 재질', en: 'Seat material' }],
+  drawer: [{ k: 'casters', ko: '바퀴', en: 'Casters', opts: [[0, '없음', 'None'], [1, '있음', 'On']], def: 0 }, DR('caster', '바퀴 지름', 'Caster diameter', 30, 100, 50, 5)],
   desk: TABLE_ROWS(25, 22, '옆판 두께', 'Side panel thickness'), standing: TABLE_ROWS(25, 70, '기둥 굵기', 'Column thickness'), dining: TABLE_ROWS(30, 55), bar: TABLE_ROWS(35, 44), coffee: TABLE_ROWS(30, 50, '발 굵기', 'Foot thickness'),
   headphone: [DR('cupH', '귀마개 높이', 'Ear cushion height', 60, 130, () => Math.round(clamp(0.5 * S.h, 75, 115))), DR('cupL', '귀마개 폭', 'Ear cushion width', 50, 115, () => Math.round(clamp(0.88 * S.d, 58, 95))), DR('cupT', '귀마개 두께', 'Ear cup thickness', 12, 45, () => Math.round(clamp(0.13 * S.w, 17, 30))), DR('bandW', '머리띠 폭', 'Headband width', 12, 45, 29)],
 };
@@ -1570,7 +1588,10 @@ function seatGeo(group, kind, W, D, H, mat, ringY, frame = mats.frame) {
     }
     return;
   }
-  if (kind === 'pstool') { // plain stool: round seat on four legs with a low ring, no backrest
+  if (kind === 'pstool') { // plain stool: round seat on four legs with a low ring, no backrest; or a solid drum, or a cube
+    const form = DET_ON ? dv('form') : 'legs';
+    if (form === 'cyl') { S2.cyl(W / 2, W / 2, H, 0, H / 2, cz, 56); return; }
+    if (form === 'cube') { S2.box(W, H, D, 0, H / 2, cz, 0, Math.min(0.012, W / 10)); return; }
     const R = W / 2, st = q('seatT', 0.04), ry = Math.min(0.2, H * 0.4), rr = R * 0.85 + (R * 0.62 - R * 0.85) * (ry / Math.max(H - st, 0.1)) + 0.01;
     S2.cyl(R, R * 0.97, st, 0, H - st / 2, cz, 40);
     for (let i = 0; i < 4; i++) { const a = Math.PI / 4 + (i * Math.PI) / 2, c = Math.cos(a), s = Math.sin(a); K.rod(new V3(c * R * 0.62, H - st, cz + s * R * 0.62), new V3(c * R * 0.85, 0, cz + s * R * 0.85), q('legT', 0.028) / 2); }
@@ -1590,8 +1611,8 @@ function seatGeo(group, kind, W, D, H, mat, ringY, frame = mats.frame) {
     K.mesh(g, 0, 0, 0);
     return;
   }
-  if (kind === 'sofa' || kind === 'armchair') { // sofa: two cushions; armchair: one
-    const armW = Math.min(0.16, W * 0.18), bk = 0.2, legH = 0.06, sw = W - 2 * armW, n = W > 1.2 ? 2 : 1, cw = sw / n;
+  if (kind === 'sofa' || kind === 'armchair') { // sofa: a cushion per seat (up to four); armchair: one
+    const armW = Math.min(0.16, W * 0.18), bk = 0.2, legH = 0.06, sw = W - 2 * armW, n = clamp(Math.round(sw / 0.62), 1, 4), cw = sw / n;
     K.box(W, H - 0.12 - legH, D + bk, 0, legH + (H - 0.12 - legH) / 2, -(D + bk) / 2, 0, 0.02);
     for (let i = 0; i < n; i++) {
       const x = -sw / 2 + cw * (i + 0.5);
@@ -1707,9 +1728,23 @@ function tableGeo(group, style, W, D, H, mat, keys = true) {
     group.userData.sink = { tip: new V3(0, H + 0.245, zf + 0.2), bottom: H - depth };
     return;
   }
-  if (style === 'drawer') { // chest of drawers: plinth, carcass, drawer fronts with bar handles
-    const base = 0.06, t = 0.02, n = drawerCount(H), fh = (H - base - t) / n;
+  if (style === 'wardrobe') { // wardrobe: plinth, carcass, two doors with long bar handles, a hanging rail and a shelf inside (seen at the gap)
+    const base = 0.06, t = 0.02, dw = W / 2 - 0.004, hy = Math.min(1.1, H * 0.5);
     T.box(W - 0.04, base, D - 0.04, 0, base / 2, -D / 2 - 0.01);
+    K.box(W, H - base, D - 0.02, 0, base + (H - base) / 2, -0.02 - (D - 0.02) / 2);
+    for (const sx of [-1, 1]) {
+      kit(group, mat).box(dw, H - base - 0.006, 0.019, sx * (dw / 2 + 0.002), base + (H - base) / 2, -0.0095, 0, 0.003);
+      X.rod(new V3(sx * 0.04, hy - 0.2, 0.014), new V3(sx * 0.04, hy + 0.2, 0.014), 0.006);
+      for (const py of [hy - 0.19, hy + 0.19]) X.rod(new V3(sx * 0.04, py, -0.001), new V3(sx * 0.04, py, 0.014), 0.004);
+    }
+    T.box(0.004, H - base - 0.01, 0.002, 0, base + (H - base) / 2, 0.0005); // the gap between the doors
+    group.userData.wardrobe = { rail: H - 0.12, shelf: H - 0.06, handle: hy };
+    return;
+  }
+  if (style === 'drawer') { // chest of drawers: plinth (or casters), carcass, drawer fronts with bar handles
+    const base = drawerBase(), t = 0.02, n = drawerCount(H), fh = (H - base - t) / n;
+    if (base === 0.06) T.box(W - 0.04, base, D - 0.04, 0, base / 2, -D / 2 - 0.01);
+    else { const wr = (base - 0.012) / 2; for (const sx of [-1, 1]) for (const sz of [0, 1]) { const x = sx * (W / 2 - 0.05), z = -0.05 - sz * (D - 0.1); T.cyl(wr, wr, 0.022, x, wr, z, 20).rotation.z = Math.PI / 2; X.box(0.03, 0.012, 0.03, x, base - 0.006, z); } }
     K.box(W, H - base - t, D - 0.02, 0, base + (H - base - t) / 2, -0.02 - (D - 0.02) / 2);
     K.box(W + 0.01, t, D + 0.005, 0, H - t / 2, -D / 2 + 0.0025, 0, 0.004);
     const top = new THREE.Group(); // the top drawer slides out when it's pulled
@@ -1745,7 +1780,8 @@ function rowOffsets() { // each unit's centre from the picked one's, mm, left to
   const c = xs[S.pick || 0]; return xs.map((v) => v - c);
 }
 const rowSpan = () => { const r = rowUnits(); if (!r) return { left: S.w / 2, right: S.w / 2, total: S.w }; const o = rowOffsets(); return { left: Math.max(...r.map((u, i) => u.w / 2 - o[i])), right: Math.max(...r.map((u, i) => o[i] + u.w / 2)), total: r.reduce((t, u) => t + u.w, 0) + r.length - 1 }; }; // mm
-const drawerHandle = (i) => { const H = S.h / 1000, n = drawerCount(H), fh = (H - 0.08) / n; return (0.06 + i * fh + fh * 0.72) * S.scale; }; // drawer 0 is the bottom one
+const drawerBase = () => (detKind() === 'drawer' && dv('casters') ? dv('caster') / 1000 + 0.012 : 0.06); // a plinth, or casters under the carcass
+const drawerHandle = (i) => { const H = S.h / 1000, n = drawerCount(H), b = drawerBase(), fh = (H - b - 0.02) / n; return (b + i * fh + fh * 0.72) * S.scale; }; // drawer 0 is the bottom one
 /* lift-up top: k = 0 closed, 1 fully raised (up 20 cm and 12 cm toward the sofa) */
 function setLift(group, k) {
   const u = group.userData.lift;
@@ -2146,6 +2182,22 @@ function tumblerGeo(group, W, H) {
   own(new RoundedBoxGeometry(R * 0.4, 0.003, R * 0.3, 2, 0.0012), mats.trim).position.set(0, H + 0.0012, zc + R * 0.1);
 }
 /* ---------- bags and lamps ---------- */
+const luggageHandle = () => (S.ctrl / 1000) * S.scale; // the trolley handle's grip height when pulled out
+/* suitcase: a hard shell with rounded corners and ribs, the zip seam round it, four spinner wheels (part of H), a carry handle on top
+   and the trolley handle pulled out to its grip height (the control point) */
+function luggageGeo(group, W, D, H) {
+  const own = meshIn(group), wh = Math.min(0.07, H * 0.11), body = H - wh, r = Math.min(0.06, W * 0.15), bev = Math.min(0.025, D * 0.12);
+  own(plateGeo(W, D, body, r, bev, 5).applyMatrix4(ON_DECK).translate(0, wh, 0), mats.foam);
+  const ribs = [];
+  for (const x of [-0.3, -0.1, 0.1, 0.3]) ribs.push([new RoundedBoxGeometry(0.012, body * 0.82, 0.004, 2, 0.0018), new THREE.Matrix4().makeTranslation(x * W, wh + body / 2, 0.0012)]);
+  own(mergeGeo(ribs), mats.trim);
+  own(plateGeo(W - 0.004, D - 0.004, 0.006, Math.max(r - 0.002, 0.004), 0.002, 2).applyMatrix4(ON_DECK).translate(0, wh + body * 0.5 - 0.003, -0.002), mats.tire); // the zip seam round the middle
+  for (const sx of [-1, 1]) for (const sz of [0, 1]) { const x = sx * (W / 2 - 0.04), z = -0.035 - sz * (D - 0.07); own(new THREE.CylinderGeometry(wh * 0.38, wh * 0.38, 0.018, 20).rotateZ(Math.PI / 2).translate(x, wh * 0.38, z), mats.tire); own(new RoundedBoxGeometry(0.035, wh * 0.4, 0.03, 2, 0.006), mats.frame).position.set(x, wh * 0.78, z); }
+  own(new RoundedBoxGeometry(0.12, 0.022, 0.03, 2, 0.01), mats.pad).position.set(0, H + 0.008, -D / 2); // carry handle
+  const top = Math.max(luggageHandle() / S.scale, H + 0.08), zt = -D * 0.82;
+  for (const sx of [-1, 1]) own(new THREE.CylinderGeometry(0.008, 0.008, top - H + 0.02, 12).translate(sx * 0.07, H + (top - H) / 2 - 0.01, zt), mats.frame);
+  own(new RoundedBoxGeometry(0.17, 0.024, 0.032, 2, 0.01), mats.pad).position.set(0, top, zt); // the grip
+}
 const lampShade = new THREE.MeshStandardMaterial({ color: 0xf1e7d6, emissive: 0xffd9a0, emissiveIntensity: 0.35, roughness: 0.85, side: THREE.DoubleSide });
 const bulbMat = new THREE.MeshStandardMaterial({ color: 0xfff4dc, emissive: 0xffe2a8, emissiveIntensity: 1.2 });
 /* where a worn backpack sits (body frame): its top just under the shoulders, its back panel on the person's back; bag frame is turned round */
@@ -2205,9 +2257,9 @@ function buildProduct() {
   if (S.source === 'model' && modelInner) holder.add(modelInner);
   else if (isFurniture()) {
     DET_ON = true;
-    try { (S.shape === 'chair' ? seatGeo : tableGeo)(holder, furn(), W, D, Hh, mats.foam); } finally { DET_ON = false; }
+    try { (S.shape === 'chair' ? seatGeo : tableGeo)(holder, furn(), W, D, Hh, mats.foam);
     const r = rowUnits();
-    if (r && r.length > 1) { const off = rowOffsets(); r.forEach((u, i) => { if (i === S.pick) return; const g = new THREE.Group(); g.position.x = off[i] / 1000; g.userData.own = true; holder.add(g); tableGeo(g, 'drawer', u.w / 1000, u.d / 1000, u.h / 1000, mats.foam); }); }
+    if (r && r.length > 1) { const off = rowOffsets(); r.forEach((u, i) => { if (i === S.pick) return; const g = new THREE.Group(); g.position.x = off[i] / 1000; g.userData.own = true; holder.add(g); tableGeo(g, 'drawer', u.w / 1000, u.d / 1000, u.h / 1000, mats.foam); }); } } finally { DET_ON = false; }
   }
   else if (S.shape === 'cup') cupGeo(holder, S.style, W, Hh);
   else if (S.shape === 'ring') ringGeo(holder, S.w, S.d, S.h, S.ringSize);
@@ -2218,6 +2270,7 @@ function buildProduct() {
   else if (S.look === 'case' && S.shape === 'box') caseGeo(holder, W, D, Hh);
   else if (S.look === 'purifier' && S.shape === 'box') purifierGeo(holder, W, D, Hh);
   else if (S.look === 'backpack' && S.shape === 'box') backpackGeo(holder, W, D, Hh);
+  else if (S.look === 'luggage' && S.shape === 'box') luggageGeo(holder, W, D, Hh);
   else if (S.look === 'pouch' && S.shape === 'box') pouchGeo(holder, W, D, Hh);
   else if (S.look === 'floorlamp' && S.shape === 'box') lampGeo(holder, W, D, Hh, true);
   else if (S.look === 'tablelamp' && S.shape === 'box') lampGeo(holder, W, D, Hh, false);
@@ -2250,6 +2303,9 @@ function buildSurface() {
     tableGeo(g, 'desk', dl.W, dl.D, SURF.desk, mats.surfaceTop, !dl.lap); // a shade darker than the floor-standing tables, so a white sheet on it shows
     surface.add(g);
     surface.userData.desk = g;
+  } else if (S.place === 'plinth') { // a plain cube, its size set on its own
+    const pl = plinthSize();
+    box(surface, pl.w, pl.h, pl.d, 0, pl.h / 2, -P.D / 2, mats.surface); // centred under the product
   } else if (S.place === 'table') {
     const w = Math.max(1.0, P.W + 0.6), d = Math.max(0.7, P.D + 0.25), h = SURF.table;
     box(surface, w, 0.03, d, 0, h - 0.015, EDGE - d / 2, mats.surfaceTop);
@@ -2263,8 +2319,8 @@ function layoutHuman() {
   if (carried()) { human.position.set(0, 0, 0); human.rotation.set(0, 0, 0); return; }
   if (atDesk()) { const dl = deskLayout(); human.position.set(-dl.xc, 0, -dl.zf + (A.chair === 'wheel' ? 0.22 : 0.2)); human.rotation.set(0, Math.PI, 0); return; } // at the keyboard
   if (S.mode === 'compare') {
-    const top = S.place === 'counter' ? Math.max(1.1, P.W + 0.6) : S.place === 'table' ? Math.max(1.0, P.W + 0.6) : 0; // the counter or table it stands on
-    const near = (rowUnits() ? (rowSpan().left / 1000) * S.scale : P.W / 2) + (top ? 0.12 : 0); // the product sits just in from the end nearest the person, so its size reads against them
+    const top = S.place === 'plinth' || S.place === 'air' ? 0 : S.place === 'counter' ? Math.max(1.1, P.W + 0.6) : S.place === 'table' ? Math.max(1.0, P.W + 0.6) : 0; // the counter or table it stands on
+    const near = (rowUnits() ? (rowSpan().left / 1000) * S.scale : S.place === 'plinth' ? Math.max(P.W, plinthSize().w) / 2 : P.W / 2) + (top ? 0.12 : 0); // the product sits just in from the end nearest the person, so its size reads against them
     if (top) surface.position.x = top / 2 - near;
     human.position.set(-(near + (top ? 0.12 : 0.3) + (A.chair === 'prop' && A.prop === 'sofa' ? 0.86 : A.seated ? 0.34 : A.shoulderHalf)), 0, A.seated ? -0.12 : -0.08);
     human.rotation.set(0, 0, 0);
@@ -2279,7 +2335,7 @@ function layoutHuman() {
   } else if (A.seated) {
     const front = A.thigh + 0.14;
     z = S.place === 'table' ? EDGE + 0.22 : S.place === 'counter' ? EDGE + front + 0.02 : 0.15 + front;
-  } else z = S.place === 'counter' ? EDGE - 0.02 + toe : S.place === 'table' ? EDGE + 0.03 + toe : 0.1 + toe;
+  } else z = S.place === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + 0.06 + toe : S.place === 'counter' ? EDGE - 0.02 + toe : S.place === 'table' ? EDGE + 0.03 + toe : 0.1 + toe;
   human.position.set(0, 0, z);
   human.rotation.set(0, Math.PI, 0);
 }
@@ -2317,8 +2373,9 @@ function furnPoint(hand) {
     case 'dining': return new V3(hand ? 0.17 * k : 0, P.H, -0.2 * k); // beside the plate
     case 'coffee': return new V3(x, tableTop(), -0.06 * P.D - 0.06 * k + S.lift * LIFT_FWD * k); // just inside the near edge of the lifting panel
     case 'sink': { const sk = SINK(S.w / 1000, S.d / 1000); return new V3(hand ? 0.03 : 0, P.H - sk.depth * k + (hand ? 0.08 : 0), sk.bz * k + (hand ? 0.03 : 0)); } // in the bowl, where hands wash
+    case 'wardrobe': return new V3(hand ? 0.04 * k : 0, Math.min(1.1, (S.h / 1000) * 0.5) * k, hand ? 0.03 : 0.015); // a door handle
     case 'drawer': return new V3(hand ? 0.03 : 0, drawerHandle(drawerCount(S.h / 1000) - 1) + (hand ? 0.012 : 0), hand ? 0.03 : 0.012); // the top drawer's handle
-    case 'chair': case 'stool': case 'pstool': case 'office': case 'armchair': case 'beanbag': return new V3(0, P.H, -P.D / 2);
+    case 'chair': case 'stool': case 'pstool': case 'office': case 'armchair': case 'sofa': case 'beanbag': return new V3(0, P.H, -P.D / 2);
     default: return new V3(x, P.H, -Math.min(0.12, P.D / 3));
   }
 }
@@ -2326,6 +2383,7 @@ function controlWorld() {
   const P = dims(), sy = SURF[S.place];
   if (isFurniture()) return furnPoint(false);
   if (S.shape === 'laptop' && S.source === 'box' && holder.userData.laptop) return keyboardPoint(); // you type on it
+  if (S.look === 'luggage' && S.source === 'box') return new V3(0, sy + luggageHandle(), -P.D * 0.82); // the pulled-out trolley handle
   if (S.face === 'top') return new V3(0, sy + P.H, -Math.min(0.08, P.D * 0.25));
   return new V3(0, sy + ctrlM(), 0);
 }
@@ -3063,11 +3121,18 @@ function furnitureChecks(out, add, push, b0) {
       add(L('맨 위 서랍', 'Top drawer'), `${L('손잡이', 'handle')} ${cmi(topH)}cm · ${txt}`, lv);
       const rb = reachSolve(A, p, human.worldToLocal(new V3(0.03, botH, 0.03)), p.maxFlex ?? 60), [bt, bl] = reachText(rb, A, careful), low = !rb.ok || rb.f > 44;
       add(L('맨 아래 서랍', 'Bottom drawer'), `${L('손잡이', 'handle')} ${cmi(botH)}cm · ${low ? L('쪼그려 앉아야 열어요', 'you have to crouch to open it') : bt}`, low ? 'warn' : bl === 'bad' ? 'warn' : bl);
-      add(L('서랍', 'Drawers'), L(`${n}단 · 한 칸 높이 ${cmi((S.h / 1000 - 0.08) / n * S.scale)}cm · 깊이 ${cmi(P.D)}cm`, `${n} drawers, ${cmi((S.h / 1000 - 0.08) / n * S.scale)} cm each, ${cmi(P.D)} cm deep`), 'info');
+      add(L('서랍', 'Drawers'), L(`${n}단${drawerBase() !== 0.06 ? ' · 바퀴' : ''} · 한 칸 높이 ${cmi((S.h / 1000 - drawerBase() - 0.02) / n * S.scale)}cm · 깊이 ${cmi(P.D)}cm`, `${n} drawers, ${cmi((S.h / 1000 - 0.08) / n * S.scale)} cm each, ${cmi(P.D)} cm deep`), 'info');
+    } else if (st === 'wardrobe') { // the rail and the shelf above it against the person's reach, the doors' swing
+      const k = S.scale, rail = (S.h / 1000 - 0.12) * k, reach = Lm.shY + A.armLen * 0.95, d = rail - reach;
+      add(L('옷봉', 'Hanging rail'), `${cmi(rail)}cm · ${L('손이 닿는 높이', 'reach')} ${cmi(reach)}cm · ` + (d > 0.05 ? L(`${cmi(d)}cm 높아 발돋움해야 걸어요`, `${cmi(d)} cm too high, on tiptoe to hang`) : d > -0.15 ? L('팔을 뻗어 걸 수 있어요', 'reachable with the arm up') : L('편하게 걸어요', 'easy to hang on')), d > 0.15 ? 'bad' : d > 0.05 ? 'warn' : 'good');
+      if (d > 0.05) push(`rail:${S.persona}:${mmi(rail)}`, d > 0.15 ? 'bad' : 'warn', L(`옷장 높이를 ${S.h}→${Math.round(((reach + 0.12 * k) / k) * 200) * 5}mm로 낮추면 ${who} 손이 옷봉에 닿아요.`, `A ${Math.round(((reach + 0.12 * k) / k) * 200) * 5} mm wardrobe (now ${S.h}) puts the rail in this ${whoEn}'s reach.`), ok, () => setDimEffective('h', Math.round(((reach + 0.12 * k) / k) * 200) * 5));
+      const hdl = Math.min(1.1, (S.h / 1000) * 0.5) * k;
+      add(L('문 손잡이', 'Door handle'), `${cmi(hdl)}cm · ` + (hdl > Lm.shY ? L('어깨보다 높아요', 'above the shoulder') : hdl < Lm.elY - 0.25 ? L('낮아서 숙여 열어요', 'low, you bend to open') : L('편하게 열어요', 'easy to open')), hdl > Lm.shY || hdl < Lm.elY - 0.25 ? 'warn' : 'good');
+      add(L('문 여는 공간', 'Door swing'), L(`문 한 짝 폭 ${cmi(P.W / 2)}cm · 앞에 ${cmi(P.W / 2)}cm 이상 비워야 해요`, `Each door ${cmi(P.W / 2)} cm wide · keep ${cmi(P.W / 2)} cm clear in front`), 'info');
     } else elbowCheck(top);
-    if (st !== 'sink' && st !== 'coffee' && st !== 'drawer') add(L('손 닿기', 'Reach'), rt, rl === 'good' ? 'good' : 'info');
+    if (st !== 'sink' && st !== 'coffee' && st !== 'drawer' && st !== 'wardrobe') add(L('손 닿기', 'Reach'), rt, rl === 'good' ? 'good' : 'info');
   } else {
-    out.flex = { beanbag: -36, armchair: -6 }[st] || 0; // lean back into a beanbag or an armchair
+    out.flex = { beanbag: -36, armchair: -6, sofa: -6 }[st] || 0; // lean back into a beanbag or an armchair
     const seat = P.H, pop = A.popliteal, d = seat - pop;
     if (st === 'stool') {
       const ring = stoolRing(S.h / 1000, S.w / 1000), ry = ring.y * S.scale, dd = seat - ry - pop;
@@ -3110,7 +3175,7 @@ function furnitureChecks(out, add, push, b0) {
       add(L('좌면 깊이', 'Seat depth'), over > 0 ? L(`${cmi(P.D)}cm · 무릎 뒤가 좌면 끝에 닿아 등받이에 기대기 어려워요`, `${cmi(P.D)} cm · the knees reach the edge before the back reaches the backrest`) : L(`${cmi(P.D)}cm · 엉덩이~오금 ${cmi(bk)}cm 안에 들어와요`, `${cmi(P.D)} cm · within the buttock-to-knee length (${cmi(bk)} cm)`), over > 0 ? 'warn' : 'good');
       if (over > 0) push(`seat-d:${S.persona}:${mmi(P.D)}`, 'warn', L(`좌면 깊이를 ${mmi(P.D)}→${mmi(bk - 0.06)}mm로 줄이면 등받이에 기댈 수 있어요.`, `A ${mmi(bk - 0.06)} mm deep seat (now ${mmi(P.D)}) lets the back reach the backrest.`), ok, () => setDimEffective('d', mmi(bk - 0.06)));
     }
-    const hipW = A.hipW * 1.1, inner = st === 'armchair' ? P.W - 2 * Math.min(0.16, P.W * 0.18) : P.W, dw = inner - hipW, perch = st === 'stool' || st === 'pstool'; // a stool is perched on
+    const hipW = A.hipW * 1.1, inner = st === 'armchair' || st === 'sofa' ? (P.W - 2 * Math.min(0.16, P.W * 0.18)) / (st === 'sofa' ? clamp(Math.round((P.W - 2 * Math.min(0.16, P.W * 0.18)) / 0.62), 1, 4) : 1) : P.W, dw = inner - hipW, perch = st === 'stool' || st === 'pstool'; // a stool is perched on
     const [wt, we, wl] = dw >= 0.04 ? ['보다 넉넉해요', ', roomy', 'good'] : dw >= 0 ? ['와 비슷해 꼭 맞아요', ', a snug fit', 'good'] : perch && dw >= -0.03 ? [`보다 ${cmi(-dw)}cm 좁지만 걸터앉는 스툴이라 괜찮아요`, `, ${cmi(-dw)} cm narrower but fine to perch on`, 'info'] : [`보다 ${cmi(-dw)}cm 좁아요`, `, ${cmi(-dw)} cm too narrow`, 'warn'];
     add(L('좌면 폭', 'Seat width'), L(`${cmi(inner)}cm · 앉은 엉덩이 폭 ${cmi(hipW)}cm${wt}`, `${cmi(inner)} cm · seated hip width ${cmi(hipW)} cm${we}`), wl);
   }
@@ -3130,7 +3195,7 @@ function refresh(o = {}) {
   if (k === 'dispenser') S.action = 'dispense';
   if (rowUnits() && S.row[S.pick] && (S.row[S.pick].w !== S.w || S.row[S.pick].d !== S.d || S.row[S.pick].h !== S.h)) S.row = S.row.map((u, i) => (i === S.pick ? { ...u, w: S.w, d: S.d, h: S.h } : u)); // the size fields are the picked unit's
   if (lookOnly()) { if (S.mode !== 'compare') { S.itemMode = S.mode; S.mode = 'compare'; } } else if (S.itemMode) { S.mode = S.itemMode; S.itemMode = null; } // only looked at; the mode comes back after
-  for (const [k, d] of [['table', 720], ['desk', 740], ['counter', 850]]) SURF[k] = ((S.surf && S.surf[k]) || d) / 1000; // the table, desk or counter it stands on, at its set height
+  for (const [k, d] of [['table', 720], ['desk', 740], ['counter', 850], ['plinth', 900], ['air', 1000]]) SURF[k] = ((S.surf && S.surf[k]) || d) / 1000; // the table, desk or counter it stands on, at its set height
   S.A = anthro(p, S.height, S.bmi);
   if (detKind() === 'office') { const lo = dv('gasMin'), hi = Math.max(dv('gasMax'), lo), want = clamp(Math.round(((S.A.popliteal + 0.01) / S.scale) * 200) * 5, lo, hi); if (want !== S.h) { S.h = want; o = { ...o, rebuild: true }; } } // the gas lift set for this person, within its range
   seatSetup(p);
@@ -3163,7 +3228,7 @@ function seatSetup(p) {
     if (st === 'stool') { const ring = stoolRing(S.h / 1000, S.w / 1000); A.footrest = { y: ring.y * S.scale + 0.009, z: -P.D / 2 + ring.r * S.scale + 0.015 - hipZ }; }
     return;
   }
-  if ((S.posture !== 'sit' && !atDesk()) || st === 'sink' || st === 'drawer') return; // at the desk everyone sits
+  if ((S.posture !== 'sit' && !atDesk()) || st === 'sink' || st === 'drawer' || st === 'wardrobe') return; // at the desk everyone sits
   const kind = propKind(), pr = PROPS[kind], fit = S.seatMode === 'fit';
   const seat = fit ? fitSeat(A, kind) : S.seatH / 1000;
   const W = kind === 'chair' ? Math.max(0.42, A.hipW + 0.08) : pr.w, D = pr.d;
@@ -3207,7 +3272,8 @@ function renderDims() {
 
 const tgLabel = () => {
   const st = furn();
-  if (st) return st === 'sink' ? L('개수대 바닥', 'Bowl bottom') : st === 'drawer' ? L('위 서랍', 'Top drawer') : S.shape === 'chair' ? L('좌면', 'Seat') : L('상판', 'Top');
+  if (st) return st === 'sink' ? L('개수대 바닥', 'Bowl bottom') : st === 'drawer' ? L('위 서랍', 'Top drawer') : st === 'wardrobe' ? L('문 손잡이', 'Door handle') : S.shape === 'chair' ? L('좌면', 'Seat') : L('상판', 'Top');
+  if (S.look === 'luggage' && S.source === 'box') return L('손잡이', 'Handle');
   return cupInHand() ? L('출수구', 'Outlet') : S.shape === 'laptop' && S.source === 'box' ? L('키보드', 'Keyboard') : L('조작부', 'Control');
 };
 function updateTags() {
@@ -3294,10 +3360,14 @@ function syncUI() {
   $('unitField').hidden = !rowOn();
   syncDetail();
   { // the surface's own height, for a product set on a table, desk or counter
-    const on = ['table', 'desk', 'counter'].includes(S.place) && !isFurniture(), mm = Math.round(SURF[S.place] * 1000);
+    const NM = { table: ['테이블', 'Table'], desk: ['책상', 'Desk'], counter: ['조리대', 'Counter'], plinth: ['단상 H', 'Plinth H'], air: ['공중 높이', 'Height'] };
+    const on = !!NM[S.place] && !isFurniture(), mm = Math.round(SURF[S.place] * 1000), lim = S.place === 'air' ? [0, 2000] : S.place === 'plinth' ? [50, 1500] : [400, 1200];
     $('surfRow').hidden = !on;
-    if (on) { $('surfLab').textContent = L({ table: '테이블', desk: '책상', counter: '조리대' }[S.place], { table: 'Table', desk: 'Desk', counter: 'Counter' }[S.place]); if (document.activeElement !== $('surfIn')) $('surfIn').value = mm; if (document.activeElement !== $('surfNum')) $('surfNum').value = mm; }
-    for (const b of $('placeSeg').children) { const k = b.dataset.place; if (!SURF[k]) continue; const c = Math.round(SURF[k] * 100); b.dataset.ko = `${{ table: '테이블', desk: '책상', counter: '조리대' }[k]} ${c}`; b.dataset.en = `${{ table: 'Table', desk: 'Desk', counter: 'Counter' }[k]} ${c}`; b.textContent = LANG === 'en' ? b.dataset.en : b.dataset.ko; }
+    if (on) { $('surfLab').textContent = L(...NM[S.place]); for (const id of ['surfIn', 'surfNum']) { $(id).min = lim[0]; $(id).max = lim[1]; if (document.activeElement !== $(id)) $(id).value = mm; } }
+    const pl = S.place === 'plinth' && !isFurniture();
+    $('plinthRows').hidden = !pl;
+    if (pl) { const ps = plinthSize(); for (const [id, v] of [['plW', ps.w], ['plWn', ps.w], ['plD', ps.d], ['plDn', ps.d]]) if (document.activeElement !== $(id)) $(id).value = Math.round(v * 1000); }
+    for (const b of $('placeSeg').children) { const k = b.dataset.place; if (!NM[k]) continue; const c = Math.round(SURF[k] * 100), nm = { plinth: ['단상', 'Plinth'], air: ['공중', 'Midair'] }[k] || NM[k]; b.dataset.ko = `${nm[0]} ${c}`; b.dataset.en = `${nm[1]} ${c}`; b.textContent = LANG === 'en' ? b.dataset.en : b.dataset.ko; }
   }
   for (const id of ['rH', 'pH']) $(id).disabled = detKind() === 'office';
   if (rowOn()) {
@@ -3325,7 +3395,7 @@ function syncUI() {
   if (S.place === 'head' && S.view === 'first') setView('third');
   syncGhostBtn(); syncBodyVis();
   segSet('postureSeg', 'posture', A.seated ? 'sit' : 'stand');
-  const st = furn(), noSit = st === 'sink' || st === 'drawer';
+  const st = furn(), noSit = st === 'sink' || st === 'drawer' || st === 'wardrobe';
   for (const b of $('postureSeg').children) b.disabled = !!p.seated || A.chair === 'product' || (noSit && b.dataset.posture === 'sit') || (atDesk() && b.dataset.posture === 'stand');
   const prop = A.chair === 'prop', pr = prop ? PROPS[A.prop] : null;
   $('seatField').hidden = !prop;
@@ -3609,11 +3679,15 @@ function stepAnim(dt) {
   if (anim.phase === 'reach') {
     const k = clamp(anim.t / 0.9, 0, 1);
     anim.reach = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
-    if (k >= 1) { anim.phase = flows() ? 'pour' : S.plan && S.plan.kind === 'type' ? 'type' : S.plan && S.plan.kind === 'pull' ? 'pull' : drinking() ? 'drink' : 'idle'; anim.t = 0; } // after reaching: water runs, the fingers type, the drawer comes out, or the cup goes to the lips
+    if (k >= 1) { anim.phase = flows() ? 'pour' : S.plan && S.plan.kind === 'type' ? 'type' : S.plan && S.plan.kind === 'pull' ? 'pull' : drinking() ? 'drink' : furn() === 'coffee' ? 'rest' : 'idle'; anim.t = 0; } // after reaching: water runs, the fingers type, the drawer comes out, or the cup goes to the lips
   } else if (anim.phase === 'pour') {
     anim.pour = clamp(anim.t / 0.25, 0, 1);
     if (isDispense()) anim.fill = clamp(anim.t / 1.9, 0, 1) * 0.85;
     if (anim.t > 1.9) { anim.phase = 'drain'; anim.t = 0; }
+  } else if (anim.phase === 'rest') { // a moment at the table, then back against the sofa
+    const k = clamp((anim.t - 1.4) / 0.9, 0, 1);
+    anim.reach = 1 - k * k * (3 - 2 * k);
+    if (k >= 1) { anim.phase = 'idle'; anim.reach = 1; }
   } else if (anim.phase === 'drink') { // up to the lips, a sip, and back down
     const t = anim.t, e = (x) => { const k = clamp(x, 0, 1); return k * k * (3 - 2 * k); };
     anim.drink = t < 1.1 ? e(t / 1.1) : t < 2.1 ? 1 : 1 - e((t - 2.1) / 0.9);
@@ -3788,9 +3862,10 @@ function addUnit(left) {
   refresh({ rebuild: true, refit: true });
 }
 $('unitAddL').addEventListener('click', () => addUnit(true));
-function setSurf(v) { const k = S.place; if (!['table', 'desk', 'counter'].includes(k) || !(v >= 400 && v <= 1200)) return; S.surf = { ...(S.surf || {}), [k]: Math.round(v) }; refresh({ rebuild: true, refit: true }); }
+function setSurf(v, key) { const k = key || S.place, lim = k === 'air' ? [0, 2000] : k === 'plinth' || k === 'plinthW' || k === 'plinthD' ? [50, 1500] : [400, 1200]; if (!['table', 'desk', 'counter', 'plinth', 'air', 'plinthW', 'plinthD'].includes(k) || !(v >= lim[0] && v <= lim[1])) return; S.surf = { ...(S.surf || {}), [k]: Math.round(v) }; refresh({ rebuild: true, refit: true }); }
 $('surfIn').addEventListener('input', (e) => setSurf(+e.target.value));
 $('surfNum').addEventListener('change', (e) => setSurf(+e.target.value));
+for (const [id, k] of [['plW', 'plinthW'], ['plD', 'plinthD']]) { $(id).addEventListener('input', (e) => setSurf(+e.target.value, k)); $(id + 'n').addEventListener('change', (e) => setSurf(+e.target.value, k)); }
 /* detail sizes: a slider or a number sets one part; a button picks a material or armrests on/off */
 function setDet(k, v) { const sp = detSpec().find((x) => x.k === k); if (!sp) return; if (!sp.opts) v = clamp(Math.round(+v / sp.step) * sp.step, sp.min, sp.max); else v = sp.opts.find((o) => String(o[0]) === String(v))[0]; S.det = { ...(S.det || {}), [k]: v }; refresh({ rebuild: true }); }
 $('detRows').addEventListener('input', (e) => { const el = e.target; if (el.dataset.det && el.value !== '' && (el.type === 'range' || !isNaN(+el.value))) { if (el.type === 'number' && (+el.value < +el.min || +el.value > +el.max)) return; setDet(el.dataset.det, el.value); } });
