@@ -494,7 +494,8 @@ input:disabled { opacity: 0.55; }
           <button type="button" data-place="counter" data-en="Counter 85">조리대 85</button>
           <button type="button" data-place="hand" data-en="In hand">손에 들기</button>
           <button type="button" data-place="back" data-en="On the back" hidden>등에 메기</button>
-          <button type="button" data-place="air" data-en="Midair 100">공중 100</button>
+          <button type="button" data-place="wall" data-en="Wall">벽</button>
+<button type="button" data-place="air" data-en="Midair 100">공중 100</button>
           <button type="button" data-place="floor" data-en="Floor">바닥</button>
         </div>
         <div class="dimrow surfrow" id="surfRow" hidden><label for="surfIn" id="surfLab">높이</label><input type="range" id="surfIn" min="400" max="1200" step="5" aria-label="놓는 곳 높이" data-en-aria="Surface height"><input type="number" id="surfNum" inputmode="decimal" min="400" max="1200" step="1"></div>
@@ -564,6 +565,9 @@ const PRESETS = {
   tumbler: { name: '텀블러', en: 'Tumbler', shape: 'cyl', look: 'tumbler', w: 72, d: 72, h: 190, place: 'hand', face: 'front', ctrl: 120, action: 'press' },
   phonemini: { name: '스마트폰 5.4인치', en: 'Smartphone 5.4"', shape: 'box', w: 64, d: 7, h: 131, place: 'hand', face: 'front', ctrl: 65, action: 'press', screen: true },
   phone: { name: '스마트폰 6.3인치', en: 'Smartphone 6.3"', shape: 'box', w: 72, d: 8, h: 150, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true },
+  fold: { name: '폴더블 7.6인치', en: 'Foldable 7.6"', shape: 'box', w: 73, d: 9, h: 158, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true, fold: 'book' }, // folded size; open about 143 x 4 mm, like a small tablet
+  foldxl: { name: '폴더블 8인치 대형', en: 'Foldable 8" large', shape: 'box', w: 78, d: 10, h: 166, place: 'hand', face: 'front', ctrl: 80, action: 'press', screen: true, fold: 'book' },
+  flip: { name: '플립폰', en: 'Flip phone', shape: 'box', w: 75, d: 14, h: 86, place: 'hand', face: 'front', ctrl: 40, action: 'press', screen: true, fold: 'flip' }, // folded size; open about 75 x 167 mm
   galaxy: { name: '대화면 스마트폰 6.9인치', en: 'Large smartphone 6.9"', shape: 'box', w: 78, d: 8, h: 163, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true },
   ipadmini: { name: '태블릿 8.3인치', en: 'Tablet 8.3"', shape: 'box', w: 135, d: 6, h: 195, place: 'hand', face: 'front', ctrl: 100, action: 'press', screen: true },
   ipadair: { name: '태블릿 11인치', en: 'Tablet 11"', shape: 'box', w: 179, d: 6, h: 248, place: 'hand', face: 'front', ctrl: 120, action: 'press', screen: true },
@@ -624,6 +628,7 @@ const PRESETS = {
 };
 /* one product, several sizes: the product is picked first, then its size */
 const FAMILIES = {
+  fold: { ko: '폴더블', en: 'Foldable', sizes: [['fold', '7.6인치', '7.6"'], ['foldxl', '8인치 대형', '8" large']] },
   phone: { ko: '스마트폰', en: 'Smartphone', sizes: [['phonemini', '5.4인치 미니', '5.4" mini'], ['phone', '6.3인치', '6.3"'], ['galaxy', '6.9인치', '6.9"']] },
   tablet: { ko: '태블릿', en: 'Tablet', sizes: [['ipadmini', '8.3인치 미니', '8.3" mini'], ['ipadair', '11인치', '11"']] },
   sofa: { ko: '소파', en: 'Sofa', sizes: [['armchair', '1인', '1-seat'], ['sofa2', '2인', '2-seat'], ['sofa', '3인', '3-seat'], ['sofa4', '4인', '4-seat']] },
@@ -639,7 +644,7 @@ const roundBase = (sh = S.shape) => sh === 'cup' || sh === 'cone' || (sh === S.s
 const PRESET_GROUPS = [
   [['목업·소품', 'Mockup & objects'], ['cube', 'cyl', 'sphere', 'cone', 'plate', 'plinthp', 'fam:paper', 'ring']],
   [['생활 제품', 'Appliances'], ['purifier', 'coffee', 'air', 'floorlamp', 'tablelamp', 'mushroom']],
-  [['전자제품', 'Electronics'], ['fam:phone', 'fam:tablet', 'macbook', 'airbuds', 'airpods', 'airmax', 'robot', 'speaker']],
+  [['전자제품', 'Electronics'], ['fam:phone', 'fam:fold', 'flip', 'fam:tablet', 'macbook', 'airbuds', 'airpods', 'airmax', 'robot', 'speaker']],
   [['안경·헬멧', 'Eyewear & helmets'], ['glasses', 'goggles', 'helmet']],
   [['가방·캐리어', 'Bags & luggage'], ['backpack', 'wallet', 'fam:pouch', 'ecobag', 'hobo', 'fam:luggage']],
   [['컵', 'Cups'], ['tumbler', 'mug', 'glass', 'latte']],
@@ -660,8 +665,8 @@ const PROPS = {
 };
 const LIFT = { L: 0.23, phi: deg(62) }; // lift-up coffee table: parallel arms swing the top up and toward the sofa
 const LIFT_RISE = LIFT.L * Math.sin(LIFT.phi), LIFT_FWD = LIFT.L * (1 - Math.cos(LIFT.phi));
-const SURF = { floor: 0, table: 0.72, desk: 0.74, counter: 0.85, hand: 0, head: 0, back: 0, plinth: 0.9, air: 1 };
-const placeLabel = (k) => ({ floor: L('바닥', 'floor'), table: L('테이블', 'table'), desk: L('책상', 'desk'), counter: L('조리대', 'counter'), hand: L('손', 'hand'), head: L('머리', 'head'), back: L('등', 'back'), plinth: L('단상', 'plinth'), air: L('공중', 'midair') })[k];
+const SURF = { floor: 0, table: 0.72, desk: 0.74, counter: 0.85, hand: 0, head: 0, back: 0, plinth: 0.9, air: 1, wall: 1.3 };
+const placeLabel = (k) => ({ floor: L('바닥', 'floor'), table: L('테이블', 'table'), desk: L('책상', 'desk'), counter: L('조리대', 'counter'), hand: L('손', 'hand'), head: L('머리', 'head'), back: L('등', 'back'), plinth: L('단상', 'plinth'), wall: L('벽', 'wall'), air: L('공중', 'midair') })[k];
 const PLACES = ['floor', 'table', 'desk', 'counter', 'hand'];
 const lvText = (k) => ({ good: L('편안', 'Good'), info: L('참고', 'Note'), warn: L('주의', 'Caution'), bad: L('문제', 'Problem') })[k];
 /* the check level as an icon (thumbs up, warning triangle, no, info; a bulb for an AI idea), its word kept as the label for screen readers and on hover */
@@ -1597,7 +1602,10 @@ const water = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 1, 12), ma
 scene.add(water);
 let modelInner = null, modelRaw = null;
 
+const foldKind = () => (S.source === 'box' && PRESETS[S.pkey] && PRESETS[S.pkey].fold) || null; // a foldable phone: 'book' opens sideways, 'flip' opens upward
+const unfolded = () => !!foldKind() && anim.played;
 function dims() {
+  if (unfolded()) { const k = S.scale / 1000; return foldKind() === 'book' ? { W: (2 * S.w - 3) * k, D: S.d * 0.47 * k, H: S.h * k } : { W: S.w * k, D: S.d * 0.47 * k, H: (2 * S.h - 4) * k }; } // opened: twice as wide (or tall), half as thick
   if (S.source === 'model' && S.model) return { W: (S.model.w / 1000) * S.scale, D: (S.model.d / 1000) * S.scale, H: (S.model.h / 1000) * S.scale };
   if (S.shape === 'ring') { const o = (ringD(S.ringSize) + 2 * S.d) / 1000; return laidFlat() ? { W: o, D: o + S.h / 1000, H: S.w / 1000 } : { W: o, D: S.w / 1000, H: o + S.h / 1000 }; } // set down: lying flat
   const W = (S.w / 1000) * S.scale, D = ((roundBase() ? S.w : S.d) / 1000) * S.scale, H = (S.h / 1000) * S.scale;
@@ -1623,14 +1631,16 @@ function kind() {
   return 'free';
 }
 const PLACE_OK = { bag: ['hand', 'floor', 'plinth', 'air'], luggage: ['floor', 'plinth', 'air'], pack: ['back', 'floor', 'plinth', 'air'], lamp: ['desk', 'table', 'counter', 'plinth', 'air'], worn: ['head'], flat: ['hand', 'desk', 'plinth', 'air'], laptop: ['table', 'desk', 'plinth', 'air'], small: ['hand', 'desk', 'table', 'counter', 'plinth', 'air'], dispenser: ['counter', 'table', 'desk', 'plinth', 'air'], floor: ['floor', 'plinth', 'air'] }; // plinth: a plain cube to stand it on; air: floating at a set height
-const placeOk = (p) => (kind() === 'free' ? !(p === 'hand' && S.noHand) && p !== 'back' : PLACE_OK[kind()].includes(p));
+const wallOk = () => S.source === 'box' && (S.look === 'paper' || S.shape === 'plate' || !!S.screen); // a sheet, a plate or a screen can hang on a wall
+const placeOk = (p) => p === 'wall' ? wallOk() : (kind() === 'free' ? !(p === 'hand' && S.noHand) && p !== 'back' : PLACE_OK[kind()].includes(p));
 const isProp = () => S.source === 'box' && !!(PRESETS[S.pkey] && PRESETS[S.pkey].prop); // a plain mockup solid: cube, cylinder, sphere, cone, plate
 const canDispense = () => kind() === 'dispenser' || (kind() === 'free' && !isProp() && (S.source === 'model' || S.pkey === 'box' || !!S.cup)); // a mockup solid never fills a cup; an AI-made one only if AI said it dispenses
 const ctrlKind = () => ['free', 'dispenser', 'floor', 'lamp'].includes(kind()); // things with a button, a tap or a switch
 const ctrlOff = () => ctrlKind() && !!S.noCtrl; // controls switched off: it is only looked at
 const lookAtIt = () => lookOnly() && !carried() && !atDesk(); // set down only to be looked at (a sheet, a mug, controls off): in use, the person stands at it and looks at it
 const hasControls = () => ctrlKind() && !ctrlOff(); // the others are simply held, worn, typed on or looked at
-const lookOnly = () => laidFlat() || ctrlOff() || (kind() === 'small' && S.place !== 'hand') || (kind() === 'pack' && S.place !== 'back'); // set down just to be looked at: no reaching or pressing
+const lidClosed = () => S.source === 'box' && S.shape === 'laptop' && dv('lid') === 'closed';
+const lookOnly = () => laidFlat() || ctrlOff() || lidClosed() || S.place === 'wall' || (kind() === 'small' && S.place !== 'hand') || (kind() === 'pack' && S.place !== 'back'); // set down just to be looked at: no reaching or pressing
 const isDispense = () => S.action === 'dispense' && !isFurniture() && S.place !== 'hand' && canDispense();
 const cupInHand = () => isDispense() && S.face === 'front';
 const cupOnTray = () => isDispense() && S.face === 'top';
@@ -1691,13 +1701,14 @@ const DETAIL = {
   desk: TABLE_ROWS(25, 22, '옆판 두께', 'Side panel thickness'), standing: TABLE_ROWS(25, 70, '기둥 굵기', 'Column thickness'), dining: TABLE_ROWS(30, 55), bar: TABLE_ROWS(35, 44), coffee: TABLE_ROWS(30, 50, '발 굵기', 'Foot thickness'),
   frame: [DR('frameT', '프레임 두께', 'Frame thickness', 2, 100, 10), MAT_ROW],
   prop: [MAT_ROW], // the plain mockup solids
+  laptop: [{ k: 'lid', ko: '덮개', en: 'Lid', opts: [['open', '열림', 'Open'], ['closed', '닫힘', 'Closed']], def: 'open' }],
   purifier: [{ k: 'form', ko: '형태', en: 'Form', opts: [['box', '네모', 'Box'], ['cyl', '원통', 'Round']], def: 'box' }],
   airpurifier: [{ k: 'form', ko: '형태', en: 'Form', opts: [['box', '네모', 'Box'], ['cyl', '원통', 'Round']], def: 'box' }],
   hobo: [{ k: 'mat', ko: '재질', en: 'Material', opts: [['fabric', '일반', 'Fabric'], ['leather', '가죽', 'Leather']], def: 'fabric' }],
   glasses: [{ k: 'gtype', ko: '테', en: 'Frame', opts: [['thin', '얇은 테', 'Thin'], ['horn', '뿔테', 'Horn-rim'], ['half', '반무테', 'Half-rim']], def: 'thin' },
     DR('rimT', '테 두께', 'Rim thickness', 1, 9, () => ((S.det && S.det.gtype) === 'horn' ? 5 : (S.det && S.det.gtype) === 'half' ? 3 : 1.5), 0.5),
     DR('lensW', '렌즈 가로', 'Lens width', 38, 66, 46), DR('lensH', '렌즈 세로', 'Lens height', 24, 56, 36)],
-  headphone: [DR('cupH', '귀마개 높이', 'Ear cushion height', 60, 130, () => Math.round(clamp(0.5 * S.h, 75, 115))), DR('cupL', '귀마개 폭', 'Ear cushion width', 50, 115, () => Math.round(clamp(0.88 * S.d, 58, 95))), DR('cupT', '귀마개 두께', 'Ear cup thickness', 12, 45, () => Math.round(clamp(0.13 * S.w, 17, 30))), DR('bandW', '머리띠 폭', 'Headband width', 12, 45, 29)],
+  headphone: [DR('cupH', '귀마개 높이', 'Ear cushion height', 60, 130, () => Math.round(clamp(0.5 * S.h, 75, 115))), DR('cupL', '귀마개 폭', 'Ear cushion width', 50, 115, () => Math.round(clamp(0.88 * S.d, 58, 95))), DR('cupT', '귀마개 두께', 'Ear cup thickness', 12, 45, () => Math.round(clamp(0.13 * S.w, 17, 30))), DR('bandW', '머리띠 폭', 'Headband width', 12, 45, 29), DR('slide', '슬라이더 길이', 'Slider extension', 0, 50, 20)],
 };
 function detKind() {
   if (S.source !== 'box') return null;
@@ -1705,6 +1716,7 @@ function detKind() {
   if (S.shape === 'frame') return 'frame';
   if (isProp()) return 'prop';
   if (S.look === 'hobo') return 'hobo';
+  if (S.shape === 'laptop') return 'laptop';
   if (S.look === 'purifier' || S.look === 'airpurifier') return S.look;
   if (S.shape === 'glasses') return 'glasses';
   return isFurniture() && DETAIL[furn()] ? furn() : null;
@@ -1912,11 +1924,14 @@ function tableGeo(group, style, W, D, H, mat, keys = true) {
     const base = 0.06, t = 0.02, dw = W / 2 - 0.004, hy = Math.min(1.1, H * 0.5);
     T.box(W - 0.04, base, D - 0.04, 0, base / 2, -D / 2 - 0.01);
     K.box(W, H - base, D - 0.02, 0, base + (H - base) / 2, -0.02 - (D - 0.02) / 2);
+    const hx = W / 2 - 0.002, door = new THREE.Group(); door.position.set(hx, 0, 0); group.add(door); // the right door hangs on a hinge at its outer edge
     for (const sx of [-1, 1]) {
-      kit(group, mat).box(dw, H - base - 0.006, 0.019, sx * (dw / 2 + 0.002), base + (H - base) / 2, -0.0095, 0, 0.003);
-      X.rod(new V3(sx * 0.04, hy - 0.2, 0.014), new V3(sx * 0.04, hy + 0.2, 0.014), 0.006);
-      for (const py of [hy - 0.19, hy + 0.19]) X.rod(new V3(sx * 0.04, py, -0.001), new V3(sx * 0.04, py, 0.014), 0.004);
+      const g = sx > 0 ? door : group, ox = sx > 0 ? -hx : 0, Xd = kit(g, mats.frame);
+      kit(g, mat).box(dw, H - base - 0.006, 0.019, sx * (dw / 2 + 0.002) + ox, base + (H - base) / 2, -0.0095, 0, 0.003);
+      Xd.rod(new V3(sx * 0.04 + ox, hy - 0.2, 0.014), new V3(sx * 0.04 + ox, hy + 0.2, 0.014), 0.006);
+      for (const py of [hy - 0.19, hy + 0.19]) Xd.rod(new V3(sx * 0.04 + ox, py, -0.001), new V3(sx * 0.04 + ox, py, 0.014), 0.004);
     }
+    group.userData.door = { g: door, max: deg(80), hinge: new V3(hx, 0, 0) };
     T.box(0.004, H - base - 0.01, 0.002, 0, base + (H - base) / 2, 0.0005); // the gap between the doors
     group.userData.wardrobe = { rail: H - 0.12, shelf: H - 0.06, handle: hy };
     return;
@@ -1989,7 +2004,7 @@ const ON_DECK = new THREE.Matrix4().makeBasis(new V3(1, 0, 0), new V3(0, 0, -1),
    speaker grilles either side and a trackpad below it, and ports on the left side; inside the lid, black glass with the lit screen in thin
    bezels and a webcam at the top. The keyboard's key pitch and the bezels follow the laptop's size */
 function laptopGeo(group, W, D, H) {
-  const base = Math.max(0.006, H * 0.6), lidT = Math.max(0.004, H * 0.4), open = deg(110), r = Math.min(0.011, W * 0.035, D * 0.05);
+  const base = Math.max(0.006, H * 0.6), lidT = Math.max(0.004, H * 0.4), open = lidClosed() ? deg(0.4) : deg(110), r = Math.min(0.011, W * 0.035, D * 0.05);
   const own = (geo, mat, parent = group) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; m.userData.own = true; parent.add(m); return m; };
   const flat = (w, d, rr) => new THREE.ShapeGeometry(roundRect(w, d, rr), 10).applyMatrix4(ON_DECK); // a flat rounded rectangle on the deck, from z 0 back to −d
   own(plateGeo(W, D, base, r, Math.min(0.0024, base * 0.4)).applyMatrix4(ON_DECK), mats.foam);
@@ -2078,7 +2093,7 @@ function sweepGeo(path, prof, scale = () => 1) {
 function headphoneGeo(group, W, D, H) {
   const A = S.A, hh = A.headH, ear = EAR.clone().multiplyScalar(hh), own = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; m.userData.own = true; group.add(m); return m; };
   const cupH = q('cupH', clamp(0.5 * H, 0.075, 0.115)), cupL = q('cupL', clamp(0.88 * D, 0.058, 0.095)), shell = q('cupT', clamp(0.13 * W, 0.017, 0.03)), pad = 0.017, bandW = q('bandW', 0.029);
-  const sideX = eggRay(1, 0, 0) * hh * 0.985, tiltZ = deg(10), tiltY = deg(5); // the cushion rests on the side of the head, the cups lean in at the top and the front
+  const sideX = eggRay(1, 0, 0) * hh * 0.985, tiltZ = deg(2), tiltY = deg(1.5), slide = q('slide', 0.02); // the cushions sit upright against the head; slide: how far each slider is drawn out
   const ends = [];
   for (const s of [-1, 1]) {
     const M = new THREE.Matrix4().makeTranslation(s * sideX, ear.y, ear.z).multiply(new THREE.Matrix4().makeRotationZ(s * tiltZ)).multiply(new THREE.Matrix4().makeRotationY(-s * tiltY))
@@ -2090,12 +2105,13 @@ function headphoneGeo(group, W, D, H) {
     own(softSlab((b) => ovalShape(cupL * 0.78 - 2 * b, cupH * 0.8 - 2 * b, 2.35), 0.002, 0.0009).translate(0, 0, pad + shell - 0.001).applyMatrix4(M), mats.trim); // its face panel
     const hinge = new V3(0, cupH / 2 + 0.005, pad + shell * 0.45).applyMatrix4(M);
     const yoke = own(new RoundedBoxGeometry(0.012, 0.013, 0.026, 2, 0.005), mats.trim); yoke.position.copy(hinge); yoke.rotation.z = s * tiltZ;
-    ends.push(hinge.clone().add(new V3(-s * 0.0012, 0.009, 0)));
+    ends.push(hinge.clone().add(new V3(-s * 0.0012, 0.009 + slide, 0)));
+    own(new RoundedBoxGeometry(0.0045, slide + 0.012, 0.011, 2, 0.0018), mats.trim).position.copy(hinge.clone().add(new V3(-s * 0.0012, (slide + 0.012) / 2, 0))); // the slider, drawn out
   }
   // the band: the head's outline in the plane of the cups, pushed out by the pad at the crown and easing out to the yokes at the ends
   const C0 = new V3(0, ear.y, ear.z), headR = (phi) => { const c = Math.cos(phi), sn = Math.sin(phi), e = HEAD_EGG; let lo = 0, hi = 1; // head units, from the ears' height
     for (let i = 0; i < 22; i++) { const t = (lo + hi) / 2; if (eggF(c * t, EAR.y + sn * t, EAR.z) > 0) hi = t; else lo = t; } return lo * hh; };
-  const bt = 0.0075, pt = 0.0075, offTop = 0.002 + pt + bt / 2, E = ends[1], phiE = Math.atan2(E.y - C0.y, E.x - C0.x), offE = Math.hypot(E.x - C0.x, E.y - C0.y) - headR(phiE);
+  const bt = 0.0075, pt = 0.0075, E = ends[1], cupBot = ear.y - cupH / 2, lift = Math.max(0, H + (slide - 0.02) - (C0.y + headR(Math.PI / 2) + 0.002 + pt + bt - cupBot)), offTop = 0.002 + pt + bt / 2 + lift, phiE = Math.atan2(E.y - C0.y, E.x - C0.x), offE = Math.hypot(E.x - C0.x, E.y - C0.y) - headR(phiE);
   const path = [], N = 96;
   for (let i = 0; i <= N; i++) {
     const phi = Math.PI - phiE - ((Math.PI - 2 * phiE) * i) / N, u = Math.abs(phi - Math.PI / 2) / (Math.PI / 2 - phiE), off = offTop + (offE - offTop) * u ** 3.2;
@@ -2108,7 +2124,7 @@ function headphoneGeo(group, W, D, H) {
   for (let i = Math.round(N * 0.24); i <= Math.round(N * 0.76); i++) { const t = path[i + 1].clone().sub(path[i - 1]).normalize(); padPath.push(path[i].clone().add(new V3(t.y, -t.x, 0).multiplyScalar(bt / 2 + pt / 2 - 0.0006))); }
   own(sweepGeo(padPath, rrectProfile(pt / 2, bandW * 0.43, 0.0034), (f) => 0.6 + 0.4 * smooth01(Math.min(f, 1 - f) / 0.14)), mats.pad);
   const yTop = path[N / 2].y + bt / 2;
-  group.userData.wear = { hole: cupH * 0.64, cupH, need: yTop - (ear.y - cupH / 2), have: H }; // band height the head needs vs the headphones' height
+  group.userData.wear = { hole: cupH * 0.64, cupH, need: yTop - lift - (ear.y - cupH / 2), have: H + (slide - 0.02), lift }; // band height the head needs vs the headphones' height with the sliders as set
 }
 /* wireless earbuds in both ears: the body sits in the concha with its soft tip in the ear canal, a short stem runs down toward the earlobe.
    W = front to back, D = across (body and tip), H = top of the body to the end of the stem (typical: 19 x 27 x 31 mm) */
@@ -2245,6 +2261,20 @@ function fitUV(geo) {
 /* phone or tablet: a rounded slab with softly rounded edges; the front is black glass with the lit screen inside a thin bezel (a phone has a
    punch-hole camera in the screen, a tablet a camera in the bezel); the back has a camera island in its top corner; buttons on the sides and
    a port at the bottom. Built round its middle so the whole device turns about when the screen should face the eyes */
+/* a foldable, open: two halves on a hinge, the inner screen across both; the left (book) or top (flip) half swings round as Play unfolds it */
+function foldGeo(group) {
+  const fk = foldKind(), P = dims(), W = P.W / S.scale, D = P.D / S.scale, H = P.H / S.scale, book = fk === 'book';
+  const hw = book ? W / 2 : W, hh = book ? H : H / 2, bev = Math.min(0.0016, D * 0.35), r = Math.min(0.009, hw * 0.12);
+  const half = (g, x0, y0) => {
+    const own = meshIn(g);
+    own(new THREE.ExtrudeGeometry(roundRect(hw - 2 * bev, hh - 2 * bev, Math.max(r - bev, 0.0005)), { depth: Math.max(D - 2 * bev, 0.0003), bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 3, curveSegments: 12 }).translate(x0, y0 + bev, -D + bev), mats.foam);
+    own(new THREE.ShapeGeometry(roundRect(hw - 0.004, hh - 0.004, Math.max(r - 0.002, 0.0005)), 8).translate(x0, y0 + 0.002, 0.0002), userImgMat('screen', hw - 0.004, hh - 0.004) || screenLit());
+  };
+  const piv = new THREE.Group(); group.add(piv);
+  if (book) { half(group, hw / 2, 0); half(piv, -hw / 2, 0); } // the right half stays in the right hand; the left half turns on the hinge at x 0
+  else { half(group, 0, 0); piv.position.y = hh; half(piv, 0, 0); } // the bottom half stays in the hand; the top half turns on the hinge at its bottom edge
+  group.userData.fold = { g: piv, book };
+}
 function phoneGeo(group, W, D, H) {
   const tab = W > 0.11, dev = new THREE.Group(), add = (geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; m.userData.own = true; dev.add(m); return m; };
   dev.position.z = -D / 2; dev.userData.screen = true; dev.userData.device = true; dev.userData.own = true;
@@ -2625,6 +2655,7 @@ function buildProduct() {
   else if (S.shape === 'laptop') laptopGeo(holder, W, D, Hh);
   else if (S.shape === 'headphone') { DET_ON = true; try { headphoneGeo(holder, W, D, Hh); } finally { DET_ON = false; } }
   else if (S.shape === 'earbud') earbudGeo(holder, S.w, S.d, S.h);
+  else if (unfolded()) foldGeo(holder);
   else if (S.screen && S.shape === 'box') phoneGeo(holder, W, D, Hh);
   else if (S.look === 'case' && S.shape === 'box') caseGeo(holder, W, D, Hh);
   else if (S.look === 'purifier' && S.shape === 'box') purifierGeo(holder, W, D, Hh);
@@ -2680,6 +2711,9 @@ function buildSurface() {
     tableGeo(g, 'desk', dl.W, dl.D, SURF.desk, mats.surfaceTop, !dl.lap); // a shade darker than the floor-standing tables, so a white sheet on it shows
     surface.add(g);
     surface.userData.desk = g;
+  } else if (S.place === 'wall') { // a plain wall, 120 mm thick, the product hung on its face
+    const w = Math.max(2.4, P.W + 1.2);
+    box(surface, w, 2.6, 0.12, 0, 1.3, -P.D - 0.06, mats.surfaceTop); // a shade darker, so a white sheet on it shows
   } else if (S.place === 'plinth') { // a plain cube, its size set on its own
     const pl = plinthSize();
     box(surface, pl.w, pl.h, pl.d, 0, pl.h / 2, -P.D / 2, mats.surface); // centred under the product
@@ -2712,7 +2746,7 @@ function layoutHuman() {
   } else if (A.seated) {
     const front = A.thigh + 0.14;
     z = S.place === 'table' ? EDGE + 0.22 : S.place === 'counter' ? EDGE + front + 0.02 : 0.15 + front;
-  } else z = S.place === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + 0.06 + toe : S.place === 'counter' ? EDGE - 0.02 + toe : S.place === 'table' ? EDGE + 0.03 + toe : 0.1 + toe;
+  } else z = S.place === 'wall' ? 0.5 + toe /* stood back to look at it */ : S.place === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + 0.06 + toe : S.place === 'counter' ? EDGE - 0.02 + toe : S.place === 'table' ? EDGE + 0.03 + toe : 0.1 + toe;
   human.position.set(0, 0, z);
   human.rotation.set(0, Math.PI, 0);
 }
@@ -2796,6 +2830,7 @@ function handKind() {
   if (box && (S.look === 'tote' || S.look === 'hobo')) return 'hang'; // a bag hanging from the hand by its handles
   if (box && S.look === 'pouch') return 'clutch'; // a pouch carried at the side, the hand over it, its back against the hip
   if (box && S.look === 'paper') return Math.max(P.W, P.H) > 0.32 ? 'sheet' : 'face'; // an A4 sheet in one hand, a poster in two
+  if (box && unfolded() && foldKind() === 'book') return 'sheet'; // an open foldable: both hands
   if (box && S.shape === 'box' && isFlat(P)) return S.screen ? (Math.min(P.W, P.H) <= 0.23 ? 'face' : 'sheet') : Math.max(P.W, P.H) > 0.17 ? 'sheet' : 'face';
   if (P.H >= 1.3 * Math.max(P.W, P.D) || (box && S.shape === 'cup')) return gripSize(P) > 0.5 * span ? 'box' : 'grip';
   return Math.max(P.W, P.D) <= 0.6 * span ? 'palm' : 'box';
@@ -2824,7 +2859,7 @@ function edgeGrip(kind) {
   const at = (t) => 0.5 * pw * Math.cos(t) - 0.38 * pl * Math.sin(t) - clear;
   if (kind === 'face') { // one hand: a phone's fingers reach straight across its back and wrap the far edge; a tablet's spread up and in
     const phone = isPhone(D3), a = deg(phone ? 90 : 55);
-    return { a, inset: at(a), up: (phone ? 0.2 : 0.32) * D3.H, phone };
+    return { a, inset: at(a), up: (phone ? 0.2 : 0.5) * D3.H, phone }; // a tablet is held at the middle of its side
   }
   let a = 0, inset = 0;
   for (const d of [25, 20, 15, 10, 5, 0]) { // two hands on a sheet: tip the fingers in only as far as the hands stay clear of each other
@@ -2960,6 +2995,12 @@ function planHands() {
     const hp = { f: HD.fingers.map((g) => solve(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85])), tm: new V3(0.45, 0.35, -0.82).normalize(), tq: new V3(0, 1, 0), t: [deg(8), deg(12)] };
     S.plan = { kind: 'bar', hp, F, W: bar.clone().sub(inHand(F, c)) };
     S.pressLocal = bar;
+  } else if (S.look === 'luggage' && S.source === 'box') { // the trolley handle's bar in an overhand grip, fingers wrapped round it
+    const rb = 0.012 * S.scale, bar = human.worldToLocal(controlWorld()), F = handFrame(new V3(0, -1, 0), new V3(0.05, -0.25, 1)), c = new V3(HD.palmT / 2 + rb + 0.002, 0.55 * HD.palmLen, 0);
+    const shape = { kind: 'c', cx: c.x, cy: c.y, r: rb, z0: -0.08, z1: 0.08 };
+    const hp = { f: HD.fingers.map((g) => solve(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85])), tm: new V3(0.55, 0.45, -0.7).normalize(), tq: new V3(0.3, 0.3, -0.9).normalize(), t: [deg(10), deg(18)] };
+    S.plan = { kind: 'bar', hp, F, W: bar.clone().sub(inHand(F, c)) };
+    S.pressLocal = bar;
   } else if (isFurniture()) {
     S.plan = { kind: 'flat', hp: flatPose() };
     S.pressLocal = human.worldToLocal(furnPoint(true));
@@ -3000,7 +3041,15 @@ function handGoal(plan, s, P, sh) {
       return { F, W: S.pressLocal.clone().add(new V3(0, A.hd.palmT / 2 + 0.003, 0)).addScaledVector(F.y, -0.5 * A.hd.palmLen), pole: new V3(-0.55, -1, -0.35), hp: plan.hp };
     }
     case 'pull': { if (!right) return null; const dr = holder.userData.drawers, dz = dr ? anim.open * dr.travel * S.scale : 0; return { F: plan.F, W: plan.W.clone().add(new V3(0, 0, -dz)), pole: new V3(-0.5, -1, -0.4), hp: plan.hp }; }
-    case 'bar': return right ? { F: plan.F, W: plan.W, pole: new V3(-0.7, -1, -0.15), hp: plan.hp } : null;
+    case 'bar': {
+      if (!right) return null;
+      const wd = holder.userData.door;
+      if (wd && anim.open > 0) { // the hand goes round with the door it is pulling
+        const th = anim.open * wd.max, R = new THREE.Matrix4().makeRotationY(th), hg = human.worldToLocal(holder.localToWorld(wd.hinge.clone())), F2 = handFrame(plan.F.x.clone().applyMatrix4(R), plan.F.y.clone().applyMatrix4(R));
+        return { F: F2, W: plan.W.clone().sub(hg).applyMatrix4(R).add(hg), pole: new V3(-0.7, -1, -0.15), hp: plan.hp };
+      }
+      return { F: plan.F, W: plan.W, pole: new V3(-0.7, -1, -0.15), hp: plan.hp };
+    }
     case 'hang': { if (!right) return null; const W = restWrist(A, P, s), rc = armIK(sh, W, A, new V3(s * 0.25, -0.3, -1)); return { F: handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)), W, pole: new V3(s * 0.25, -0.3, -1), hp: plan.hp }; } // the right arm hangs, the bag in its hand
     case 'clutch': { if (right) return null; /* the left hand */ const W = restWrist(A, P, s), rc = armIK(sh, W, A, new V3(s * 0.25, -0.3, -1)); return { F: handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)), W, pole: new V3(s * 0.25, -0.3, -1), hp: plan.hp }; }
     case 'palm': return right ? { F: handFrame(UP.clone(), new V3(0.25, 0.12, 1)), W: new V3(P.shR.x + 0.3 * A.forearm, P.shR.y - A.upperArm + 0.2 * A.forearm, P.shR.z + 0.93 * A.forearm), pole: new V3(-0.4, -1, -0.5), hp: plan.hp } : null;
@@ -3126,6 +3175,8 @@ function placeExtras(pose) {
   product.updateMatrixWorld(true);
   const dr = holder.userData.drawers;
   if (dr && dr.top) dr.top.position.z = (use ? anim.open : 0) * dr.travel;
+  const wd = holder.userData.door; if (wd) wd.g.rotation.y = (use ? anim.open : 0) * wd.max; // the wardrobe door swings out
+  const fd = holder.userData.fold; if (fd) { const t = smooth01(anim.open), a = (1 - t) * Math.PI; if (fd.book) fd.g.rotation.y = a; else fd.g.rotation.x = a; } // a foldable opens as the hands come up
   const sk = holder.userData.sink; // kitchen sink: water from the faucet into the bowl
   if (use && sk && anim.pour > 0.001) {
     const tip = holder.localToWorld(sk.tip.clone()), bottom = holder.localToWorld(new V3(0, sk.bottom, 0)).y;
@@ -3347,12 +3398,12 @@ function evaluate() {
   if (deskItem()) return deskItemChecks(out, add, P);
   if (S.mode === 'use' && lookAtIt()) { // standing at the plinth, looking down at what lies on it
     human.updateMatrixWorld(true);
-    const b = visBox(product), c = b.getCenter(new V3()); c.y = b.max.y;
+    const b = visBox(product), c = b.getCenter(new V3()); if (S.place !== 'wall') c.y = b.max.y; // on a wall: its middle
     const tl = human.worldToLocal(c.clone()), dz = Math.max(0.05, tl.z - b0.eye.z), dy = eyeY - tl.y, dist = Math.hypot(dz, dy), ang = Math.atan2(dy, dz) * 180 / Math.PI;
     S.nod = clamp(deg(ang) - deg(22), 0, deg(40)); // the eyes drop about 22°, the neck bows for the rest
     out.target = c; out.targetLocal = tl;
     const alv = ang > 60 || ang < -30 ? 'warn' : 'good';
-    add(L('시선', 'Gaze'), ang >= 0 ? L(`눈에서 ${cmi(dist)}cm · 아래로 ${Math.round(ang)}°${ang > 60 ? ' · 목을 많이 숙여요' : ' · 편하게 내려다봐요'}`, `${cmi(dist)} cm from the eyes · ${Math.round(ang)}° down${ang > 60 ? ', the neck bows a lot' : ', an easy look down'}`) : L(`눈에서 ${cmi(dist)}cm · 위로 ${Math.round(-ang)}°${ang < -30 ? ' · 고개를 들어야 해요' : ' · 편하게 올려다봐요'}`, `${cmi(dist)} cm from the eyes · ${Math.round(-ang)}° up${ang < -30 ? ', the head tips back' : ', an easy look up'}`), alv);
+    add(L('시선', 'Gaze'), Math.abs(ang) < 8 ? L(`눈에서 ${cmi(dist)}cm · 눈높이에서 봐요`, `${cmi(dist)} cm from the eyes · at eye level`) : ang >= 0 ? L(`눈에서 ${cmi(dist)}cm · 아래로 ${Math.round(ang)}°${ang > 60 ? ' · 목을 많이 숙여요' : ' · 편하게 내려다봐요'}`, `${cmi(dist)} cm from the eyes · ${Math.round(ang)}° down${ang > 60 ? ', the neck bows a lot' : ', an easy look down'}`) : L(`눈에서 ${cmi(dist)}cm · 위로 ${Math.round(-ang)}°${ang < -30 ? ' · 고개를 들어야 해요' : ' · 편하게 올려다봐요'}`, `${cmi(dist)} cm from the eyes · ${Math.round(-ang)}° up${ang < -30 ? ', the head tips back' : ', an easy look up'}`), alv);
     const top = sy + P.H;
     add(L('윗면 높이', 'Top height'), L(`${cmi(top)}cm · 눈높이(${cmi(eyeY)}cm)보다 ${cmi(eyeY - top)}cm 낮아요`, `${cmi(top)} cm · ${cmi(eyeY - top)} cm below eye level (${cmi(eyeY)} cm)`), 'info');
     add(L('크기 감각', 'Size'), sizeTxt, 'info');
@@ -3647,13 +3698,14 @@ function furnitureChecks(out, add, push, b0) {
 /* ---------- update pipeline ---------- */
 function refresh(o = {}) {
   const p = PERSONAS[S.persona], k = kind(); // an example keeps a place and a use that make sense for it, whatever was clicked or restored
-  if (PLACE_OK[k] && !PLACE_OK[k].includes(S.place) && !isFurniture()) S.place = PLACE_OK[k][0];
+  if (PLACE_OK[k] && !placeOk(S.place) && !isFurniture()) S.place = PLACE_OK[k][0];
   if (S.action === 'dispense' && !canDispense()) S.action = 'press';
   if (k === 'dispenser') S.action = 'dispense';
   if (rowUnits() && S.row[S.pick] && (S.row[S.pick].w !== S.w || S.row[S.pick].d !== S.d || S.row[S.pick].h !== S.h)) S.row = S.row.map((u, i) => (i === S.pick ? { ...u, w: S.w, d: S.d, h: S.h } : u)); // the size fields are the picked unit's
   if (lookOnly() && !lookAtIt()) { if (S.mode !== 'compare') { S.itemMode = S.mode; S.mode = 'compare'; } } else if (S.itemMode) { S.mode = S.itemMode; S.itemMode = null; } // only looked at; the mode comes back after (on the plinth it can also be looked down at)
-  for (const [k, d] of [['table', 720], ['desk', 740], ['counter', 850], ['plinth', 900], ['air', 1000]]) SURF[k] = ((S.surf && S.surf[k]) || d) / 1000; // the table, desk or counter it stands on, at its set height
-  { const key = [S.pkey, S.place, S.mode, S.persona, S.posture, S.source].join('|'); if (key !== anim.key) { anim.key = key; anim.played = false; } } // a new setup starts at rest
+  for (const [k, d] of [['table', 720], ['desk', 740], ['counter', 850], ['plinth', 900], ['air', 1000]]) SURF[k] = ((S.surf && S.surf[k]) || d) / 1000;
+  SURF.wall = Math.max(0, ((S.surf && S.surf.wall) || 1450) / 1000 - dims().H / 2); // on the wall: its middle at the set height // the table, desk or counter it stands on, at its set height
+  { const key = [S.pkey, S.place, S.mode, S.persona, S.posture, S.source].join('|'); if (key !== anim.key) { anim.key = key; Object.assign(anim, { played: false, phase: 'idle', reach: 1, open: 0, pour: 0, fill: 0, drink: 0 }); } } // a new setup starts at rest
   if (S.place !== S.pvPlace) { S.pvPlace = S.place; S.pv = null; } // a new place: the person shown as that place has it
   if (S.source === 'box' && S.shape === 'glasses') { const g = glassesSize(); S.w = Math.round(g.W * 1000); S.h = Math.round(g.H * 1000); } // set by the lenses and rims
   S.height = clamp(S.height, p.hr[0], p.hr[1]); S.bmi = clamp(S.bmi, p.br[0], p.br[1]); // within the real range for this kind of person
@@ -3847,8 +3899,8 @@ function syncUI() {
   $('unitField').hidden = !rowOn();
   syncDetail();
   { // the surface's own height, for a product set on a table, desk or counter
-    const NM = { table: ['테이블', 'Table'], desk: ['책상', 'Desk'], counter: ['조리대', 'Counter'], plinth: ['단상 H', 'Plinth H'], air: ['공중 높이', 'Height'] };
-    const on = !!NM[S.place] && !isFurniture(), mm = Math.round(SURF[S.place] * 1000), lim = S.place === 'air' ? [0, 2000] : S.place === 'plinth' ? [50, 1500] : [400, 1200];
+    const NM = { table: ['테이블', 'Table'], desk: ['책상', 'Desk'], counter: ['조리대', 'Counter'], plinth: ['단상 H', 'Plinth H'], air: ['공중 높이', 'Height'], wall: ['벽(중심 높이)', 'Wall (centre)'] };
+    const on = !!NM[S.place] && !isFurniture(), mm = S.place === 'wall' ? (S.surf && S.surf.wall) || 1450 : Math.round(SURF[S.place] * 1000), lim = S.place === 'air' ? [0, 2000] : S.place === 'wall' ? [300, 2200] : S.place === 'plinth' ? [50, 1500] : [400, 1200];
     $('surfRow').hidden = !on;
     $('surfReset').hidden = !on; $('surfReset').disabled = !(S.surf && (S.surf[S.place] != null || (S.place === 'plinth' && (S.surf.plinthW != null || S.surf.plinthD != null))));
     if (on) { $('surfLab').textContent = L(...NM[S.place]); for (const id of ['surfIn', 'surfNum']) { $(id).min = lim[0]; $(id).max = lim[1]; if (document.activeElement !== $(id)) $(id).value = mm; } }
@@ -4215,7 +4267,7 @@ function updateOverlay(pose) {
 const flows = () => S.mode === 'use' && S.place !== 'hand' && (isDispense() || furn() === 'sink'); // water or coffee runs after the reach
 /* 동작 보기 switches: act and hold, then back to the resting pose */
 function rest() {
-  Object.assign(anim, { played: false, phase: 'idle', t: 0, reach: 0, pour: 0, fill: 0, open: 0, drink: 0 });
+  Object.assign(anim, { played: false, phase: 'idle', t: 0, reach: 1, pour: 0, fill: 0, open: 0, drink: 0 });
   if (furn() === 'coffee' && S.lift) { S.lift = 0; anim.lift = 0; setLift(holder, 0); }
   refresh();
 }
@@ -4225,6 +4277,7 @@ function syncPlay() {
 }
 function play() {
   anim.played = true; syncPlay();
+  if (foldKind()) { refresh({ rebuild: true }); Object.assign(anim, { phase: 'unfold', t: 0, open: 0, reach: 1 }); return; } // a foldable opens in the hands
   if (reduceMotion) { anim.reach = 1; anim.pour = 0; anim.fill = isDispense() ? 0.85 : 0; anim.open = S.plan && S.plan.kind === 'pull' ? 1 : 0; anim.lift = S.lift; setLift(holder, anim.lift); return; }
   if (furn() === 'coffee' && S.mode === 'use') { // show the lift-up: top goes up, then the hand reaches it
     if (!S.lift) { S.lift = 1; refresh(); }
@@ -4243,10 +4296,11 @@ function stepAnim(dt) {
   if (anim.phase === 'idle') return;
   anim.t += dt;
   if (anim.phase === 'wait') { if (Math.abs(S.lift - anim.lift) < 1e-3) { anim.phase = 'reach'; anim.t = 0; } return; }
+  if (anim.phase === 'unfold') { anim.open = reduceMotion ? 1 : Math.min(1, anim.t / 1.3); if (anim.open >= 1) anim.phase = 'idle'; return; }
   if (anim.phase === 'reach') {
     const k = clamp(anim.t / 0.9, 0, 1);
     anim.reach = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
-    if (k >= 1) { anim.phase = flows() ? 'pour' : S.plan && S.plan.kind === 'type' ? 'type' : S.plan && S.plan.kind === 'pull' ? 'pull' : drinking() ? 'drink' : 'idle'; anim.t = 0; } // after reaching: water runs, the fingers type, the drawer comes out, or the cup goes to the lips
+    if (k >= 1) { anim.phase = flows() ? 'pour' : S.plan && S.plan.kind === 'type' ? 'type' : S.plan && (S.plan.kind === 'pull' || (S.plan.kind === 'bar' && holder.userData.door)) ? 'pull' : drinking() ? 'drink' : 'idle'; anim.t = 0; } // after reaching: water runs, the fingers type, the drawer comes out, or the cup goes to the lips
   } else if (anim.phase === 'pour') {
     anim.pour = clamp(anim.t / 0.25, 0, 1);
     if (isDispense()) anim.fill = clamp(anim.t / 1.9, 0, 1) * 0.85;
@@ -4451,7 +4505,7 @@ function addUnit(left) {
   refresh({ rebuild: true, refit: true });
 }
 $('unitAddL').addEventListener('click', () => addUnit(true));
-function setSurf(v, key) { const k = key || S.place, lim = k === 'air' ? [0, 2000] : k === 'plinth' || k === 'plinthW' || k === 'plinthD' ? [50, 1500] : [400, 1200]; if (!['table', 'desk', 'counter', 'plinth', 'air', 'plinthW', 'plinthD'].includes(k) || !(v >= lim[0] && v <= lim[1])) return; S.surf = { ...(S.surf || {}), [k]: Math.round(v) }; refresh({ rebuild: true, refit: true }); }
+function setSurf(v, key) { const k = key || S.place, lim = k === 'air' ? [0, 2000] : k === 'wall' ? [300, 2200] : k === 'plinth' || k === 'plinthW' || k === 'plinthD' ? [50, 1500] : [400, 1200]; if (!['table', 'desk', 'counter', 'plinth', 'air', 'wall', 'plinthW', 'plinthD'].includes(k) || !(v >= lim[0] && v <= lim[1])) return; S.surf = { ...(S.surf || {}), [k]: Math.round(v) }; refresh({ rebuild: true, refit: true }); }
 $('surfIn').addEventListener('input', (e) => setSurf(+e.target.value));
 $('surfReset').addEventListener('click', () => { if (!S.surf) return; const n = { ...S.surf }; delete n[S.place]; if (S.place === 'plinth') { delete n.plinthW; delete n.plinthD; } S.surf = n; refresh({ rebuild: true, refit: true }); }); // the table, desk, counter, plinth or height back to its default
 $('surfNum').addEventListener('change', (e) => setSurf(+e.target.value));
