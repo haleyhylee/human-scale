@@ -75,6 +75,8 @@ button { cursor: pointer; }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
 .chip:disabled { opacity: 0.4; cursor: default; border-color: var(--line); }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.unit-acts { margin-top: 8px; }
+.tag.unit { font-weight: 600; }
 .toast { pointer-events: auto; align-self: center; width: min(480px, 100%); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; background: var(--raise); border: 1px solid var(--line); border-radius: 8px; padding: 10px 10px 10px 12px; box-shadow: 0 6px 20px rgb(0 0 0 / 0.12); animation: rise 0.22s ease-out; }
 .toast .kicker { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; }
 .toast p { margin: 0; font-size: 13.5px; line-height: 1.45; }
@@ -215,6 +217,9 @@ input:disabled { opacity: 0.55; }
       <div class="guide target" id="g-tg" hidden><span></span></div>
       <div class="tag" id="t-human" hidden></div>
       <div class="tag" id="t-prod" hidden></div>
+      <div class="tag unit" id="t-u0" hidden></div>
+      <div class="tag unit" id="t-u1" hidden></div>
+      <div class="tag unit" id="t-u2" hidden></div>
       <div class="tag target" id="t-tg" hidden></div>
     </div>
     <div class="top">
@@ -350,6 +355,12 @@ input:disabled { opacity: 0.55; }
         </div>
         <p class="hint" id="dimStep"></p>
         <p class="hint" id="furnHint" hidden></p>
+      </div>
+      <div class="field" id="unitField" hidden>
+        <div class="label"><span data-en="Units side by side">유닛 이어 붙이기</span> <span class="muted" data-en="up to 3, 1 mm apart · W is the picked unit's">최대 3개 · 1mm 간격 · W는 고른 유닛 폭</span></div>
+        <div class="seg" id="unitSeg" role="group" aria-label="사람이 쓸 유닛" data-en-aria="Unit the person uses"></div>
+        <div class="chips unit-acts"><button type="button" class="chip" id="unitAddL" data-en="+ Left">+ 왼쪽에</button><button type="button" class="chip" id="unitAddR" data-en="+ Right">+ 오른쪽에</button><button type="button" class="chip" id="unitDel" data-en="Remove picked">고른 유닛 빼기</button></div>
+        <p class="hint" id="unitHint"></p>
       </div>
       <div class="field" id="liftField" hidden>
         <div class="label"><span data-en="Lift-up top">리프트업 상판</span> <span class="muted" data-en="rises 20 cm, comes 12 cm closer">20cm 올라오고 12cm 다가와요</span></div>
@@ -1665,6 +1676,17 @@ function tableGeo(group, style, W, D, H, mat, keys = true) {
   K.box(W - 2 * ins, 0.07, 0.018, 0, H - t - 0.035, -D + ins);
 }
 const drawerCount = (H) => clamp(Math.round((H - 0.08) / 0.19), 1, 8);
+/* chest-of-drawers units in a row (up to three, A first): same depth and height, each its own width, 1 mm apart (a stacking tolerance);
+   the person uses the picked one, which stays at the product's centre, the others sit beside it */
+const rowOn = () => isFurniture() && furn() === 'drawer' && S.source === 'box';
+const rowUnits = () => (rowOn() && S.row && S.row.length ? S.row : null);
+function rowOffsets() { // each unit's centre from the picked one's, mm, left to right
+  const r = rowUnits(); if (!r) return [0];
+  const xs = []; let x = 0;
+  for (const u of r) { xs.push(x + u.w / 2); x += u.w + 1; }
+  const c = xs[S.pick || 0]; return xs.map((v) => v - c);
+}
+const rowSpan = () => { const r = rowUnits(); if (!r) return { left: S.w / 2, right: S.w / 2, total: S.w }; const o = rowOffsets(); return { left: Math.max(...r.map((u, i) => u.w / 2 - o[i])), right: Math.max(...r.map((u, i) => o[i] + u.w / 2)), total: r.reduce((t, u) => t + u.w, 0) + r.length - 1 }; }; // mm
 const drawerHandle = (i) => { const H = S.h / 1000, n = drawerCount(H), fh = (H - 0.08) / n; return (0.06 + i * fh + fh * 0.72) * S.scale; }; // drawer 0 is the bottom one
 /* lift-up top: k = 0 closed, 1 fully raised (up 20 cm and 12 cm toward the sofa) */
 function setLift(group, k) {
@@ -2070,7 +2092,11 @@ function buildProduct() {
   holder.userData = {};
   const W = S.w / 1000, D = (S.shape === 'cyl' || S.shape === 'cup' ? S.w : S.d) / 1000, Hh = S.h / 1000;
   if (S.source === 'model' && modelInner) holder.add(modelInner);
-  else if (isFurniture()) (S.shape === 'chair' ? seatGeo : tableGeo)(holder, furn(), W, D, Hh, mats.foam);
+  else if (isFurniture()) {
+    (S.shape === 'chair' ? seatGeo : tableGeo)(holder, furn(), W, D, Hh, mats.foam);
+    const r = rowUnits();
+    if (r && r.length > 1) { const off = rowOffsets(); r.forEach((u, i) => { if (i === S.pick) return; const g = new THREE.Group(); g.position.x = off[i] / 1000; g.userData.own = true; holder.add(g); tableGeo(g, 'drawer', u.w / 1000, D, Hh, mats.foam); }); }
+  }
   else if (S.shape === 'cup') cupGeo(holder, S.style, W, Hh);
   else if (S.shape === 'ring') ringGeo(holder, S.w, S.d, S.h, S.ringSize);
   else if (S.shape === 'laptop') laptopGeo(holder, W, D, Hh);
@@ -2122,7 +2148,7 @@ function layoutHuman() {
   if (atDesk()) { const dl = deskLayout(); human.position.set(-dl.xc, 0, -dl.zf + (A.chair === 'wheel' ? 0.22 : 0.2)); human.rotation.set(0, Math.PI, 0); return; } // at the keyboard
   if (S.mode === 'compare') {
     const top = S.place === 'counter' ? Math.max(1.1, P.W + 0.6) : S.place === 'table' ? Math.max(1.0, P.W + 0.6) : 0; // the counter or table it stands on
-    const near = P.W / 2 + (top ? 0.12 : 0); // the product sits just in from the end nearest the person, so its size reads against them
+    const near = (rowUnits() ? (rowSpan().left / 1000) * S.scale : P.W / 2) + (top ? 0.12 : 0); // the product sits just in from the end nearest the person, so its size reads against them
     if (top) surface.position.x = top / 2 - near;
     human.position.set(-(near + (top ? 0.12 : 0.3) + (A.chair === 'prop' && A.prop === 'sofa' ? 0.86 : A.seated ? 0.34 : A.shoulderHalf)), 0, A.seated ? -0.12 : -0.08);
     human.rotation.set(0, 0, 0);
@@ -2958,6 +2984,7 @@ function refresh(o = {}) {
   if (PLACE_OK[k] && !PLACE_OK[k].includes(S.place) && !isFurniture()) S.place = PLACE_OK[k][0];
   if (S.action === 'dispense' && !canDispense()) S.action = 'press';
   if (k === 'dispenser') S.action = 'dispense';
+  if (rowUnits() && S.row[S.pick] && S.row[S.pick].w !== S.w) S.row = S.row.map((u, i) => (i === S.pick ? { ...u, w: S.w } : u)); // W is the picked unit's
   if (lookOnly()) { if (S.mode !== 'compare') { S.itemMode = S.mode; S.mode = 'compare'; } } else if (S.itemMode) { S.mode = S.itemMode; S.itemMode = null; } // only looked at; the mode comes back after
   S.A = anthro(p, S.height, S.bmi);
   seatSetup(p);
@@ -3040,7 +3067,7 @@ const tgLabel = () => {
 function updateTags() {
   const p = PERSONAS[S.persona], P = dims();
   $('t-human').textContent = `${pLabel(p)} ${fmtH(S.height)}cm`;
-  $('t-prod').textContent = S.shape === 'ring' && S.source === 'box' ? L(`${prodName()} ${S.ringSize}호 · 폭 ${S.w}mm`, `${prodName()} · size ${S.ringSize} · ${S.w} mm band`) : `${prodName()} ${mmi(P.W)}×${mmi(P.D)}×${mmi(P.H)}`;
+  $('t-prod').textContent = rowUnits() && S.row.length > 1 ? L(`${prodName()} ${S.row.length}개 · 전체 폭 ${rowSpan().total}mm`, `${prodName()} ×${S.row.length} · overall ${rowSpan().total} mm`) : S.shape === 'ring' && S.source === 'box' ? L(`${prodName()} ${S.ringSize}호 · 폭 ${S.w}mm`, `${prodName()} · size ${S.ringSize} · ${S.w} mm band`) : `${prodName()} ${mmi(P.W)}×${mmi(P.D)}×${mmi(P.H)}`;
   $('t-tg').textContent = S.place === 'hand' ? L(`손 ${cm1(S.A.hand)}cm · 한 뼘 ${cm1(S.A.span)}cm`, `Hand ${cm1(S.A.hand)} cm · span ${cm1(S.A.span)} cm`)
     : S.place === 'head' ? (S.shape === 'earbud' ? L(`귀 길이 약 ${cm1(0.26 * S.A.headH)}cm`, `Ear about ${cm1(0.26 * S.A.headH)} cm long`) : L(`머리 폭 ${cm1(0.68 * S.A.headH)}cm`, `Head ${cm1(0.68 * S.A.headH)} cm wide`)) : `${tgLabel()} ${cmi(controlWorld().y)}cm`;
 }
@@ -3118,6 +3145,14 @@ function syncUI() {
   $('furnHint').hidden = !isFurniture();
   if (isFurniture()) $('furnHint').textContent = furnHintText();
   $('liftField').hidden = furn() !== 'coffee';
+  $('unitField').hidden = !rowOn();
+  if (rowOn()) {
+    const r = S.row || [{ n: 'A', w: S.w }], seg = $('unitSeg');
+    seg.replaceChildren(...r.map((u, i) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.unit = i; b.textContent = `${u.n} ${u.w}`; b.setAttribute('aria-pressed', String(i === (S.pick || 0))); return b; }));
+    $('unitAddL').disabled = $('unitAddR').disabled = r.length >= 3;
+    $('unitDel').disabled = r.length < 2 || r[S.pick || 0].n === 'A';
+    $('unitHint').textContent = L(`전체 폭 ${rowSpan().total}mm · 사람은 ${r[S.pick || 0].n} 유닛을 써요. 유닛을 누르면 그 앞으로 가고, W로 그 유닛 폭을 바꿔요.`, `Overall width ${rowSpan().total} mm · the person uses unit ${r[S.pick || 0].n}. Tap a unit to go to it; W changes its width.`);
+  }
   segSet('liftSeg', 'lift', S.lift);
   const disp = S.action === 'dispense';
   $('ctrlHRow').hidden = S.face === 'top' && !disp;
@@ -3352,7 +3387,13 @@ function updateOverlay(pose) {
   };
   const P = dims(), A = S.A;
   put($('t-human'), human.localToWorld(pose.P.headCenter.clone().add(new V3(0, A.headH * 0.62, 0))), S.guides && S.view !== 'first', 'translate(-50%, calc(-100% - 4px))');
-  put($('t-prod'), product.localToWorld(new V3(0, P.H, -P.D / 2)), S.guides, 'translate(-50%, calc(-100% - 8px))');
+  const ru = rowUnits() && S.row.length > 1 ? S.row : null, ro = ru ? rowOffsets() : null;
+  put($('t-prod'), product.localToWorld(new V3(ru ? (((rowSpan().right - rowSpan().left) / 2) / 1000) * S.scale : 0, P.H, -P.D / 2)), S.guides, 'translate(-50%, calc(-100% - 8px))');
+  for (let i = 0; i < 3; i++) { // each unit's name and size on its front, just under the top
+    const el = $(`t-u${i}`), u = ru && ru[i];
+    if (u) el.textContent = `${u.n} ${mmi((u.w / 1000) * S.scale)}×${mmi(P.D)}×${mmi(P.H)}`;
+    put(el, u ? product.localToWorld(new V3((ro[i] / 1000) * S.scale, P.H - 0.07 * S.scale, 0.01)) : new V3(), !!u && S.guides && S.view !== 'top', 'translate(-50%, -50%)');
+  }
   const handTag = S.place === 'hand';
   put($('t-tg'), handTag ? hands[0].g.localToWorld(new V3(0, 0, 0)) : controlWorld(), S.guides && S.view !== 'top' && S.view !== 'first' && (handTag || S.mode === 'use'), handTag ? 'translate(-50%, 18px)' : 'translate(12px, -50%)');
   const lines = S.guides && (S.view === 'front' || S.view === 'side');
@@ -3453,7 +3494,7 @@ function setPersona(k) { const p = PERSONAS[k]; S.persona = k; S.height = p.h; S
 function applyPreset(k) {
   const pr = PRESETS[k];
   Object.assign(S, { source: 'box', preset: k, pkey: k, name: pr.name, shape: pr.shape, style: pr.style || null, look: pr.look || null, noHand: !!pr.noHand, w: pr.w, d: pr.d, h: pr.h, place: pr.place, face: pr.face, ctrl: pr.ctrl, action: pr.action, scale: 1, posture: pr.posture || 'stand', base: { w: pr.w, d: pr.d, h: pr.h }, screen: !!pr.screen, lift: 0, ringSize: pr.size || S.ringSize });
-  S.seatMode = 'fixed'; S.seatH = PROPS[propKind()].h; S.preDesk = null;
+  S.seatMode = 'fixed'; S.seatH = PROPS[propKind()].h; S.preDesk = null; S.row = null; S.pick = 0;
   anim.lift = 0; anim.fill = 0;
   refresh({ rebuild: true, refit: true });
 }
@@ -3538,6 +3579,29 @@ for (const t of document.querySelectorAll('[role="tab"]')) {
 }
 $('btnGuides').addEventListener('click', () => { S.guides = !S.guides; $('btnGuides').setAttribute('aria-pressed', String(S.guides)); });
 $('btnPlay').addEventListener('click', play);
+/* chest-of-drawers units: add one to the left or right (named B, then C, with the picked one's width), pick one to use, remove one */
+function addUnit(left) {
+  const r = (S.row || [{ n: 'A', w: S.w }]).map((u, i) => (i === (S.pick || 0) ? { ...u, w: S.w } : u));
+  if (r.length >= 3) return;
+  const u = { n: ['A', 'B', 'C'].find((n) => !r.some((x) => x.n === n)), w: S.w };
+  S.row = left ? [u, ...r] : [...r, u];
+  S.pick = (S.pick || 0) + (left ? 1 : 0);
+  refresh({ rebuild: true, refit: true });
+}
+$('unitAddL').addEventListener('click', () => addUnit(true));
+$('unitAddR').addEventListener('click', () => addUnit(false));
+$('unitDel').addEventListener('click', () => {
+  const r = S.row; if (!r || r.length < 2 || r[S.pick].n === 'A') return;
+  S.row = r.filter((_, i) => i !== S.pick); S.pick = S.row.findIndex((u) => u.n === 'A'); S.w = S.row[S.pick].w;
+  if (S.row.length === 1) S.row = null, S.pick = 0;
+  refresh({ rebuild: true, refit: true });
+});
+$('unitSeg').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-unit]'); if (!b || !S.row) return;
+  const i = +b.dataset.unit; if (i === S.pick) return;
+  S.row = S.row.map((u, j) => (j === S.pick ? { ...u, w: S.w } : u)); S.pick = i; S.w = S.row[i].w;
+  refresh({ rebuild: true, refit: true });
+});
 $('btnGhost').addEventListener('click', () => { S.ghost = !S.ghost; syncUI(); }); // see the product through the person in the front view, or not
 
 /* ---------- your own model ---------- */
@@ -3747,7 +3811,7 @@ $('wReset').addEventListener('click', () => { S.bmi = PERSONAS[S.persona].bmi; r
 $('sReset').addEventListener('click', () => { S.scale = 1; refresh({ rebuild: true }); });
 $('cReset').addEventListener('click', () => { S.ctrl = ctrlDefault(); refresh(); });
 
-const HKEYS = ['persona', 'height', 'bmi', 'posture', 'source', 'preset', 'pkey', 'name', 'shape', 'style', 'look', 'noHand', 'w', 'd', 'h', 'scale', 'place', 'face', 'ctrl', 'action', 'mode', 'base', 'screen', 'seatMode', 'seatH', 'lift', 'ringSize'];
+const HKEYS = ['row', 'pick', 'persona', 'height', 'bmi', 'posture', 'source', 'preset', 'pkey', 'name', 'shape', 'style', 'look', 'noHand', 'w', 'd', 'h', 'scale', 'place', 'face', 'ctrl', 'action', 'mode', 'base', 'screen', 'seatMode', 'seatH', 'lift', 'ringSize'];
 const hist = { list: [], i: -1, timer: 0 };
 const snap = () => Object.fromEntries(HKEYS.map((k) => [k, S[k]]));
 function commit() {
