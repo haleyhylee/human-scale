@@ -707,8 +707,9 @@ const typePose = () => ({ f: [0, 1, 2, 3].map((i) => [deg(22 + 3 * i), deg(42), 
 const flatPose = () => ({ f: [0, 1, 2, 3].map((i) => [deg(4 + i), deg(6 + i), deg(4)]), tm: new V3(0.15, 0.7, -0.7).normalize(), tq: new V3(0.5, 0, 0.86).normalize(), t: [deg(6), deg(8)] });
 function gripPose(HD, sh) {
   const f = HD.fingers.map((F) => solve(sh, new V3(0, F.y, F.z), UP, FAX, F.L, F.r, [90, 105, 85]));
-  const T = HD.thumb, tm = new V3(0.75, 0.35, -0.55).normalize(), tq = new V3(0, 1, 0);
-  const t = solve(sh, T.base, tm, new V3().crossVectors(tm, tq).normalize(), T.L, T.r, [55, 80], [-25, -50]);
+  // the thumb wraps the other way round: from its root beside the palm along the object's outline, curling in about the object's axis
+  const T = HD.thumb, a = Math.atan2(T.base.y - sh.cy, T.base.x - sh.cx), tm = new V3(-Math.sin(a), Math.cos(a), -0.25).normalize(), tq = new V3(-Math.cos(a), -Math.sin(a), 0);
+  const t = solve(sh, T.base, tm, new V3().crossVectors(tm, tq).normalize(), T.L, T.r, [60, 75], [-5, -5]); // never bent back
   return { f, tm, tq, t };
 }
 function blendPose(a, b, k) {
@@ -956,10 +957,10 @@ function fillCleft(pts) {
   const c = pts.length / 2, b = pts[c - 2][1]; // the back centre and, two points out, the fullest part of the buttocks
   return pts.map(([x, z], i) => (Math.abs(i - c) <= 1 ? [x, Math.min(z, b * (i === c ? 0.985 : 0.99))] : [x, z]));
 }
-/* the front of the lower torso, from the crotch up past the hips, filled out to its convex hull: a mannequin's plain, flat front with no
-   groin hollows; each front point (within 80 degrees of straight ahead) goes out along its own ray to the hull */
+/* the front of the lower torso (crotch to past the hips) and of the chest filled out to its convex hull: a mannequin's plain front with
+   no groin hollows and no cleavage; each front point (within 80 degrees of straight ahead) goes out along its own ray to the hull */
 function fillFront(pts, f) {
-  if (f >= 0.3) return pts;
+  if (f >= 0.3 && f < 0.66) return pts;
   const P = pts.slice().sort((u, v) => u[0] - v[0] || u[1] - v[1]), cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], up = [];
   for (const q of P) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
   for (const q of P.slice().reverse()) { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
@@ -977,7 +978,7 @@ function torsoGeo(key, tl, p, band = null) {
     for (let i = 1; i < key.length; i++) if (f <= key[i][0]) { const t = (f - key[i - 1][0]) / (key[i][0] - key[i - 1][0]); return [1, 2, 3].map((j) => key[i - 1][j] + (key[i][j] - key[i - 1][j]) * t); }
     return key[key.length - 1].slice(1);
   };
-  const flat = p.sex === 'M' ? 0.92 : p.sex === 'N' ? 0.6 : 0, first = TORSO_RINGS[0].p, last = TORSO_RINGS[TORSO_RINGS.length - 1].p;
+  const flat = p.sex === 'M' ? 0.92 : p.sex === 'N' ? 0.6 : 0.4, first = TORSO_RINGS[0].p, last = TORSO_RINGS[TORSO_RINGS.length - 1].p; // a woman's bust kept soft, as on a display mannequin
   const ringAt = (f) => { // the measured section at any height, between the sliced ones
     const k = TORSO_RINGS.findIndex((r) => r.f >= f);
     if (k <= 0) return k === 0 ? first : last;
@@ -2116,11 +2117,14 @@ function buildSurface() {
 
 function layoutHuman() {
   const A = S.A, P = dims(), st = furn();
+  surface.position.x = 0;
   if (carried()) { human.position.set(0, 0, 0); human.rotation.set(0, 0, 0); return; }
   if (atDesk()) { const dl = deskLayout(); human.position.set(-dl.xc, 0, -dl.zf + (A.chair === 'wheel' ? 0.22 : 0.2)); human.rotation.set(0, Math.PI, 0); return; } // at the keyboard
   if (S.mode === 'compare') {
-    const halfW = S.place === 'counter' ? Math.max(1.1, P.W + 0.6) / 2 : S.place === 'table' ? Math.max(1.0, P.W + 0.6) / 2 : P.W / 2;
-    human.position.set(-(halfW + 0.3 + (A.chair === 'prop' && A.prop === 'sofa' ? 0.86 : A.seated ? 0.34 : A.shoulderHalf)), 0, A.seated ? -0.12 : -0.08);
+    const top = S.place === 'counter' ? Math.max(1.1, P.W + 0.6) : S.place === 'table' ? Math.max(1.0, P.W + 0.6) : 0; // the counter or table it stands on
+    const near = P.W / 2 + (top ? 0.12 : 0); // the product sits just in from the end nearest the person, so its size reads against them
+    if (top) surface.position.x = top / 2 - near;
+    human.position.set(-(near + (top ? 0.12 : 0.3) + (A.chair === 'prop' && A.prop === 'sofa' ? 0.86 : A.seated ? 0.34 : A.shoulderHalf)), 0, A.seated ? -0.12 : -0.08);
     human.rotation.set(0, 0, 0);
     return;
   }
@@ -2391,7 +2395,7 @@ function handGoal(plan, s, P, sh) {
     }
     case 'pull': { if (!right) return null; const dr = holder.userData.drawers, dz = dr ? anim.open * dr.travel * S.scale : 0; return { F: plan.F, W: plan.W.clone().add(new V3(0, 0, -dz)), pole: new V3(-0.5, -1, -0.4), hp: plan.hp }; }
     case 'palm': return right ? { F: handFrame(UP.clone(), new V3(0.25, 0.12, 1)), W: new V3(P.shR.x + 0.3 * A.forearm, P.shR.y - A.upperArm + 0.2 * A.forearm, P.shR.z + 0.93 * A.forearm), pole: new V3(-0.4, -1, -0.5), hp: plan.hp } : null;
-    case 'handle': return right ? { F: handFrame(new V3(1, 0, 0), new V3(0.25, 0, 1)), W: holdWrist(A, P), pole: new V3(-0.35, -1, -0.6), hp: plan.hp } : null;
+    case 'handle': return right ? sip(plan, { F: handFrame(new V3(1, 0, 0), new V3(0.25, 0, 1)), W: holdWrist(A, P), pole: new V3(-0.35, -1, -0.6), hp: plan.hp }, P) : null;
     case 'grip': {
       if (!right) { // the other hand presses the dispense button
         const p2 = plan.press2;
@@ -2400,10 +2404,37 @@ function handGoal(plan, s, P, sh) {
         return { F, W: p2.at.clone().sub(inHand(F, p2.tip)), pole: new V3(0.55, -1, -0.35), hp: p2.hp };
       }
       const F = handFrame(new V3(1, 0, 0), new V3(0.25, 0, 1));
-      return S.place === 'hand' ? { F, W: holdWrist(A, P), pole: new V3(-0.35, -1, -0.6), hp: plan.hp } : { F, W: S.cupLocal.clone().sub(inHand(F, plan.off)), pole: new V3(-0.55, -1, -0.35), hp: plan.hp };
+      return S.place === 'hand' ? sip(plan, { F, W: holdWrist(A, P), pole: new V3(-0.35, -1, -0.6), hp: plan.hp }, P) : { F, W: S.cupLocal.clone().sub(inHand(F, plan.off)), pole: new V3(-0.55, -1, -0.35), hp: plan.hp };
     }
   }
   return null;
+}
+/* drinking: a cup or a tumbler held in the hand goes to the lips when Play runs */
+const drinkware = () => S.source === 'box' && (S.look === 'tumbler' || S.shape === 'cup');
+const drinking = () => S.place === 'hand' && drinkware() && !!S.plan && (S.plan.kind === 'grip' || S.plan.kind === 'handle');
+const mouthPoint = (P) => P.headCenter.clone().addScaledVector(P.neckDir, -0.32 * S.A.headH).addScaledVector(P.headFwd, 0.6 * S.A.headH); // on the lower lip (body frame)
+function handToProduct(plan) { // where the held thing sits in the hand: hand frame to product frame
+  if (plan.kind !== 'grip') return plan.rel.clone();
+  const D3 = dims(), t = drinkware() ? -1 : 1, Yp = new V3(0, 0, -1), Xp = (plan.swap ? new V3(0, -1, 0) : new V3(1, 0, 0)).multiplyScalar(t), Zp = (plan.swap ? new V3(1, 0, 0) : new V3(0, 1, 0)).multiplyScalar(t);
+  return new THREE.Matrix4().makeBasis(Xp, Yp, Zp).setPosition(plan.off.clone().addScaledVector(Yp, -D3.H / 2).addScaledVector(Zp, D3.D / 2));
+}
+/* the cup tipped to the lips: its rim (a tumbler's mouthpiece) on the lower lip, tilted back toward the face; the right hand's frame and
+   wrist (body frame) that hold it there */
+function drinkGoal(plan, P) {
+  const D3 = dims(), R = D3.W / 2, tum = S.look === 'tumbler', th = deg(tum ? 52 : S.style === 'latte' ? 38 : 45);
+  const b = P.headFwd.clone().setY(0).normalize().negate(); // from the cup toward the face
+  const Yp = UP.clone().multiplyScalar(Math.cos(th)).addScaledVector(b, Math.sin(th)), Zp = b.clone().multiplyScalar(Math.cos(th)).addScaledVector(UP, -Math.sin(th)), Xp = new V3().crossVectors(Yp, Zp);
+  const rim = new V3(0, D3.H + (tum ? 0.002 : 0), tum ? -0.44 * R : 0); // product frame: the mouthpiece, or the near rim
+  const O = mouthPoint(P).sub(Xp.clone().multiplyScalar(rim.x).addScaledVector(Yp, rim.y).addScaledVector(Zp, rim.z));
+  const Mh = new THREE.Matrix4().makeBasis(Xp, Yp, Zp).setPosition(O).multiply(handToProduct(plan).invert()), W = new V3(), q = new THREE.Quaternion();
+  Mh.decompose(W, q, new V3());
+  return { q, W };
+}
+function sip(plan, g, P) { // the hold, eased over to the lips while drinking
+  const d = anim.drink;
+  if (!(d > 0) || !drinking()) return g;
+  const t = drinkGoal(plan, P);
+  return { F: { q: g.F.q.clone().slerp(t.q, d) }, W: g.W.clone().lerp(t.W, d), pole: g.pole.clone().lerp(new V3(-0.45, -1, 0.35), d), hp: g.hp };
 }
 /* typing: the fingers lift and strike in turn */
 function tapPose(hp, s) {
@@ -2451,7 +2482,13 @@ function placeExtras(pose) {
   if (S.place === 'hand' && grip) {
     const P = dims(), e = hr.matrixWorld.elements;
     const X = new V3(e[0], e[1], e[2]).normalize(), Y = new V3(e[4], e[5], e[6]).normalize(), Z = new V3(e[8], e[9], e[10]).normalize();
-    const Yp = Z.clone().negate(), Xp = plan.swap ? Y.clone().negate() : X, Zp = plan.swap ? X : Y;
+    const Yp = Z.clone().negate(), turn = drinkware() ? -1 : 1;
+    let Xp = (plan.swap ? Y.clone().negate() : X.clone()).multiplyScalar(turn), Zp = (plan.swap ? X.clone() : Y.clone()).multiplyScalar(turn);
+    if (pose && S.look === 'tumbler' && S.source === 'box') { // its mouthpiece turns to the lips
+      const d = human.localToWorld(mouthPoint(pose.P)).sub(hr.localToWorld(plan.off.clone()));
+      d.addScaledVector(Yp, -d.dot(Yp));
+      if (d.lengthSq() > 1e-8) { Zp = d.normalize(); Xp = new V3().crossVectors(Yp, Zp); }
+    }
     product.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(Xp, Yp, Zp));
     product.position.copy(hr.localToWorld(plan.off.clone())).addScaledVector(Yp, -P.H / 2).addScaledVector(Zp, P.D / 2);
   }
@@ -2480,7 +2517,7 @@ function placeExtras(pose) {
 }
 
 /* ---------- pose and ergonomic checks ---------- */
-const anim = { reach: 1, pour: 0, fill: 0, lift: 0, open: 0, phase: 'idle', t: 0 };
+const anim = { reach: 1, pour: 0, fill: 0, lift: 0, open: 0, drink: 0, phase: 'idle', t: 0 };
 
 function isFlat(P) { return S.shape === 'box' && S.source === 'box' && Math.min(P.W, P.D) / Math.max(P.W, P.D) < 0.35; }
 const roundGrip = () => S.source === 'box' && ['cyl', 'cup', 'sphere'].includes(S.shape);
@@ -3353,7 +3390,7 @@ function play() {
     Object.assign(anim, { phase: 'wait', t: 0, reach: 0, pour: 0 });
     return;
   }
-  Object.assign(anim, { phase: 'reach', t: 0, reach: 0, pour: 0, fill: 0, open: 0 });
+  Object.assign(anim, { phase: 'reach', t: 0, reach: 0, pour: 0, fill: 0, open: 0, drink: 0 });
 }
 function liftMoved() { if (!reduceMotion) Object.assign(anim, { phase: 'wait', t: 0, reach: 0 }); } // the hand waits for the top to move
 function stepAnim(dt) {
@@ -3367,11 +3404,15 @@ function stepAnim(dt) {
   if (anim.phase === 'reach') {
     const k = clamp(anim.t / 0.9, 0, 1);
     anim.reach = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
-    if (k >= 1) { anim.phase = flows() ? 'pour' : S.plan && S.plan.kind === 'type' ? 'type' : S.plan && S.plan.kind === 'pull' ? 'pull' : 'idle'; anim.t = 0; } // after reaching: water runs, the fingers type, or the drawer comes out
+    if (k >= 1) { anim.phase = flows() ? 'pour' : S.plan && S.plan.kind === 'type' ? 'type' : S.plan && S.plan.kind === 'pull' ? 'pull' : drinking() ? 'drink' : 'idle'; anim.t = 0; } // after reaching: water runs, the fingers type, the drawer comes out, or the cup goes to the lips
   } else if (anim.phase === 'pour') {
     anim.pour = clamp(anim.t / 0.25, 0, 1);
     if (isDispense()) anim.fill = clamp(anim.t / 1.9, 0, 1) * 0.85;
     if (anim.t > 1.9) { anim.phase = 'drain'; anim.t = 0; }
+  } else if (anim.phase === 'drink') { // up to the lips, a sip, and back down
+    const t = anim.t, e = (x) => { const k = clamp(x, 0, 1); return k * k * (3 - 2 * k); };
+    anim.drink = t < 1.1 ? e(t / 1.1) : t < 2.1 ? 1 : 1 - e((t - 2.1) / 0.9);
+    if (t >= 3) { anim.phase = 'idle'; anim.drink = 0; }
   } else if (anim.phase === 'type') {
     if (anim.t > 2.6) anim.phase = 'idle';
   } else if (anim.phase === 'pull') {
