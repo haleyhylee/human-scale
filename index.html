@@ -140,6 +140,8 @@ button { cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
 .label .seg.mini { margin-left: auto; }
 .seg.mini button { height: 26px; padding: 0 10px; font-size: 12px; }
+.seg .ox { display: inline-flex; align-items: center; justify-content: center; width: 38px; padding: 0; }
+.seg .ox svg { width: 15px; height: 15px; }
 .seg button:disabled { opacity: 0.4; cursor: default; }
 .seg.full { display: flex; }
 .seg.full button { flex: 1 1 0; padding: 0 4px; }
@@ -470,26 +472,8 @@ input:disabled { opacity: 0.55; }
         <input type="range" id="sIn" min="50" max="200" step="5">
         <p class="hint" id="sDims"></p>
       </div>
-      <div class="field" id="placeField">
-        <div class="label"><span data-en="Placed on">놓는 곳</span><button type="button" class="reset" id="surfReset" hidden data-en="Default">기본값</button></div>
-        <div class="seg full" id="placeSeg">
-          <button type="button" data-place="floor" data-en="Floor">바닥</button>
-          <button type="button" data-place="table" data-en="Table 72">테이블 72</button>
-          <button type="button" data-place="desk" data-en="Desk 74">책상 74</button>
-          <button type="button" data-place="counter" data-en="Counter 85">조리대 85</button>
-          <button type="button" data-place="hand" data-en="In hand">손에 들기</button>
-          <button type="button" data-place="back" data-en="On the back" hidden>등에 메기</button>
-          <button type="button" data-place="plinth" data-en="Plinth 90">단상 90</button>
-          <button type="button" data-place="air" data-en="Midair 100">공중 100</button>
-        </div>
-        <div class="dimrow surfrow" id="surfRow" hidden><label for="surfIn" id="surfLab">높이</label><input type="range" id="surfIn" min="400" max="1200" step="5" aria-label="놓는 곳 높이" data-en-aria="Surface height"><input type="number" id="surfNum" inputmode="decimal" min="400" max="1200" step="1"></div>
-        <div id="plinthRows" hidden>
-          <div class="dimrow surfrow"><label for="plW" data-en="Plinth W">단상 W</label><input type="range" id="plW" min="100" max="1500" step="10"><input type="number" id="plWn" inputmode="decimal" min="100" max="1500" step="1"></div>
-          <div class="dimrow surfrow"><label for="plD" data-en="Plinth D">단상 D</label><input type="range" id="plD" min="100" max="1500" step="10"><input type="number" id="plDn" inputmode="decimal" min="100" max="1500" step="1"></div>
-        </div>
-      </div>
       <div class="field" id="ctrlField">
-        <div class="label"><span data-en="Controls">조작부</span><div class="seg mini" id="ctrlOnSeg" role="group" aria-label="조작부 있음 또는 없음" data-en-aria="Controls on or off"><button type="button" data-on="1" data-en="On">있음</button><button type="button" data-on="0" data-en="Off">없음</button></div></div>
+        <div class="label"><span data-en="Controls">조작부</span><div class="seg mini" id="ctrlOnSeg" role="group" aria-label="조작부 있음 또는 없음" data-en-aria="Controls on or off"><button type="button" data-on="1" class="ox" aria-label="조작부 있음" data-en-aria="Controls on" title="있음"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2.6"/></svg></button><button type="button" data-on="0" class="ox" aria-label="조작부 없음" data-en-aria="Controls off" title="없음"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button></div></div>
         <div id="ctrlBody" class="field-sub">
         <div class="row2">
           <div class="seg" id="faceSeg"><button type="button" data-face="front" data-en="Front">앞면</button><button type="button" data-face="top" data-en="Top">윗면</button></div>
@@ -501,6 +485,24 @@ input:disabled { opacity: 0.55; }
           <input type="range" id="cIn" min="0" max="400" step="5">
         </div>
         </div>
+      <div class="field" id="placeField">
+        <div class="label"><span data-en="Placed on">놓는 곳</span><button type="button" class="reset" id="surfReset" hidden data-en="Default">기본값</button></div>
+        <div class="seg full" id="placeSeg">
+          <button type="button" data-place="plinth" data-en="Plinth 90">단상 90</button>
+          <button type="button" data-place="table" data-en="Table 72">테이블 72</button>
+          <button type="button" data-place="desk" data-en="Desk 74">책상 74</button>
+          <button type="button" data-place="counter" data-en="Counter 85">조리대 85</button>
+          <button type="button" data-place="hand" data-en="In hand">손에 들기</button>
+          <button type="button" data-place="back" data-en="On the back" hidden>등에 메기</button>
+          <button type="button" data-place="air" data-en="Midair 100">공중 100</button>
+          <button type="button" data-place="floor" data-en="Floor">바닥</button>
+        </div>
+        <div class="dimrow surfrow" id="surfRow" hidden><label for="surfIn" id="surfLab">높이</label><input type="range" id="surfIn" min="400" max="1200" step="5" aria-label="놓는 곳 높이" data-en-aria="Surface height"><input type="number" id="surfNum" inputmode="decimal" min="400" max="1200" step="1"></div>
+        <div id="plinthRows" hidden>
+          <div class="dimrow surfrow"><label for="plW" data-en="Plinth W">단상 W</label><input type="range" id="plW" min="100" max="1500" step="10"><input type="number" id="plWn" inputmode="decimal" min="100" max="1500" step="1"></div>
+          <div class="dimrow surfrow"><label for="plD" data-en="Plinth D">단상 D</label><input type="range" id="plD" min="100" max="1500" step="10"><input type="number" id="plDn" inputmode="decimal" min="100" max="1500" step="1"></div>
+        </div>
+      </div>
       </div>
     </section>
 
@@ -556,8 +558,8 @@ const pLabel = (p) => L(p.label, p.en);
 /* furniture: shape 'desk' = anything with a top (H = top height), 'chair' = anything you sit on (H = seat height) */
 const FURN = (o) => ({ place: 'floor', face: 'top', ctrl: o.h, action: 'press', ...o });
 const PRESETS = {
-  purifier: { name: '슬림 정수기', en: 'Slim water purifier', shape: 'box', look: 'purifier', w: 180, d: 420, h: 380, place: 'counter', face: 'front', ctrl: 230, action: 'dispense', noHand: true },
-  coffee: { name: '커피머신', en: 'Coffee machine', shape: 'box', look: 'coffee', w: 240, d: 400, h: 330, place: 'counter', face: 'top', ctrl: 160, action: 'dispense', noHand: true }, // button on top, cup on the drip tray
+  purifier: { name: '슬림 정수기', en: 'Slim water purifier', shape: 'box', look: 'purifier', w: 180, d: 420, h: 380, place: 'plinth', face: 'front', ctrl: 230, action: 'dispense', noHand: true },
+  coffee: { name: '커피머신', en: 'Coffee machine', shape: 'box', look: 'coffee', w: 240, d: 400, h: 330, place: 'plinth', face: 'top', ctrl: 160, action: 'dispense', noHand: true }, // button on top, cup on the drip tray
   air: { name: '공기청정기', en: 'Air purifier', shape: 'box', look: 'airpurifier', w: 300, d: 300, h: 720, place: 'floor', face: 'top', ctrl: 720, action: 'press', noHand: true },
   tumbler: { name: '텀블러', en: 'Tumbler', shape: 'cyl', look: 'tumbler', w: 72, d: 72, h: 190, place: 'hand', face: 'front', ctrl: 120, action: 'press' },
   phonemini: { name: '스마트폰 5.4인치', en: 'Smartphone 5.4"', shape: 'box', w: 64, d: 7, h: 131, place: 'hand', face: 'front', ctrl: 65, action: 'press', screen: true },
@@ -565,19 +567,22 @@ const PRESETS = {
   galaxy: { name: '대화면 스마트폰 6.9인치', en: 'Large smartphone 6.9"', shape: 'box', w: 78, d: 8, h: 163, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true },
   ipadmini: { name: '태블릿 8.3인치', en: 'Tablet 8.3"', shape: 'box', w: 135, d: 6, h: 195, place: 'hand', face: 'front', ctrl: 100, action: 'press', screen: true },
   ipadair: { name: '태블릿 11인치', en: 'Tablet 11"', shape: 'box', w: 179, d: 6, h: 248, place: 'hand', face: 'front', ctrl: 120, action: 'press', screen: true },
-  macbook: { name: '노트북 13인치', en: 'Laptop 13"', shape: 'laptop', w: 304, d: 215, h: 11, place: 'table', face: 'top', ctrl: 11, action: 'press', posture: 'sit', noHand: true }, // opens on the table
+  macbook: { name: '노트북 13인치', en: 'Laptop 13"', shape: 'laptop', w: 304, d: 215, h: 11, place: 'plinth', face: 'top', ctrl: 11, action: 'press', posture: 'sit', noHand: true }, // opens on the table
   airbuds: { name: '무선 이어버드 (착용)', en: 'Wireless earbuds (worn)', shape: 'earbud', w: 19, d: 27, h: 31, place: 'head', face: 'front', ctrl: 15, action: 'press' }, // a typical stem earbud, about 19 x 27 x 31 mm, in the ears
   airpods: { name: '이어버드 케이스', en: 'Earbuds case', shape: 'box', look: 'case', w: 62, d: 22, h: 47, place: 'hand', face: 'front', ctrl: 20, action: 'press' }, // a typical charging case
   airmax: { name: '오버이어 헤드폰', en: 'Over-ear headphones', shape: 'headphone', w: 170, d: 85, h: 190, place: 'head', face: 'front', ctrl: 90, action: 'press' }, // typical over-ear headphones, worn
   mug: { name: '머그컵', en: 'Mug', shape: 'cup', style: 'mug', w: 82, d: 82, h: 95, place: 'hand', face: 'front', ctrl: 60, action: 'press' },
   glass: { name: '유리잔', en: 'Glass', shape: 'cup', style: 'glass', w: 72, d: 72, h: 110, place: 'hand', face: 'front', ctrl: 60, action: 'press' },
   latte: { name: '라떼잔', en: 'Latte cup', shape: 'cup', style: 'latte', w: 110, d: 110, h: 70, place: 'hand', face: 'front', ctrl: 40, action: 'press' },
-  a4: { name: 'A4 용지', en: 'A4 sheet', shape: 'box', look: 'paper', w: 210, d: 1, h: 297, place: 'plinth', face: 'front', ctrl: 150, action: 'press' },
+  a4: { name: '종이 A4', en: 'Paper A4', shape: 'box', look: 'paper', w: 210, d: 1, h: 297, place: 'plinth', face: 'front', ctrl: 150, action: 'press' },
+  a3: { name: '포스터 A3', en: 'Poster A3', shape: 'box', look: 'paper', w: 297, d: 1, h: 420, place: 'plinth', face: 'front', ctrl: 210, action: 'press' },
+  a2: { name: '포스터 A2', en: 'Poster A2', shape: 'box', look: 'paper', w: 420, d: 1, h: 594, place: 'plinth', face: 'front', ctrl: 300, action: 'press' },
+  a1: { name: '포스터 A1', en: 'Poster A1', shape: 'box', look: 'paper', w: 594, d: 1, h: 841, place: 'plinth', face: 'front', ctrl: 420, action: 'press' },
   backpack: { name: '백팩', en: 'Backpack', shape: 'box', look: 'backpack', w: 300, d: 160, h: 450, place: 'back', face: 'front', ctrl: 400, action: 'press' }, // a 20 L daypack, worn
   pouch13: { name: '노트북 파우치 13인치', en: 'Laptop sleeve 13"', shape: 'box', look: 'pouch', w: 335, d: 25, h: 245, place: 'hand', face: 'front', ctrl: 120, action: 'press' },
   pouch16: { name: '노트북 파우치 16인치', en: 'Laptop sleeve 16"', shape: 'box', look: 'pouch', w: 385, d: 28, h: 275, place: 'hand', face: 'front', ctrl: 140, action: 'press' },
-  floorlamp: { name: '스탠드 조명', en: 'Floor lamp', shape: 'box', look: 'floorlamp', w: 420, d: 420, h: 1600, place: 'floor', face: 'front', ctrl: 1050, action: 'press', noHand: true }, // pull switch under the shade
-  tablelamp: { name: '테이블 조명', en: 'Table lamp', shape: 'box', look: 'tablelamp', w: 300, d: 300, h: 450, place: 'desk', face: 'front', ctrl: 20, action: 'press', noHand: true }, // switch on the base
+  floorlamp: { name: '스탠드 조명', en: 'Floor lamp', shape: 'box', look: 'floorlamp', w: 420, d: 420, h: 1600, place: 'floor', face: 'front', ctrl: 1050, action: 'press', noCtrl: true, noHand: true }, // pull switch under the shade
+  tablelamp: { name: '테이블 조명', en: 'Table lamp', shape: 'box', look: 'tablelamp', w: 300, d: 300, h: 450, place: 'plinth', face: 'front', ctrl: 20, action: 'press', noCtrl: true, noHand: true }, // switch on the base
   lug20: { name: '캐리어 20인치', en: 'Suitcase 20"', shape: 'box', look: 'luggage', w: 360, d: 230, h: 550, place: 'floor', face: 'top', ctrl: 950, action: 'press', noHand: true }, // carry-on, with wheels
   lug24: { name: '캐리어 24인치', en: 'Suitcase 24"', shape: 'box', look: 'luggage', w: 420, d: 260, h: 650, place: 'floor', face: 'top', ctrl: 1000, action: 'press', noHand: true },
   lug26: { name: '캐리어 26인치', en: 'Suitcase 26"', shape: 'box', look: 'luggage', w: 450, d: 280, h: 700, place: 'floor', face: 'top', ctrl: 1020, action: 'press', noHand: true },
@@ -612,15 +617,17 @@ const FAMILIES = {
   phone: { ko: '스마트폰', en: 'Smartphone', sizes: [['phonemini', '5.4인치 미니', '5.4" mini'], ['phone', '6.3인치', '6.3"'], ['galaxy', '6.9인치', '6.9"']] },
   tablet: { ko: '태블릿', en: 'Tablet', sizes: [['ipadmini', '8.3인치 미니', '8.3" mini'], ['ipadair', '11인치', '11"']] },
   sofa: { ko: '소파', en: 'Sofa', sizes: [['armchair', '1인', '1-seat'], ['sofa2', '2인', '2-seat'], ['sofa', '3인', '3-seat'], ['sofa4', '4인', '4-seat']] },
+  paper: { ko: '종이', en: 'Paper', sizes: [['a4', 'A4', 'A4'], ['a3', 'A3 포스터', 'A3 poster'], ['a2', 'A2 포스터', 'A2 poster'], ['a1', 'A1 포스터', 'A1 poster']] },
   pouch: { ko: '노트북 파우치', en: 'Laptop sleeve', sizes: [['pouch13', '13인치', '13"'], ['pouch16', '16인치', '16"']] },
   luggage: { ko: '캐리어', en: 'Suitcase', sizes: [['lug20', '20인치', '20"'], ['lug24', '24인치', '24"'], ['lug26', '26인치', '26"'], ['lug28', '28인치', '28"'], ['lug30', '30인치', '30"']] },
 };
 const familyOf = (k) => Object.keys(FAMILIES).find((f) => FAMILIES[f].sizes.some((x) => x[0] === k)) || null;
 /* the plain object's forms, each with its own starting size (W, D, H mm) */
 const FORMS = { box: [80, 80, 80], frame: [200, 200, 200], cyl: [80, 80, 150], sphere: [100, 100, 100], cone: [100, 100, 150], plate: [100, 100, 5] };
-const roundBase = (sh = S.shape) => sh === 'cyl' || sh === 'cup' || sh === 'cone'; // W = D
+const roundSeat = () => S.source === 'box' && S.shape === 'chair' && (S.style === 'stool' || (S.style === 'pstool' && ((S.det && S.det.form) || 'legs') !== 'cube')); // a round stool: its seat is W across, so D follows W
+const roundBase = (sh = S.shape) => sh === 'cyl' || sh === 'cup' || sh === 'cone' || (sh === S.shape && roundSeat()); // W = D
 const PRESET_GROUPS = [
-  [['목업·소품', 'Mockup & objects'], ['cube', 'cyl', 'sphere', 'cone', 'plate', 'a4', 'ring']],
+  [['목업·소품', 'Mockup & objects'], ['cube', 'cyl', 'sphere', 'cone', 'plate', 'fam:paper', 'ring']],
   [['생활 제품', 'Appliances'], ['purifier', 'coffee', 'air', 'floorlamp', 'tablelamp']],
   [['전자제품', 'Electronics'], ['fam:phone', 'fam:tablet', 'macbook', 'airbuds', 'airpods', 'airmax']],
   [['가방·캐리어', 'Bags & luggage'], ['backpack', 'fam:pouch', 'fam:luggage']],
@@ -929,6 +936,17 @@ const LIMB_PROFILE = {
 /* ---------- scene ---------- */
 const canvas = $('c'), stage = $('stage');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+/* a soft grey room with a few bright panels, only for metal to reflect (nothing else looks into it) */
+const ENV = (() => {
+  const sc = new THREE.Scene(), box = new THREE.BoxGeometry();
+  const wall = new THREE.Mesh(box, new THREE.MeshBasicMaterial({ color: 0xaeb2b7, side: THREE.BackSide })); wall.scale.set(10, 6, 10); wall.position.y = 3; sc.add(wall);
+  const floor = new THREE.Mesh(box, new THREE.MeshBasicMaterial({ color: 0x6d7074 })); floor.scale.set(10, 0.05, 10); floor.position.y = 0.02; sc.add(floor);
+  for (const [x, y, z, sx, sy, sz, k] of [[0, 5.9, 0, 5, 0.1, 2.5, 7], [-4.9, 3.2, 0.5, 0.1, 2.2, 4, 5], [4.9, 2.8, -1, 0.1, 1.4, 2.6, 3.5], [0.5, 3, -4.9, 3.5, 1.8, 0.1, 2.5], [0, 2.4, 4.9, 6, 0.5, 0.1, 1.8]]) {
+    const m = new THREE.Mesh(box, new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 1, 1).multiplyScalar(k) })); m.position.set(x, y, z); m.scale.set(sx, sy, sz); sc.add(m);
+  }
+  const pm = new THREE.PMREMGenerator(renderer), tex = pm.fromScene(sc, 0.03).texture; pm.dispose();
+  return tex;
+})();
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -963,7 +981,8 @@ const mats = {
   surface: new THREE.MeshStandardMaterial({ roughness: 0.75 }),
   surfaceTop: new THREE.MeshStandardMaterial({ roughness: 0.6 }),
   frame: new THREE.MeshStandardMaterial({ roughness: 0.45, metalness: 0.35 }),
-  metal: new THREE.MeshStandardMaterial({ color: 0xb3b7bd, roughness: 0.32, metalness: 0.3 }), // an AI-made mockup's metal parts: steel grey, whatever the theme
+  shiny: null, // set below: polished metal, reflecting a soft room
+  metal: new THREE.MeshPhysicalMaterial({ color: 0xd4d8dd, metalness: 1, roughness: 0.16, envMap: ENV, envMapIntensity: 1.1, clearcoat: 0.5, clearcoatRoughness: 0.1 }), // metal parts: polished steel, whatever the theme
   tire: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
   joint: new THREE.MeshPhysicalMaterial({ roughness: 0.32, clearcoat: 0.7, clearcoatRoughness: 0.18 }), // the mannequin's joint balls: the body's white, a touch glossier
   band: new THREE.MeshPhysicalMaterial({ roughness: 0.32, clearcoat: 0.7, clearcoatRoughness: 0.18, side: THREE.DoubleSide }), // the ring over its waist joint, white like the joint balls
@@ -1522,6 +1541,10 @@ function wheelchairGeo(grp, A, sy) {
     tube(grp, new V3(x, sy + 0.46, -0.21), new V3(x, sy + 0.46, -0.33));
     tube(grp, new V3(x, sy - 0.03, 0.3), new V3(s * (seatW / 2 - 0.03), footY, fz));
     tube(grp, new V3(s * (seatW / 2 - 0.02), sy - 0.03, 0.26), new V3(s * (seatW / 2 - 0.02), 0.1, fz + 0.06));
+    // armrest: a padded bar 22 cm over the seat on two posts, short at the front so it slides under a desk
+    tube(grp, new V3(x + s * 0.012, sy - 0.03, -0.12), new V3(x + s * 0.012, sy + 0.21, -0.12));
+    tube(grp, new V3(x + s * 0.012, sy - 0.03, 0.1), new V3(x + s * 0.012, sy + 0.21, 0.1));
+    add(new THREE.BoxGeometry(0.055, 0.03, 0.3), mats.seat, x + s * 0.012, sy + 0.225, -0.01);
   }
 }
 
@@ -1584,19 +1607,21 @@ function kind() {
   if (S.look === 'airpurifier' || S.look === 'floorlamp') return 'floor';
   return 'free';
 }
-const PLACE_OK = { luggage: ['floor', 'air'], pack: ['back', 'floor', 'air'], lamp: ['desk', 'table', 'counter', 'plinth', 'air'], worn: ['head'], flat: ['hand', 'desk', 'plinth', 'air'], laptop: ['table', 'desk', 'air'], small: ['hand', 'desk', 'table', 'counter', 'plinth', 'air'], dispenser: ['counter', 'table', 'desk', 'air'], floor: ['floor', 'air'] }; // plinth: a plain cube to stand it on; air: floating at a set height
+const PLACE_OK = { luggage: ['floor', 'plinth', 'air'], pack: ['back', 'floor', 'plinth', 'air'], lamp: ['desk', 'table', 'counter', 'plinth', 'air'], worn: ['head'], flat: ['hand', 'desk', 'plinth', 'air'], laptop: ['table', 'desk', 'plinth', 'air'], small: ['hand', 'desk', 'table', 'counter', 'plinth', 'air'], dispenser: ['counter', 'table', 'desk', 'plinth', 'air'], floor: ['floor', 'plinth', 'air'] }; // plinth: a plain cube to stand it on; air: floating at a set height
 const placeOk = (p) => (kind() === 'free' ? !(p === 'hand' && S.noHand) && p !== 'back' : PLACE_OK[kind()].includes(p));
 const isProp = () => S.source === 'box' && !!(PRESETS[S.pkey] && PRESETS[S.pkey].prop); // a plain mockup solid: cube, cylinder, sphere, cone, plate
 const canDispense = () => kind() === 'dispenser' || (kind() === 'free' && !isProp() && (S.source === 'model' || S.pkey === 'box' || !!S.cup)); // a mockup solid never fills a cup; an AI-made one only if AI said it dispenses
-const ctrlOff = () => kind() === 'free' && !!S.noCtrl; // controls switched off: it is only stood beside
-const lookAtIt = () => S.source === 'box' && laidFlat() && S.place === 'plinth'; // a sheet, a phone or a ring lying on the plinth: in use, the person stands at it and looks down at it
-const hasControls = () => ['free', 'dispenser', 'floor', 'lamp'].includes(kind()) && !ctrlOff(); // the others are simply held, worn, typed on or looked at
+const ctrlKind = () => ['free', 'dispenser', 'floor', 'lamp'].includes(kind()); // things with a button, a tap or a switch
+const ctrlOff = () => ctrlKind() && !!S.noCtrl; // controls switched off: it is only looked at
+const lookAtIt = () => lookOnly() && !carried() && !atDesk(); // set down only to be looked at (a sheet, a mug, controls off): in use, the person stands at it and looks at it
+const hasControls = () => ctrlKind() && !ctrlOff(); // the others are simply held, worn, typed on or looked at
 const lookOnly = () => laidFlat() || ctrlOff() || (kind() === 'small' && S.place !== 'hand') || (kind() === 'pack' && S.place !== 'back'); // set down just to be looked at: no reaching or pressing
 const isDispense = () => S.action === 'dispense' && !isFurniture() && S.place !== 'hand' && canDispense();
 const cupInHand = () => isDispense() && S.face === 'front';
 const cupOnTray = () => isDispense() && S.face === 'top';
 const isCoffee = () => /커피|coffee|espresso|에스프레소|라떼|latte|캡슐|capsule/i.test(`${S.name} ${S.pkey || ''}`);
-const plinthSize = () => ({ w: ((S.surf && S.surf.plinthW) || 400) / 1000, d: ((S.surf && S.surf.plinthD) || 400) / 1000, h: SURF.plinth });
+const plinthFit = (k) => { if (S.place !== 'plinth' || isFurniture()) return 400; const P = dims(), v = (k === 'w' ? P.W : P.D) * 1000 + 60; return Math.max(400, Math.ceil(v / 50) * 50); }; // big enough for what stands on it
+const plinthSize = () => ({ w: ((S.surf && S.surf.plinthW) || plinthFit('w')) / 1000, d: ((S.surf && S.surf.plinthD) || plinthFit('d')) / 1000, h: SURF.plinth });
 const carried = () => S.place === 'hand' || S.place === 'head' || S.place === 'back'; // held in the hands, or worn on the head or the back
 const setDown = () => S.source === 'box' && (S.shape === 'ring' || S.look === 'paper' || S.screen); // things that are held, or laid flat on the desk: a ring, a sheet, a phone, a tablet
 const deskItem = () => atDesk() && setDown();
@@ -1636,26 +1661,28 @@ function stoolRing(H, W, y) {
 /* ---------- detail sizes: each part of a chair, a table or headphones set on its own (mm, tilt in degrees) ----------
    The H field stays the overall height (for an office chair: its seat, set by the gas lift between lowest and highest to suit the person).
    Only the product being checked takes them; a desk under someone's laptop keeps the defaults. */
-const TOP_MAT = { wood: new THREE.MeshStandardMaterial({ color: 0x9c6b43, roughness: 0.72 }), glass: new THREE.MeshStandardMaterial({ color: 0xcfe2e4, roughness: 0.06, transparent: true, opacity: 0.4, depthWrite: false }), metal: new THREE.MeshStandardMaterial({ color: 0xa6abb0, roughness: 0.3, metalness: 0.85 }) };
-const MAT_ROW = { k: 'mat', ko: '재질', en: 'Material', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['glass', '유리', 'Glass'], ['metal', '철제', 'Metal']], def: 'solid' };
+const TOP_MAT = { wood: new THREE.MeshStandardMaterial({ color: 0x9c6b43, roughness: 0.72 }), glass: new THREE.MeshStandardMaterial({ color: 0xcfe2e4, roughness: 0.06, transparent: true, opacity: 0.4, depthWrite: false }), metal: mats.metal };
+const MAT_ROW = { k: 'mat', ko: '재질', en: 'Material', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['glass', '유리', 'Glass'], ['metal', '메탈', 'Metal']], def: 'solid' };
 const DR = (k, ko, en, min, max, def, step = 1, unit = 'mm') => ({ k, ko, en, min, max, def, step, unit });
-const TABLE_ROWS = (t, leg, legKo = '다리 굵기', legEn = 'Leg thickness') => [DR('topT', '상판 두께', 'Top thickness', 12, 80, t), DR('legT', legKo, legEn, 15, 120, leg), { ...MAT_ROW, ko: '상판 재질', en: 'Top material' }];
+const TABLE_ROWS = (t, leg, legKo = '다리 굵기', legEn = 'Leg thickness') => [DR('topT', '상판 두께', 'Top thickness', 12, 80, t), DR('legT', legKo, legEn, 15, 120, leg), MAT_ROW];
 const DETAIL = {
   office: [DR('backH', '등받이 높이', 'Backrest height', 250, 850, 500, 5), DR('backW', '등받이 폭', 'Backrest width', 280, 650, () => Math.round(S.w * 0.9), 5), DR('backT', '등받이 기울기', 'Backrest tilt', 0, 30, 10, 1, '°'),
     { k: 'arm', ko: '팔걸이', en: 'Armrests', opts: [[1, '있음', 'On'], [0, '없음', 'Off']], def: 1 }, DR('armH', '팔걸이 높이(좌면 위)', 'Armrest above seat', 120, 350, 235, 5), DR('armGap', '팔걸이 안쪽 간격', 'Between armrests', 380, 700, () => S.w - 15, 5), DR('armL', '팔걸이 길이', 'Armrest length', 120, 380, 250, 5),
     DR('gasMin', '좌면 최저', 'Lowest seat', 330, 560, 400, 5), DR('gasMax', '좌면 최고', 'Highest seat', 380, 700, 520, 5), DR('wheel', '바퀴 지름', 'Caster diameter', 35, 80, 50, 5)],
-  chair: [DR('backH', '등받이 높이(좌면 위)', 'Backrest above seat', 150, 600, 400, 5), DR('seatT', '좌판 두께', 'Seat thickness', 12, 80, 30), DR('legT', '다리 굵기', 'Leg thickness', 15, 70, 32), { ...MAT_ROW, ko: '좌판 재질', en: 'Seat material' }],
-  pstool: [{ k: 'form', ko: '형태', en: 'Form', opts: [['legs', '다리', 'Legs'], ['cyl', '원기둥', 'Cylinder'], ['cube', '큐브', 'Cube']], def: 'legs' }, DR('seatT', '좌판 두께', 'Seat thickness', 15, 90, 40), DR('legT', '다리 굵기', 'Leg thickness', 15, 60, 28), { ...MAT_ROW, ko: '좌판 재질', en: 'Seat material' }],
-  stool: [DR('seatT', '좌판 두께', 'Seat thickness', 15, 90, 50), DR('legT', '다리 굵기', 'Leg thickness', 15, 60, 26), { ...MAT_ROW, ko: '좌판 재질', en: 'Seat material' }],
+  chair: [DR('backH', '등받이 높이(좌면 위)', 'Backrest above seat', 150, 600, 400, 5), DR('seatT', '좌판 두께', 'Seat thickness', 12, 80, 30), DR('legT', '다리 굵기', 'Leg thickness', 15, 70, 32), MAT_ROW],
+  pstool: [{ k: 'form', ko: '형태', en: 'Form', opts: [['legs', '다리', 'Legs'], ['cyl', '원기둥', 'Cylinder'], ['cube', '큐브', 'Cube']], def: 'legs' }, DR('seatT', '좌판 두께', 'Seat thickness', 15, 90, 40), DR('legT', '다리 굵기', 'Leg thickness', 15, 60, 28), MAT_ROW],
+  stool: [DR('seatT', '좌판 두께', 'Seat thickness', 15, 90, 50), DR('legT', '다리 굵기', 'Leg thickness', 15, 60, 26), MAT_ROW],
   drawer: [{ k: 'casters', ko: '바퀴', en: 'Casters', opts: [[0, '없음', 'None'], [1, '있음', 'On']], def: 0 }, DR('caster', '바퀴 지름', 'Caster diameter', 30, 100, 50, 5)],
   desk: TABLE_ROWS(25, 22, '옆판 두께', 'Side panel thickness'), standing: TABLE_ROWS(25, 70, '기둥 굵기', 'Column thickness'), dining: TABLE_ROWS(30, 55), bar: TABLE_ROWS(35, 44), coffee: TABLE_ROWS(30, 50, '발 굵기', 'Foot thickness'),
-  frame: [DR('frameT', '프레임 두께', 'Frame thickness', 2, 100, 10)],
+  frame: [DR('frameT', '프레임 두께', 'Frame thickness', 2, 100, 10), MAT_ROW],
+  prop: [MAT_ROW], // the plain mockup solids
   headphone: [DR('cupH', '귀마개 높이', 'Ear cushion height', 60, 130, () => Math.round(clamp(0.5 * S.h, 75, 115))), DR('cupL', '귀마개 폭', 'Ear cushion width', 50, 115, () => Math.round(clamp(0.88 * S.d, 58, 95))), DR('cupT', '귀마개 두께', 'Ear cup thickness', 12, 45, () => Math.round(clamp(0.13 * S.w, 17, 30))), DR('bandW', '머리띠 폭', 'Headband width', 12, 45, 29)],
 };
 function detKind() {
   if (S.source !== 'box') return null;
   if (S.shape === 'headphone') return 'headphone';
   if (S.shape === 'frame') return 'frame';
+  if (isProp()) return 'prop';
   return isFurniture() && DETAIL[furn()] ? furn() : null;
 }
 const detSpec = () => DETAIL[detKind()] || [];
@@ -1663,8 +1690,10 @@ function dv(k) { const sp = detSpec().find((x) => x.k === k); if (!sp) return un
 let DET_ON = false; // set while the product itself is being built
 const q = (k, d) => { if (!DET_ON) return d; const v = dv(k); return v == null ? d : v / 1000; };
 const topMat = (mat) => (DET_ON && dv('mat') && dv('mat') !== 'solid' ? TOP_MAT[dv('mat')] : mat);
+const propMat = () => (dv('mat') && dv('mat') !== 'solid' ? TOP_MAT[dv('mat')] : mats.foam); // a mockup solid in its chosen material
 function seatGeo(group, kind, W, D, H, mat, ringY, frame = mats.frame) {
-  const K = kit(group, mat), X = kit(group, frame), S2 = kit(group, topMat(mat)), cz = -D / 2;
+  const M = ['stool', 'pstool', 'chair'].includes(kind) ? topMat(mat) : mat; // the chosen material is the whole chair or stool, not just its seat
+  const K = kit(group, M), X = kit(group, frame), S2 = kit(group, topMat(mat)), cz = -D / 2;
   if (kind === 'stool') {
     const R = W / 2, ring = stoolRing(H, W, ringY), st = q('seatT', 0.05), lr = q('legT', 0.026) / 2;
     S2.cyl(R, R * 0.96, st, 0, H - st / 2, cz, 40);
@@ -1749,7 +1778,7 @@ function seatGeo(group, kind, W, D, H, mat, ringY, frame = mats.frame) {
 /* tables: H is the top (the counter for a sink, the lowered top for a lift-up table) */
 const SINK = (W, D) => { const bw = Math.min(0.76, W - 0.2), bd = Math.min(0.44, D - 0.15); return { bw, bd, fr: 0.07, depth: 0.2, bz: -(0.07 + bd / 2) }; };
 function tableGeo(group, style, W, D, H, mat, keys = true) {
-  const K = kit(group, mat), X = kit(group, mats.frame), T = kit(group, mats.tire);
+  const K = kit(group, topMat(mat)), X = kit(group, mats.frame), T = kit(group, mats.tire); // the chosen material is the whole table
   const TP = kit(group, topMat(mat));
   if (style === 'desk' || style === 'standing') {
     const t = q('topT', 0.025), pt = q('legT', 0.022), cw = q('legT', 0.07);
@@ -2448,14 +2477,14 @@ function buildProduct() {
     const t = Math.min(dv('frameT') / 1000, W / 2, D / 2, Hh / 2), bars = [];
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) bars.push([new THREE.BoxGeometry(t, Hh, t), new THREE.Matrix4().makeTranslation(sx * (W - t) / 2, Hh / 2, -D / 2 + sz * (D - t) / 2)]);
     for (const y of [t / 2, Hh - t / 2]) { for (const sz of [-1, 1]) bars.push([new THREE.BoxGeometry(W - 2 * t, t, t), new THREE.Matrix4().makeTranslation(0, y, -D / 2 + sz * (D - t) / 2)]); for (const sx of [-1, 1]) bars.push([new THREE.BoxGeometry(t, t, D - 2 * t), new THREE.Matrix4().makeTranslation(sx * (W - t) / 2, y, -D / 2)]); }
-    meshIn(holder)(mergeGeo(bars), mats.foam);
+    meshIn(holder)(mergeGeo(bars), propMat());
   }
   else {
     const geo = S.shape === 'cyl' ? new THREE.CylinderGeometry(W / 2, W / 2, Hh, 56).translate(0, Hh / 2, -D / 2)
       : S.shape === 'cone' ? new THREE.CylinderGeometry(0.0002, W / 2, Hh, 56).translate(0, Hh / 2, -D / 2)
       : S.shape === 'sphere' ? new THREE.SphereGeometry(0.5, 48, 32).scale(W, Hh, D).translate(0, Hh / 2, -D / 2)
       : new RoundedBoxGeometry(W, Hh, D, 3, Math.min(0.016, Math.min(W, D, Hh) * 0.12)).translate(0, Hh / 2, -D / 2);
-    const m = new THREE.Mesh(geo, S.look === 'paper' ? mats.paper : mats.foam);
+    const m = new THREE.Mesh(geo, S.look === 'paper' ? mats.paper : propMat());
     m.castShadow = true; m.receiveShadow = true; m.userData.own = true;
     holder.add(m);
     const im = S.look === 'paper' && userImgMat('paper', W, Hh);
@@ -2506,7 +2535,7 @@ function layoutHuman() {
   const toe = 0.75 * A.footL;
   let z;
   if (st) {
-    if (A.seated) z = A.chair === 'wheel' ? (st === 'sink' || st === 'coffee' ? A.thigh + 0.16 : 0.22) : { desk: 0.2, standing: 0.2, dining: 0.2, bar: 0.26, coffee: 0.38 + A.seatEdge }[st] ?? 0.2;
+    if (A.seated) z = A.chair === 'wheel' ? (st === 'sink' || st === 'coffee' ? A.thigh + 0.16 : st === 'drawer' || st === 'wardrobe' ? A.thigh + 0.3 : 0.22) : { desk: 0.2, standing: 0.2, dining: 0.2, bar: 0.26, coffee: 0.38 + A.seatEdge }[st] ?? 0.2;
     else z = { desk: 0.05 + toe, standing: 0.05 + toe, dining: 0.05 + toe, bar: 0.04 + toe, coffee: 0.28 + toe, sink: toe - 0.03, drawer: 0.16 + toe, wardrobe: 0.3 + toe }[st] ?? 0.05 + toe;
   } else if (A.seated) {
     const front = A.thigh + 0.14;
@@ -2593,7 +2622,7 @@ function handKind() {
   if (box && S.shape === 'ring') return 'ring';
   if (box && S.shape === 'cup' && S.style !== 'glass') return 'handle';
   if (box && S.look === 'pouch') return 'clutch'; // a pouch carried at the side, the hand over it, its back against the hip
-  if (box && S.look === 'paper') return 'face'; // an A4 sheet in one hand
+  if (box && S.look === 'paper') return Math.max(P.W, P.H) > 0.32 ? 'sheet' : 'face'; // an A4 sheet in one hand, a poster in two
   if (box && S.shape === 'box' && isFlat(P)) return S.screen ? (Math.min(P.W, P.H) <= 0.23 ? 'face' : 'sheet') : Math.max(P.W, P.H) > 0.17 ? 'sheet' : 'face';
   if (P.H >= 1.3 * Math.max(P.W, P.D) || (box && S.shape === 'cup')) return gripSize(P) > 0.5 * span ? 'box' : 'grip';
   return Math.max(P.W, P.D) <= 0.6 * span ? 'palm' : 'box';
@@ -3119,8 +3148,8 @@ function evaluate() {
     const tl = human.worldToLocal(c.clone()), dz = Math.max(0.05, tl.z - b0.eye.z), dy = eyeY - tl.y, dist = Math.hypot(dz, dy), ang = Math.atan2(dy, dz) * 180 / Math.PI;
     S.nod = clamp(deg(ang) - deg(22), 0, deg(40)); // the eyes drop about 22°, the neck bows for the rest
     out.target = c; out.targetLocal = tl;
-    const alv = ang > 60 ? 'warn' : 'good';
-    add(L('시선', 'Gaze'), L(`눈에서 ${cmi(dist)}cm · 아래로 ${Math.round(ang)}°${ang > 60 ? ' · 목을 많이 숙여요' : ' · 편하게 내려다봐요'}`, `${cmi(dist)} cm from the eyes · ${Math.round(ang)}° down${ang > 60 ? ', the neck bows a lot' : ', an easy look down'}`), alv);
+    const alv = ang > 60 || ang < -30 ? 'warn' : 'good';
+    add(L('시선', 'Gaze'), ang >= 0 ? L(`눈에서 ${cmi(dist)}cm · 아래로 ${Math.round(ang)}°${ang > 60 ? ' · 목을 많이 숙여요' : ' · 편하게 내려다봐요'}`, `${cmi(dist)} cm from the eyes · ${Math.round(ang)}° down${ang > 60 ? ', the neck bows a lot' : ', an easy look down'}`) : L(`눈에서 ${cmi(dist)}cm · 위로 ${Math.round(-ang)}°${ang < -30 ? ' · 고개를 들어야 해요' : ' · 편하게 올려다봐요'}`, `${cmi(dist)} cm from the eyes · ${Math.round(-ang)}° up${ang < -30 ? ', the head tips back' : ', an easy look up'}`), alv);
     const top = sy + P.H;
     add(L('윗면 높이', 'Top height'), L(`${cmi(top)}cm · 눈높이(${cmi(eyeY)}cm)보다 ${cmi(eyeY - top)}cm 낮아요`, `${cmi(top)} cm · ${cmi(eyeY - top)} cm below eye level (${cmi(eyeY)} cm)`), 'info');
     add(L('크기 감각', 'Size'), sizeTxt, 'info');
@@ -3598,7 +3627,7 @@ function syncUI() {
   const P = dims();
   $('sDims').textContent = L(`${isModel ? '모델' : '목업'} 실제 크기 ${mmi(P.W)} × ${mmi(P.D)} × ${mmi(P.H)} mm`, `${isModel ? 'Model' : 'Mockup'} actual size ${mmi(P.W)} × ${mmi(P.D)} × ${mmi(P.H)} mm`);
   { // controls: a plain solid (or an AI-made mockup) can have them switched off; only a dispenser offers filling a cup
-    const offable = kind() === 'free' && S.source === 'box';
+    const offable = ctrlKind(); // anything with a button, tap or switch can have it off (a lamp starts off)
     $('ctrlField').hidden = carried() || isFurniture() || S.shape === 'laptop' || laidFlat() || !(hasControls() || offable);
     $('ctrlOnSeg').hidden = !offable; segSet('ctrlOnSeg', 'on', ctrlOff() ? '0' : '1');
     $('ctrlBody').hidden = ctrlOff();
@@ -3642,6 +3671,7 @@ function syncUI() {
   $('cOut').textContent = `${mmi(ctrlM())}mm`;
   for (const b of $('modeSeg').children) b.disabled = carried() || (lookOnly() && !lookAtIt()); // a ring, a sheet, a phone laid on the desk or a mug set down is only looked at
   $('modelOpts').hidden = !isModel; $('backToBox').hidden = !isModel;
+  syncPlay();
   $('btnPlay').disabled = handKind() === 'clutch' || lookAtIt() || (S.mode === 'compare' && S.place !== 'hand') || A.chair === 'product' || S.place === 'head' || S.place === 'back';
   const fpBtn = $('views').querySelector('[data-view="first"]'); // worn things can't be seen from your own eyes
   fpBtn.disabled = S.place === 'head' || S.place === 'back';
@@ -3847,8 +3877,7 @@ function zoomFocus() {
   if (u.focus) return holder.localToWorld(u.focus.clone()); // a lamp: its shade
   if (S.view === 'first' && S.A.chair === 'product') return new V3(0, 0.3 * dims().H, 0); // sitting on it: its front, between the shins
   if (S.view === 'first' && isFurniture()) return controlWorld();
-  if (isFurniture() && S.shape !== 'chair' && !isOrtho()) { const c = controlWorld(); if (b.clone().expandByScalar(0.05).containsPoint(c)) return c; } // a table or a cabinet: the part in use
-  if (isFurniture() && S.shape === 'desk' && !['drawer', 'wardrobe'].includes(furn()) && S.view !== 'top') { const c = b.getCenter(new V3()); c.y = Math.min(b.max.y, dims().H) - 0.03; return c; } // a table, flat on: its top (not a monitor or tap on it, not the empty space between the legs)
+  if (isFurniture() && S.shape === 'desk' && !['drawer', 'wardrobe'].includes(furn()) && S.view !== 'top') { const c = b.getCenter(new V3()); c.y = Math.min(b.max.y, dims().H) - 0.03; return c; } // a table: its top (not a monitor or tap on it, not the empty space between the legs); a cabinet: its middle
   return b.getCenter(new V3());
 }
 /* the person in the way: seen from the camera, is most of the product behind the body? then the person turns see-through by itself
@@ -3979,8 +4008,18 @@ function updateOverlay(pose) {
 
 /* ---------- motion ---------- */
 const flows = () => S.mode === 'use' && S.place !== 'hand' && (isDispense() || furn() === 'sink'); // water or coffee runs after the reach
+/* 동작 보기 switches: act and hold, then back to the resting pose */
+function rest() {
+  Object.assign(anim, { played: false, phase: 'idle', t: 0, reach: 0, pour: 0, fill: 0, open: 0, drink: 0 });
+  if (furn() === 'coffee' && S.lift) { S.lift = 0; anim.lift = 0; setLift(holder, 0); }
+  refresh();
+}
+function syncPlay() {
+  const b = $('btnPlay'), on = anim.played;
+  b.dataset.ko = on ? '기본 자세' : '동작 보기'; b.dataset.en = on ? 'Rest' : 'Play'; b.textContent = L(b.dataset.ko, b.dataset.en); b.setAttribute('aria-pressed', String(on));
+}
 function play() {
-  anim.played = true;
+  anim.played = true; syncPlay();
   if (reduceMotion) { anim.reach = 1; anim.pour = 0; anim.fill = isDispense() ? 0.85 : 0; anim.open = S.plan && S.plan.kind === 'pull' ? 1 : 0; anim.lift = S.lift; setLift(holder, anim.lift); return; }
   if (furn() === 'coffee' && S.mode === 'use') { // show the lift-up: top goes up, then the hand reaches it
     if (!S.lift) { S.lift = 1; refresh(); }
@@ -4091,6 +4130,7 @@ function setPersona(k) { const p = PERSONAS[k]; S.persona = k; S.height = p.h; S
 function applyPreset(k) {
   const pr = PRESETS[k];
   Object.assign(S, { source: 'box', preset: k, pkey: k, name: pr.name, shape: pr.shape, style: pr.style || null, look: pr.look || null, noHand: !!pr.noHand, noCtrl: !!pr.noCtrl, w: pr.w, d: pr.d, h: pr.h, place: pr.place, face: pr.face, ctrl: pr.ctrl, action: pr.action, scale: 1, posture: pr.posture || 'stand', base: { w: pr.w, d: pr.d, h: pr.h }, screen: !!pr.screen, lift: 0, ringSize: pr.size || S.ringSize });
+  S.mode = 'use'; S.itemMode = null; // every product starts in use
   S.seatMode = 'fixed'; S.seatH = PROPS[propKind()].h; S.preDesk = null; S.row = null; S.pick = 0; S.det = {}; S.parts = null; S.pbase = null; S.mineId = null; S.cup = false;
   anim.lift = 0; anim.fill = 0;
   refresh({ rebuild: true, refit: true });
@@ -4195,7 +4235,7 @@ for (const t of document.querySelectorAll('[role="tab"][aria-controls]')) { // t
   });
 }
 $('btnGuides').addEventListener('click', () => { S.guides = !S.guides; $('btnGuides').setAttribute('aria-pressed', String(S.guides)); });
-$('btnPlay').addEventListener('click', play);
+$('btnPlay').addEventListener('click', () => (anim.played ? rest() : play()));
 /* chest-of-drawers units: add one to the left or right (named B, then C, with the picked one's width), pick one to use, remove one */
 function addUnit(left) {
   const r = (S.row || [{ n: 'A', w: S.w, d: S.d, h: S.h }]).map((u, i) => (i === (S.pick || 0) ? { ...u, w: S.w, d: S.d, h: S.h } : u));
