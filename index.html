@@ -3459,7 +3459,8 @@ function handGoal(plan, s, P, sh) {
       return { F, W: S.pressLocal.clone().sub(inHand(F, plan.tip)), pole: S.pressLocal.y < S.A.hipY ? new V3(-0.15, 0.1, -1) : new V3(-0.55, -1, -0.35), hp: plan.hp }; // reaching down low: the elbow back, like the other arm hanging
     }
     case 'ring': return right ? { F: handFrame(new V3(0.1, 0, -1), new V3(0.3, 1, 0.12)), W: new V3(P.shR.x + 0.05, P.shR.y - 0.12, P.shR.z + 0.3), pole: new V3(-0.6, -1, 0.1), hp: plan.hp } : null;
-    case 'grab': return right ? { F: { q: plan.grab.q }, W: plan.grab.W, pole: new V3(-0.3, -1, -0.6), hp: plan.hp } : null; // the elbow back and down by the side
+    case 'grab': if (right && sh.distanceTo(plan.grab.W) > A.reach * 0.97) return null; // out of reach (on the floor): the hand hangs open like the other, not a fist in the air
+      return right ? { F: { q: plan.grab.q }, W: plan.grab.W, pole: new V3(-0.3, -1, -0.6), hp: plan.hp } : null; // the elbow back and down by the side
     case 'flat': {
       if (!right) return null;
       const F = handFrame(new V3(0, -1, 0), new V3(0.12, 0, 1));
