@@ -2094,8 +2094,11 @@ const rowUnits = () => (rowOn() && S.row && S.row.length ? S.row : null);
 const ROW_GAP = 50; // mm between one mockup and the next, to start with
 const rowMain = () => { const r = rowUnits(); return !r ? 0 : isProp() ? Math.max(0, r.findIndex((u) => u.n === 'A')) : S.pick || 0; }; // the one the person uses, at the product's place
 const sizeUnit = () => (rowProp() && rowUnits() && (S.pick || 0) !== rowMain() && S.row[S.pick]) || null; // a mockup beside the main one whose size the W, D, H fields show
+const stacked = () => S.source === 'box' && S.look === 'parcel' && !!rowUnits(); // parcel boxes pile up, the main one at the bottom
+const stackY = () => { const r = rowUnits(), m = rowMain(), ys = new Array(r.length).fill(0); let y = r[m].h; r.forEach((u, i) => { if (i !== m) { ys[i] = y; y += u.h; } }); return { ys, total: y }; }; // each box's bottom (mm), and the pile's height
 function rowOffsets() { // each unit's centre from the main one's, mm, left to right
   const r = rowUnits(); if (!r) return [0];
+  if (stacked()) return r.map(() => 0);
   const m = rowMain(), xs = new Array(r.length).fill(0), gap = (i) => (isProp() ? r[i].gap ?? ROW_GAP : 1);
   for (let i = m + 1; i < r.length; i++) xs[i] = xs[i - 1] + r[i - 1].w / 2 + gap(i) + r[i].w / 2;
   for (let i = m - 1; i >= 0; i--) xs[i] = xs[i + 1] - r[i + 1].w / 2 - gap(i) - r[i].w / 2;
@@ -2105,7 +2108,7 @@ const rowSpan = () => { const r = rowUnits(); if (!r) return { left: S.w / 2, ri
 const rowExt = () => { // the whole row at scale (m): reach left and right of the main one, its middle, width, deepest and tallest
   const P = dims(), r = rowUnits(); if (!r || r.length < 2) return { l: P.W / 2, r: P.W / 2, c: 0, w: P.W, d: P.D, h: P.H };
   const sp = rowSpan(), k = S.scale / 1000, l = sp.left * k, rr = sp.right * k;
-  return { l, r: rr, c: (rr - l) / 2, w: l + rr, d: Math.max(...r.map((u) => (roundBase() ? u.w : u.d))) * k, h: Math.max(...r.map((u) => u.h)) * k };
+  return { l, r: rr, c: (rr - l) / 2, w: l + rr, d: Math.max(...r.map((u) => (roundBase() ? u.w : u.d))) * k, h: (stacked() ? stackY().total : Math.max(...r.map((u) => u.h))) * k };
 };
 const drawerBase = () => (detKind() === 'drawer' && dv('casters') ? dv('caster') / 1000 + 0.012 : 0.06); // a plinth, or casters under the carcass
 const drawerHandle = (i) => { const H = S.h / 1000, n = drawerCount(H), b = drawerBase(), fh = (H - b - 0.02) / n; return (drawerCols() ? drawerDoorY(H, b) : b + i * fh + fh * 0.72) * S.scale; }; // drawer 0 is the bottom one; side by side, all at the same height
@@ -2960,7 +2963,7 @@ function buildProduct() {
   else plainSolid(holder, W, D, Hh);
   if (rowProp() && rowUnits() && S.row.length > 1) { // the other mockups beside the main one, each its own size
     const off = rowOffsets(), m = rowMain();
-    S.row.forEach((u, i) => { if (i === m) return; const g = new THREE.Group(), w = u.w / 1000, d = (roundBase() ? u.w : u.d) / 1000, h = u.h / 1000; g.position.set(off[i] / 1000, 0, S.place === 'wall' ? (d - D) / 2 : 0); g.userData.own = true; g.userData.unit = u.n; holder.add(g); propSolid(g, w, d, h); });
+    S.row.forEach((u, i) => { if (i === m) return; const g = new THREE.Group(), w = u.w / 1000, d = (roundBase() ? u.w : u.d) / 1000, h = u.h / 1000; g.position.set(off[i] / 1000, stacked() ? stackY().ys[i] / 1000 : 0, S.place === 'wall' ? (d - D) / 2 : stacked() ? (d - D) / 2 : 0); g.userData.own = true; g.userData.unit = u.n; holder.add(g); propSolid(g, w, d, h); });
   }
   holder.scale.setScalar(S.scale);
 }
@@ -3852,7 +3855,8 @@ function evaluate() {
     human.updateMatrixWorld(true);
     const b = mainBox(), c = b.getCenter(new V3()); if (S.place !== 'wall') c.y = b.max.y; // on a wall: its middle
     if (grabbable()) { const w = Math.min(P.W, P.D), fist = !laidFlat() && P.H >= 0.025 && w <= GRAB_MAX; add(L('쥐기', 'Grasp'), fist ? L(`동작 보기를 누르면 한 손으로 쥐어요 · 쥐는 폭 ${mmi(w)}mm`, `Play takes it in one hand · ${mmi(w)} mm across`) : laidFlat() || P.H < 0.025 ? L('얇아서 쥐기보다 손바닥을 얹어요 · 동작 보기에서 보여요', 'Too thin to grip · Play rests a palm on it') : L(`한 손에 쥐기엔 커요(${mmi(w)}mm) · 동작 보기를 누르면 손바닥을 위에 얹어요`, `Too big for one hand (${mmi(w)} mm) · Play rests a palm on top`), fist ? 'good' : 'info'); }
-    if (rowProp() && rowUnits() && S.row.length > 1) add(L('여러 개', 'Side by side'), L(`${S.row.length}개 · 전체 폭 ${mmi((rowSpan().total / 1000) * S.scale)}mm · 사람은 메인 A를 봐요`, `${S.row.length} of them · ${mmi((rowSpan().total / 1000) * S.scale)} mm overall · the person looks at A, the main one`), 'info');
+    if (stacked() && S.row.length > 1) add(L('쌓기', 'Stacked'), L(`${S.row.length}개 · 쌓은 높이 ${mmi((stackY().total / 1000) * S.scale)}mm`, `${S.row.length} stacked · ${mmi((stackY().total / 1000) * S.scale)} mm tall`), 'info');
+    else if (rowProp() && rowUnits() && S.row.length > 1) add(L('여러 개', 'Side by side'), L(`${S.row.length}개 · 전체 폭 ${mmi((rowSpan().total / 1000) * S.scale)}mm · 사람은 메인 A를 봐요`, `${S.row.length} of them · ${mmi((rowSpan().total / 1000) * S.scale)} mm overall · the person looks at A, the main one`), 'info');
     const tl = human.worldToLocal(c.clone()), dz = Math.max(0.05, tl.z - b0.eye.z), dy = eyeY - tl.y, dist = Math.hypot(dz, dy), ang = Math.atan2(dy, dz) * 180 / Math.PI;
     S.nod = clamp(deg(ang) - deg(22), 0, deg(40)); // the eyes drop about 22°, the neck bows for the rest
     out.target = c; out.targetLocal = tl;
@@ -3866,7 +3870,7 @@ function evaluate() {
     return out;
   }
   if (S.mode === 'compare') {
-    const top = sy + P.H, gap = top - eyeY, pre = A.seated ? L('앉은 ', 'seated ') : '';
+    const top = sy + (stacked() ? (stackY().total / 1000) * S.scale : P.H), gap = top - eyeY, pre = A.seated ? L('앉은 ', 'seated ') : '';
     add(L('윗면 높이', 'Top height'), L(`${cmi(top)}cm · ${pre}눈높이(${cmi(eyeY)}cm)보다 ${Math.abs(cmi(gap))}cm ${gap > 0 ? '높아요' : '낮아요'}`, `${cmi(top)} cm · ${Math.abs(cmi(gap))} cm ${gap > 0 ? 'above' : 'below'} ${pre}eye level (${cmi(eyeY)} cm)`), gap > 0 ? 'warn' : 'good');
     if (atDesk()) add(L('모니터와 비교', 'Vs. monitor'), monitorTxt(P), 'info');
     add(L('크기 감각', 'Size'), sizeTxt, 'info');
@@ -4254,7 +4258,7 @@ const tgLabel = () => {
 function updateTags() {
   const p = PERSONAS[S.persona], P = dims();
   $('t-human').textContent = `${pLabel(p)} ${fmtH(S.height)}cm`;
-  $('t-prod').textContent = rowUnits() && S.row.length > 1 ? L(`${prodName()} ${S.row.length}개 · 전체 폭 ${rowSpan().total}mm`, `${prodName()} ×${S.row.length} · overall ${rowSpan().total} mm`) : S.shape === 'ring' && S.source === 'box' ? L(`${prodName()} ${S.ringSize}호 · 폭 ${S.w}mm`, `${prodName()} · size ${S.ringSize} · ${S.w} mm band`) : (() => { const Q = unfolded() ? openDims() : P; return `${prodName()} ${mmi(Q.W)}×${mmi(Q.D)}×${mmi(Q.H)}`; })();
+  $('t-prod').textContent = rowUnits() && S.row.length > 1 && stacked() ? L(`${prodName()} ${S.row.length}개 · 쌓은 높이 ${stackY().total}mm`, `${prodName()} ×${S.row.length} · ${stackY().total} mm stacked`) : rowUnits() && S.row.length > 1 ? L(`${prodName()} ${S.row.length}개 · 전체 폭 ${rowSpan().total}mm`, `${prodName()} ×${S.row.length} · overall ${rowSpan().total} mm`) : S.shape === 'ring' && S.source === 'box' ? L(`${prodName()} ${S.ringSize}호 · 폭 ${S.w}mm`, `${prodName()} · size ${S.ringSize} · ${S.w} mm band`) : (() => { const Q = unfolded() ? openDims() : P; return `${prodName()} ${mmi(Q.W)}×${mmi(Q.D)}×${mmi(Q.H)}`; })();
   $('t-tg').textContent = S.place === 'hand' ? L(`손 ${cm1(S.A.hand)}cm · 한 뼘 ${cm1(S.A.span)}cm`, `Hand ${cm1(S.A.hand)} cm · span ${cm1(S.A.span)} cm`)
     : S.place === 'head' ? (S.shape === 'earbud' ? L(`귀 길이 약 ${cm1(0.26 * S.A.headH)}cm`, `Ear about ${cm1(0.26 * S.A.headH)} cm long`) : L(`머리 폭 ${cm1(0.68 * S.A.headH)}cm`, `Head ${cm1(0.68 * S.A.headH)} cm wide`)) : `${tgLabel()} ${cmi(controlWorld().y)}cm`;
 }
@@ -4347,7 +4351,7 @@ function syncUI() {
   $('sDims').textContent = L(`${isModel ? '모델' : '목업'} 실제 크기 ${mmi(P.W)} × ${mmi(P.D)} × ${mmi(P.H)} mm`, `${isModel ? 'Model' : 'Mockup'} actual size ${mmi(P.W)} × ${mmi(P.D)} × ${mmi(P.H)} mm`);
   { // controls: a plain solid (or an AI-made mockup) can have them switched off; only a dispenser offers filling a cup
     const offable = ctrlKind(); // anything with a button, tap or switch can have it off (a lamp starts off)
-    $('ctrlField').hidden = (carried() && S.place !== 'hand') || isFurniture() || S.shape === 'laptop' || laidFlat() || !(hasControls() || offable); // held in the hand too: its button can be on or off
+    $('ctrlField').hidden = (S.source === 'box' && S.look === 'parcel') || (carried() && S.place !== 'hand') || isFurniture() || S.shape === 'laptop' || laidFlat() || !(hasControls() || offable); // held in the hand too: its button can be on or off
     $('ctrlOnSeg').hidden = !offable; segSet('ctrlOnSeg', 'on', ctrlOff() ? '0' : '1');
     $('ctrlBody').hidden = ctrlOff();
     $('actSeg').hidden = !canDispense();
@@ -4379,13 +4383,13 @@ function syncUI() {
     seg.replaceChildren(...r.map((u, i) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.unit = i; b.textContent = `${u.n} ${u.w}`; b.setAttribute('aria-pressed', String(i === (S.pick || 0))); return b; }));
     $('unitAddL').disabled = $('unitAddR').disabled = r.length >= 3;
     $('unitDel').disabled = r.length < 2 || r[S.pick || 0].n === 'A';
-    const prop = isProp(), pk = r[S.pick || 0], su = sizeUnit();
+    const prop = rowProp(), pk = r[S.pick || 0], su = sizeUnit();
     $('unitLbl').textContent = prop ? L('여러 개 놓기', 'Several side by side') : L('유닛 이어 붙이기', 'Units side by side');
     $('unitSub').textContent = prop ? L('최대 3개 · A가 메인', 'up to 3 · A is the main one') : L('최대 3개 · 1mm 간격 · 크기는 고른 유닛 것', "up to 3, 1 mm apart · the size is the picked unit's");
     $('unitDel').textContent = prop ? L('고른 것 빼기', 'Remove picked') : L('고른 유닛 빼기', 'Remove picked');
-    $('gapRow').hidden = !su;
+    $('gapRow').hidden = !su || stacked(); // stacked boxes have no gap
     if (su) { const m = rowMain(), nb = r[S.pick < m ? S.pick + 1 : S.pick - 1]; $('gapLbl').textContent = L(`${su.n}↔${nb.n} 간격`, `${su.n}–${nb.n} gap`); for (const id of ['gapIn', 'gapNum']) if (document.activeElement !== $(id)) $(id).value = su.gap ?? ROW_GAP; }
-    $('unitHint').textContent = prop
+    $('unitHint').textContent = stacked() ? L(`쌓은 높이 ${stackY().total}mm · A가 맨 아래, 추가한 박스는 위로 쌓여요. ${su ? `지금 W·D·H는 ${su.n} 것이에요.` : 'B나 C를 누르면 W·D·H로 그 크기를 바꿔요.'}`, `${stackY().total} mm stacked · A at the bottom, the others piled on top. ${su ? `W·D·H now show ${su.n}.` : 'Pick B or C to size it.'}`) : prop
       ? L(`전체 폭 ${rowSpan().total}mm · A는 제자리에 있고 사람도 A를 써요. ${su ? `지금 W·D·H와 간격은 ${su.n} 것이에요.` : 'B나 C를 누르면 W·D·H로 그 크기를, 간격으로 옆과의 사이를 바꿔요.'} 앞면은 나란히 맞춰요.`, `Overall width ${rowSpan().total} mm · A stays put and the person uses it. ${su ? `W, D, H and the gap now set ${su.n}.` : 'Tap B or C to set its size with W, D, H and its gap to the next one.'} Fronts line up.`)
       : L(`전체 폭 ${rowSpan().total}mm · 사람은 ${pk.n} 유닛을 써요. 유닛을 누르면 그 앞으로 가고, W·D·H로 그 유닛 크기를 바꿔요. 앞면은 나란히 맞춰요.`, `Overall width ${rowSpan().total} mm · the person uses unit ${pk.n}. Tap a unit to go to it; W, D and H change its size. Fronts line up.`);
   }
@@ -4706,7 +4710,7 @@ function updateOverlay(pose) {
   const P = dims(), A = S.A;
   put($('t-human'), human.localToWorld(pose.P.headCenter.clone().add(new V3(0, A.headH * 0.62, 0))), S.guides && S.view !== 'first' && personVis() !== 'off', 'translate(-50%, calc(-100% - 4px))');
   const ru = rowUnits() && S.row.length > 1 ? S.row : null, ro = ru ? rowOffsets() : null;
-  const prRow = !!ru && isProp(); // mockups: each one's tag over the row, left to right a level higher each so neighbours never overlap; the overall tag over them all
+  const prRow = !!ru && rowProp(), stk = prRow && stacked(); // mockups: each one's tag over the row, left to right a level higher each so neighbours never overlap; the overall tag over them all
   let boxes = null, allTop = 0;
   if (prRow) { boxes = {}; for (const c of holder.children) if (c.userData.unit) boxes[c.userData.unit] = new THREE.Box3().setFromObject(c); boxes.A = mainBox(); allTop = Math.max(...Object.values(boxes).map((b) => b.max.y)) + 0.012; } // world boxes, so a row hung on a wall is tagged above it too
   const topOf = (b) => new V3((b.min.x + b.max.x) / 2, allTop, (b.min.z + b.max.z) / 2);
@@ -4714,6 +4718,7 @@ function updateOverlay(pose) {
   for (let i = 0; i < 3; i++) { // each unit's name and size: on a chest's front just under its top; over a mockup
     const el = $(`t-u${i}`), u = ru && ru[i], ud = u ? (roundBase() ? u.w : u.d) : 0, bx = prRow && u && boxes[u.n];
     if (u) el.textContent = `${u.n} ${mmi((u.w / 1000) * S.scale)}×${mmi((ud / 1000) * S.scale)}×${mmi((u.h / 1000) * S.scale)}`;
+    if (stk) { put(el, bx ? new V3(bx.max.x + 0.01, (bx.min.y + bx.max.y) / 2, bx.max.z) : new V3(), !!bx && S.guides && S.view !== 'top', 'translate(6px, -50%)'); continue; } // stacked boxes: each one's tag beside it
     put(el, bx ? topOf(bx) : u ? product.localToWorld(new V3((ro[i] / 1000) * S.scale, (u.h / 1000 - 0.07) * S.scale, 0.01)) : new V3(), !!u && (!prRow || !!bx) && S.guides && S.view !== 'top', prRow ? `translate(-50%, calc(-100% - ${i * 24}px))` : 'translate(-50%, -50%)');
   }
   const handTag = S.place === 'hand';
