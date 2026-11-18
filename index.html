@@ -645,7 +645,8 @@ const PRESETS = {
   parcel6: { name: '택배박스 6호', en: 'Parcel box No.6', shape: 'box', look: 'parcel', w: 520, d: 480, h: 400, place: 'hand', face: 'front', ctrl: 200, action: 'press', noCtrl: true },
   parcel7: { name: '택배박스 7호', en: 'Parcel box No.7', shape: 'box', look: 'parcel', w: 620, d: 480, h: 400, place: 'hand', face: 'front', ctrl: 200, action: 'press', noCtrl: true },
   trolley: { name: '수납 트롤리', en: 'Storage trolley', shape: 'box', look: 'trolley', w: 450, d: 350, h: 800, place: 'floor', face: 'top', ctrl: 860, action: 'press', noHand: true }, // tiers of trays on castors, pushed by a bar at the back
-  bowl: { name: '그릇', en: 'Bowl', shape: 'box', look: 'bowl', w: 250, d: 250, h: 25, place: 'table', face: 'top', ctrl: 30, action: 'press', posture: 'sit', prop: true, noCtrl: true }, // a rice bowl, a soup bowl or a shallow bowl, S/M/L
+  dish: { name: '접시', en: 'Plate', shape: 'box', look: 'bowl', w: 250, d: 250, h: 25, place: 'table', face: 'top', ctrl: 30, action: 'press', posture: 'sit', prop: true, noCtrl: true }, // a rice bowl, a soup bowl or a shallow bowl, S/M/L
+  bowl: { name: '그릇', en: 'Bowl', shape: 'box', look: 'bowl', w: 115, d: 115, h: 65, place: 'table', face: 'top', ctrl: 30, action: 'press', posture: 'sit', prop: true, noCtrl: true }, // a rice bowl, a soup bowl or a shallow bowl, S/M/L
   jar: { name: '유리병', en: 'Glass jar', shape: 'box', look: 'jar', w: 80, d: 80, h: 130, place: 'hand', face: 'front', ctrl: 60, action: 'press', noCtrl: true }, // a glass jar with a screw metal lid, 250/500/1000 ml
   book: { name: '책', en: 'Book', shape: 'box', look: 'book', w: 150, d: 22, h: 210, place: 'plinth', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // stood up: cover, spine and the block of pages
   sphere: { name: '구', en: 'Sphere', shape: 'sphere', w: 100, d: 100, h: 100, place: 'plinth', face: 'front', ctrl: 50, action: 'press', prop: true, noCtrl: true },
@@ -694,7 +695,7 @@ const PRESET_GROUPS = [
   [['전자제품', 'Electronics'], ['fam:phone', 'fam:fold', 'flip', 'fam:tablet', 'fam:laptop', 'airbuds', 'airpods', 'airmax', 'fam:speaker']],
   [['안경·헬멧', 'Eyewear & helmets'], ['glasses', 'sunglasses', 'helmet']],
   [['가방·캐리어', 'Bags & luggage'], ['wallet', 'fam:pouch', 'ecobag', 'hobo', 'backpack', 'fam:luggage']],
-  [['키친웨어', 'Kitchenware'], ['tumbler', 'mug', 'glass', 'latte', 'bowl', 'jar']],
+  [['키친웨어', 'Kitchenware'], ['tumbler', 'mug', 'glass', 'latte', 'dish', 'bowl', 'jar']],
   [['가구', 'Furniture'], ['desk', 'standing', 'dining', 'living', 'bar', 'sink', 'drawer', 'wardrobe', 'trolley', 'chair', 'pstool', 'office', 'stool', 'fam:sofa', 'beanbag', 'plinthp']],
 ];
 /* ring sizes (Korean 호 = Japanese 号): inner diameter 13.0 mm at size 1, +1/3 mm per size */
@@ -1769,7 +1770,8 @@ const DETAIL = {
   propR: [DR('rad', '모서리 R', 'Corner radius', 0, 50, 0), MAT_ROW], // the cube and the cylinder: sharp edges unless rounded
   pump: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], cream: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl', apply: true }, { k: 'ml', ko: '용량', en: 'Volume', opts: [[15, '15ml', '15 ml'], [30, '30ml', '30 ml'], [50, '50ml', '50 ml'], [100, '100ml', '100 ml']], def: 50, apply: true }, DR('rad', '모서리 R', 'Corner radius', 0, 20, 0), { k: 'mat', ko: '뚜껑 재질', en: 'Lid', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['metal', '메탈', 'Metal']], def: 'solid' }], lipstick: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], tube: [MAT_ROW], // cosmetics: the body round or square
   trap: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cube', '네모', 'Square'], ['cyl', '원통', 'Round']], def: 'cube' }, { k: 'narrow', ko: '좁아지는 쪽', en: 'Narrower at', opts: [['top', '위', 'Top'], ['bottom', '아래', 'Bottom']], def: 'top' }, DR('draft', '구배 각도', 'Draft angle', 1, 40, 10, 1, '°'), MAT_ROW],
-  bowl: [{ k: 'btype', ko: '종류', en: 'Type', opts: [['plate', '접시', 'Plate'], ['rice', '밥그릇', 'Rice bowl'], ['soup', '국그릇', 'Soup bowl'], ['shallow', '접시형 볼', 'Shallow bowl']], def: 'plate', apply: true },
+  dish: [{ k: 'btype', ko: '종류', en: 'Type', opts: [['plate', '접시', 'Plate'], ['shallow', '접시형 볼', 'Shallow bowl']], def: 'plate', apply: true }],
+  bowl: [{ k: 'btype', ko: '종류', en: 'Type', opts: [['rice', '밥그릇', 'Rice bowl'], ['soup', '국그릇', 'Soup bowl']], def: 'rice', apply: true },
     { k: 'bsize', ko: '크기', en: 'Size', opts: [['S', '소', 'S'], ['M', '중', 'M'], ['L', '대', 'L']], def: 'M', apply: true },
     { k: 'mat', ko: '재질', en: 'Material', opts: [['ceramic', '도자기', 'Ceramic'], ['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['glass', '유리', 'Glass'], ['metal', '메탈', 'Metal']], def: 'ceramic' }],
   jar: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '사각', 'Square']], def: 'cyl', apply: true },
@@ -1789,6 +1791,8 @@ const DETAIL = {
     DR('lensW', '렌즈 가로', 'Lens width', 40, 66, () => ({ square: 52, round: 49, aviator: 58 })[SFORM()]), DR('lensH', '렌즈 세로', 'Lens height', 30, 60, () => ({ square: 44, round: 47, aviator: 50 })[SFORM()])],
   headphone: [DR('cupH', '귀마개 높이', 'Ear cushion height', 60, 130, () => Math.round(clamp(0.5 * S.h, 75, 115))), DR('cupL', '귀마개 폭', 'Ear cushion width', 50, 115, () => Math.round(clamp(0.88 * S.d, 58, 95))), DR('cupT', '귀마개 두께', 'Ear cup thickness', 12, 45, () => Math.round(clamp(0.13 * S.w, 17, 30))), DR('bandW', '머리띠 폭', 'Headband width', 12, 45, 29), DR('slide', '슬라이더 길이', 'Slider extension', 0, 50, 20)],
 };
+DETAIL.dish.push(DETAIL.bowl[1], DETAIL.bowl[2]); // a plate: its own types, the bowl's sizes and materials
+
 const BOWL_SIZES = { plate: { S: [200, 22], M: [250, 25], L: [280, 27] }, rice: { S: [105, 55], M: [115, 65], L: [125, 72] }, soup: { S: [130, 62], M: [145, 70], L: [160, 80] }, shallow: { S: [150, 45], M: [180, 55], L: [210, 62] } }; // diameter, height (mm)
 const JAR_SIZES = { cyl: { 250: [65, 100], 500: [80, 130], 1000: [100, 170] }, cube: { 250: [60, 95], 500: [75, 120], 1000: [95, 150] } }; // width, height (mm)
 function detApply() { // a bowl's type and size, or a jar's form and volume, set its outer size
@@ -1800,6 +1804,7 @@ function detKind() {
   if (S.source !== 'box') return null;
   if (S.shape === 'headphone') return 'headphone';
   if (S.shape === 'frame') return 'frame';
+  if (S.look === 'bowl' && S.source === 'box') return S.pkey === 'dish' ? 'dish' : 'bowl'; // plates and bowls share the lathe, not the choices
   if (['tube', 'pump', 'lipstick', 'cream', 'trap', 'bowl', 'jar', 'trolley'].includes(S.look) && S.source === 'box') return S.look; // book and disc: the plain mockups' material row
   if (isProp()) return ['cube', 'cyl', 'plinthp'].includes(S.pkey) ? 'propR' : 'prop';
   if (S.look === 'hobo') return 'hobo';
