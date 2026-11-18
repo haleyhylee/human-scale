@@ -663,7 +663,7 @@ const PRESETS = {
   card: { name: '명함', en: 'Business card', shape: 'box', look: 'paper', w: 90, d: 1, h: 50, place: 'hand', face: 'front', ctrl: 25, action: 'press' }, // held up by its edge to be read
   brochure: { name: '브로셔', en: 'Brochure', shape: 'box', look: 'paper', w: 100, d: 3, h: 210, place: 'hand', face: 'front', ctrl: 100, action: 'press' }, // a folded leaflet
   pencase: { name: '필통', en: 'Pencil case', shape: 'box', look: 'pencase', w: 200, d: 55, h: 55, place: 'table', face: 'front', ctrl: 27, action: 'press', prop: true, noCtrl: true }, // a soft zipped case
-  lightstick: { name: '응원봉', en: 'Light stick', shape: 'box', look: 'lightstick', w: 72, d: 72, h: 250, place: 'hand', face: 'front', ctrl: 120, action: 'press', noCtrl: true }, // a globe on a handle: lights up when used
+  lightstick: { name: '응원봉', en: 'Light stick', shape: 'box', look: 'lightstick', w: 95, d: 95, h: 250, place: 'hand', face: 'front', ctrl: 120, action: 'press', noCtrl: true }, // a globe on a handle: lights up when used
   banner: { name: '배너', en: 'Banner stand', shape: 'box', look: 'banner', w: 600, d: 400, h: 1800, place: 'floor', face: 'front', ctrl: 900, action: 'press', noCtrl: true, noHand: true }, // your image on a tall stand
   aboard: { name: '입간판', en: 'A-board', shape: 'box', look: 'aboard', w: 600, d: 550, h: 1000, place: 'floor', face: 'front', ctrl: 500, action: 'press', noCtrl: true, noHand: true }, // an A-frame sign, your image on its face
   book: { name: '책', en: 'Book', shape: 'box', look: 'book', w: 150, d: 22, h: 210, place: 'plinth', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // stood up: cover, spine and the block of pages
@@ -1685,6 +1685,7 @@ const lampCtrl = () => { // a lamp's switch spot (product frame, scaled): on the
   if (S.source !== 'box' || S.face !== 'front') return null; const k = S.scale, W = S.w / 1000, D = S.d / 1000;
   if (S.look === 'tablelamp') return new V3(0, Math.min(ctrlM(), 0.022 * k), (-D / 2 + Math.min(0.085, W * 0.275) * 0.96) * k);
   if (S.look === 'floorlamp') return new V3(0, ctrlM(), (-D / 2 + 0.013) * k);
+  if (S.look === 'microwave') return new V3((W / 2 - W * 0.12) * k, ctrlM(), -0.012 * k); // on the panel at the right
   return null;
 };
 /* filling a cup: held under the outlet when the control is on the front (water purifier),
@@ -3176,7 +3177,7 @@ function doorGeo(group, W, D, H) {
   L(new THREE.CylinderGeometry(0.026, 0.026, 0.008, 32).rotateX(Math.PI / 2).translate(lx, ly, 0.004), steel);
   meshIn(lever)(new THREE.CylinderGeometry(0.0095, 0.0095, 0.12, 20).rotateZ(Math.PI / 2).translate(-0.055, 0, 0.05), steel);
   meshIn(lever)(new THREE.CylinderGeometry(0.009, 0.009, 0.05, 16).rotateX(Math.PI / 2).translate(0, 0, 0.025), steel);
-  group.userData.door = { g: leaf, max: deg(30), sign: 1, hinge: new V3(hx, 0, zf), lever }; // pushed a little way open, the hand going with the lever // pushed open, away from the person
+  group.userData.door = { g: leaf, max: deg(60), sign: 1, hinge: new V3(hx, 0, zf), lever, release: true }; // pushed a little way open, the hand going with the lever // pushed open, away from the person
   group.userData.handle = new V3(hx + lx - 0.07, ly, zf + 0.054); group.userData.handleAxis = 'x'; group.userData.handleR = 0.0095;
 }
 /* a microwave: a box on little feet; the door with its dark window on the left, hinged on the left; the panel with a display on the right; a bar handle on the door's edge */
@@ -3191,8 +3192,7 @@ function microwaveGeo(group, W, D, H) {
   L(new THREE.BoxGeometry(dw * 0.72, (H - ft) * 0.62, 0.003).translate(dw * 0.44, ft + (H - ft) * 0.52, 0.0005), darkGloss); // the window
   L(new RoundedBoxGeometry(0.02, (H - ft) * 0.55, 0.022, 2, 0.006).translate(dw - 0.022, ft + (H - ft) * 0.5, 0.008), darkGloss); // the handle
   L(new THREE.BoxGeometry(dw - 0.04, H - ft - 0.05, 0.003).translate(dw / 2, ft + (H - ft) / 2, -0.021), mats.cup); // inside, seen when open
-  group.userData.door = { g: door, max: deg(50), sign: -1, hinge: new V3(hx, 0, 0) };
-  group.userData.handle = new V3(hx + dw - 0.022, ft + (H - ft) * 0.5, 0.02); group.userData.handleAxis = 'yr'; group.userData.handleR = 0.01; // the upright handle, fingers round it from the right
+  group.userData.door = { g: door, max: deg(95), sign: -1, hinge: new V3(hx, 0, 0), auto: true }; // the start button pressed, the door pops open
 }
 /* a rice cooker: a round white body swelling a little at the middle, a silver band round its top with the display, a domed lid hinged at the back
    with the steam knob on it and the opening button at its front; open, the steel inner pot shows */
@@ -3236,7 +3236,8 @@ function potGeo(group, W, D, H) {
   own(new THREE.CylinderGeometry(R, R * 0.98, H, 64, 1, true).translate(0, H / 2, cz), steel);
   own(new THREE.CylinderGeometry(R * 0.98, R * 0.98, 0.004, 64).translate(0, 0.002, cz), steel);
   own(new THREE.TorusGeometry(R, 0.003, 8, 64).rotateX(Math.PI / 2).translate(0, H, cz), steel);
-  for (const sx of [-1, 1]) own(new THREE.TorusGeometry(0.025, 0.006, 10, 24, Math.PI).rotateX(Math.PI / 2).rotateY(sx > 0 ? -Math.PI / 2 : Math.PI / 2).translate(sx * (R + 0.002), H * 0.82, cz), mats.pad); // side handles
+  for (const sx of [-1, 1]) own(new THREE.TorusGeometry(0.025, 0.006, 10, 24, Math.PI).rotateX(Math.PI / 2).rotateY(sx > 0 ? Math.PI / 2 : -Math.PI / 2).translate(sx * (R + 0.002), H * 0.82, cz), mats.pad); // side handles, looping outward
+  group.userData.potHandles = [-1, 1].map((sx) => new V3(sx * (R + 0.026), H * 0.82, cz));
 }
 /* a pencil case: a soft rounded tube of fabric, a zip along the top, a pull at one end */
 function pencaseGeo(group, W, D, H) {
@@ -3247,7 +3248,7 @@ function pencaseGeo(group, W, D, H) {
 }
 /* a light stick: a long handle with a button, a collar, a clear globe that glows when it is switched on */
 function lightstickGeo(group, W, D, H) {
-  const own = meshIn(group), R = W / 2, hr = Math.min(0.017, R * 0.46), hh = H - 2 * R - 0.025, cz = -D / 2, cy = hh + 0.025 + R * 0.96;
+  const own = meshIn(group), R = W / 2, hr = W * 0.21, hh = H - 2 * R - 0.025, cz = -D / 2, cy = hh + 0.025 + R * 0.96; // the handle ~40 mm across on a 95 mm globe
   own(new THREE.CylinderGeometry(hr, hr * 1.04, hh, 40).translate(0, hh / 2, cz), mats.paper);
   own(new THREE.CylinderGeometry(0.006, 0.006, 0.003, 20).rotateX(Math.PI / 2).translate(0, hh * 0.72, cz + hr + 0.001), mats.trim); // the switch
   own(new THREE.CylinderGeometry(R * 0.62, hr * 1.1, 0.025, 40).translate(0, hh + 0.0125, cz), mats.paper); // the collar
@@ -3281,7 +3282,22 @@ function aboardGeo(group, W, D, H) {
 /* a four-door fridge: tall doors over short drawers in two columns, a dark seam between; the top right door swings open on its outer hinge */
 function fridgeGeo(group, W, D, H) {
   const own = meshIn(group), dD = 0.05, body = D - dD, base = 0.05, split = base + (H - base) * 0.38, g = 0.004, cw = W / 2;
-  own(new RoundedBoxGeometry(W - 0.004, H - 0.002, body, 2, 0.006).translate(0, H / 2, -dD - body / 2), mats.foam);
+  const zf = -dD, zb = -D + 0.004, wt = 0.03, cav = new THREE.MeshStandardMaterial({ color: 0xf3f4f5, roughness: 0.55 }), shelfM = new THREE.MeshPhysicalMaterial({ color: 0xdfe8ec, roughness: 0.08, transparent: true, opacity: 0.45, depthWrite: false });
+  own(new RoundedBoxGeometry(W - 0.004, split, body, 2, 0.006).translate(0, split / 2, zf - body / 2), mats.foam); // the freezer below
+  own(new RoundedBoxGeometry(cw - 0.002, H - split, body, 2, 0.006).translate(-cw / 2, split + (H - split) / 2, zf - body / 2), mats.foam); // behind the closed left door
+  { // the fridge behind the right door: white walls, glass shelves, two crisper drawers at the bottom, a light at the top
+    const x0 = 0.001, x1 = W / 2 - 0.002, cx = (x0 + x1) / 2, iw = x1 - x0 - 2 * wt, y0 = split, y1 = H - 0.002, ih = y1 - y0 - 2 * wt, id = body - wt;
+    own(new THREE.BoxGeometry(x1 - x0, y1 - y0, wt).translate(cx, (y0 + y1) / 2, zb + wt / 2), cav); // back
+    own(new THREE.BoxGeometry(x1 - x0, wt, body).translate(cx, y1 - wt / 2, zf - body / 2), mats.foam); own(new THREE.BoxGeometry(iw, 0.002, id).translate(cx, y1 - wt - 0.001, zf - id / 2 - 0.002), cav); // top
+    own(new THREE.BoxGeometry(x1 - x0, wt, body).translate(cx, y0 + wt / 2, zf - body / 2), mats.foam); own(new THREE.BoxGeometry(iw, 0.002, id).translate(cx, y0 + wt + 0.001, zf - id / 2 - 0.002), cav); // floor
+    for (const x of [x0 + wt / 2, x1 - wt / 2]) own(new THREE.BoxGeometry(wt, y1 - y0, body).translate(x, (y0 + y1) / 2, zf - body / 2), mats.foam);
+    for (const x of [x0 + wt + 0.001, x1 - wt - 0.001]) own(new THREE.BoxGeometry(0.002, ih, id).translate(x, (y0 + y1) / 2, zf - id / 2 - 0.002), cav);
+    const dh = Math.min(0.2, ih * 0.2); // crisper drawers
+    for (const sx of [-1, 1]) own(new RoundedBoxGeometry(iw / 2 - 0.012, dh, id - 0.05, 2, 0.006).translate(cx + sx * (iw / 4), y0 + wt + dh / 2 + 0.004, zf - (id - 0.05) / 2 - 0.02), shelfM);
+    const n = 3, sp = (ih - dh - 0.02) / (n + 1);
+    for (let i = 1; i <= n; i++) own(new THREE.BoxGeometry(iw - 0.004, 0.006, id - 0.03).translate(cx, y0 + wt + dh + 0.02 + sp * i, zf - (id - 0.03) / 2 - 0.004), shelfM);
+    own(new THREE.BoxGeometry(iw * 0.6, 0.008, 0.03).translate(cx, y1 - wt - 0.006, zf - id * 0.35), new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.8 })); // the light
+  }
   own(new THREE.BoxGeometry(W - 0.02, base, 0.02).translate(0, base / 2, -dD - 0.02), darkGloss); // the toe kick
   own(new THREE.BoxGeometry(W - 0.01, 0.012, dD - 0.004).translate(0, split, -dD / 2), darkGloss); // the line between doors and drawers
   const panel = (g2, w, h, x, y) => own(new RoundedBoxGeometry(w, h, dD - 0.004, 2, 0.004).translate(x, y, -dD / 2), mats.foam);
@@ -3290,6 +3306,7 @@ function fridgeGeo(group, W, D, H) {
   const door = new THREE.Group(); door.position.set(W / 2, 0, 0); group.add(door);
   meshIn(door)(new RoundedBoxGeometry(cw - g, H - split - 0.012, dD - 0.004, 2, 0.004).translate(-cw / 2, split + (H - split) / 2, -dD / 2), mats.foam);
   meshIn(door)(new THREE.BoxGeometry(cw - g - 0.02, H - split - 0.04, 0.004).translate(-cw / 2, split + (H - split) / 2, -dD - 0.004), mats.cup); // the inner liner, seen when open
+  for (let i = 0; i < 4; i++) { const y = split + 0.08 + i * (H - split - 0.16) / 3.4; meshIn(door)(new THREE.BoxGeometry(cw - g - 0.07, 0.07, 0.07).translate(-cw / 2, y + 0.035, -dD - 0.04), shelfM); } // the door bins
   own(new THREE.BoxGeometry(0.006, H - base - 0.01, dD - 0.01).translate(0, base + (H - base) / 2, -dD / 2), darkGloss); // the centre seam, where the hands go
   group.userData.door = { g: door, max: deg(70), hinge: new V3(W / 2, 0, 0) };
   group.userData.handle = new V3(0.012, Math.min(H - 0.1, S.ctrl / 1000), 0.004);
@@ -3339,10 +3356,10 @@ function cushionGeo(group, W, D, H) {
   own(body(W * 0.84, D * 0.84, 0.002).translate(0, bh - 0.0015, -D * 0.08), new THREE.MeshStandardMaterial({ color: 0xe6c9ad, roughness: 0.95 })); // the cushion
   own(body(W * 0.8, D * 0.8, 0.004).translate(0, bh, -D * 0.1), new THREE.MeshStandardMaterial({ color: 0x2a2b2d, roughness: 0.85 })); // the puff on it
   own(new THREE.BoxGeometry(W * 0.7, 0.0012, 0.012).translate(0, bh + 0.0046, -D / 2), darkGloss); // its strap
-  const lid = new THREE.Group(); lid.position.set(0, bh, -D + 0.004); group.add(lid);
-  meshIn(lid)(body(W * 1.005, D * 1.005, lh).translate(0, 0, D - 0.004 + D * 0.0025), darkGloss);
-  meshIn(lid)(body(W * 0.8, D * 0.8, 0.0012).translate(0, -0.0007, D - 0.004 - D * 0.1), mats.metal); // the mirror inside
-  group.userData.door = { g: lid, max: deg(100), axis: 'x', sign: -1, hinge: new V3(0, bh, -D + 0.004), auto: true };
+  const lid = new THREE.Group(); lid.position.set(0, bh, -0.004); group.add(lid); // hinged at the edge away from the face, so the mirror opens toward it
+  meshIn(lid)(body(W * 1.005, D * 1.005, lh).translate(0, 0, 0.004 + D * 0.0025), darkGloss);
+  meshIn(lid)(body(W * 0.8, D * 0.8, 0.0012).translate(0, -0.0007, 0.004 - D * 0.1), mats.metal); // the mirror inside
+  group.userData.door = { g: lid, max: deg(100), axis: 'x', sign: 1, hinge: new V3(0, bh, -0.004), auto: true };
 }
 /* a corrugated parcel box: kraft board, the top flaps meeting along the middle under a strip of tape that runs down the front and back */
 function parcelGeo(group, W, D, H) {
@@ -3485,8 +3502,8 @@ function layoutHuman() {
   } else if (A.seated) {
     const front = A.thigh + 0.14;
     z = S.place === 'table' ? EDGE + 0.22 : S.place === 'counter' ? EDGE + front + 0.02 : 0.15 + front;
-  } else z = S.place === 'wall' ? wallDist() + toe /* stood back far enough to take it all in, or as set */ : S.place === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + 0.06 + toe : S.place === 'counter' ? EDGE - 0.02 + toe + (S.source === 'box' && S.look === 'microwave' ? 0.12 : 0) : S.place === 'table' ? EDGE + 0.03 + toe : (APPLIANCE_GAP[S.source === 'box' && S.look] ?? (dims().H > 0.6 && S.look !== 'floorlamp' ? 0.03 : 0.1)) + toe; // up to a tall thing on the floor (a plinth): toes close
-  human.position.set(S.source === 'box' && S.look === 'fridge' ? -dims().W * 0.22 : S.source === 'box' && S.look === 'microwave' ? dims().W * 0.25 : 0, 0, z); // at a fridge: in front of the left door, clear of the right one as it swings
+  } else z = S.place === 'wall' ? wallDist() + toe /* stood back far enough to take it all in, or as set */ : S.place === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + 0.06 + toe : S.place === 'counter' ? EDGE - 0.02 + toe + (S.source === 'box' && S.look === 'microwave' ? 0.08 : 0) : S.place === 'table' ? EDGE + 0.03 + toe : ((S.source === 'box' && S.style === 'drawer' && !drawerCols() ? dims().D * 0.62 + 0.06 : null) ?? APPLIANCE_GAP[S.source === 'box' && S.look] ?? (dims().H > 0.6 && S.look !== 'floorlamp' ? 0.03 : 0.1)) + toe; // up to a tall thing on the floor (a plinth): toes close
+  human.position.set(S.source === 'box' && S.look === 'fridge' ? -dims().W * 0.22 : S.source === 'box' && S.look === 'microwave' ? dims().W * 0.38 : 0, 0, z); // at a fridge: in front of the left door, clear of the right one as it swings
   human.rotation.set(0, Math.PI, 0);
 }
 
@@ -3704,7 +3721,7 @@ function flatTop() {
   return t;
 }
 /* how far the toes stay from big things on the floor (m): room to stand back, and for a door to swing past */
-const APPLIANCE_GAP = { fridge: 0.32, washer: 0.16, standac: 0.38, airpurifier: 0.1, purifier: 0.25, door: 0.3, wardrobe: 0.3, trolley: 0.18, floorlamp: 0.12 };
+const APPLIANCE_GAP = { banner: 1.1, aboard: 0.85, fridge: 0.32, washer: 0.16, standac: 0.38, airpurifier: 0.1, purifier: 0.25, door: 0.3, wardrobe: 0.3, trolley: 0.18, floorlamp: 0.12 };
 function planHands() {
   const A = S.A, HD = A.hd;
   S.handRest = restPose();
@@ -3713,7 +3730,8 @@ function planHands() {
   if (S.place === 'head' || S.place === 'back') return; // worn: the hands rest
   if (grabbable()) {
     const P = dims();
-    if (!laidFlat() && P.H >= 0.025 && Math.min(P.W, P.D) <= GRAB_MAX) { const g = objectGrip(HD, P, ['cyl', 'sphere', 'cone', 'parts'].includes(S.shape), 0.5); S.plan = { ...g, kind: 'grab', grab: grabGoal(g) }; } // a fist round its middle
+    if (S.look === 'pencase' && S.source === 'box') { const g = objectGrip(HD, { W: P.H, D: P.D, H: P.W }, true, 0.5); g.dims = { W: P.H / S.scale, D: P.D / S.scale, H: P.W / S.scale }; S.plan = { ...g, kind: 'grab', grab: grabGoal(g, new THREE.Matrix4().makeTranslation(0, P.H / 2, 0).multiply(new THREE.Matrix4().makeRotationZ(-Math.PI / 2))) }; } // lying down: the fist round its middle, across it
+    else if (!laidFlat() && P.H >= 0.025 && Math.min(P.W, P.D) <= GRAB_MAX && S.look !== 'pump') { const g = objectGrip(HD, P, ['cyl', 'sphere', 'cone', 'parts'].includes(S.shape), 0.5); S.plan = { ...g, kind: 'grab', grab: grabGoal(g) }; } // a fist round its middle
     else { const t = flatTop();
       S.pressLocal = human.worldToLocal(t); S.plan = { kind: 'flat', hp: flatPose() }; } // too big or too flat for a fist (a sheet, a plate, a ring): the palm rests on it
     return;
@@ -3727,6 +3745,7 @@ function planHands() {
     else if (kind === 'palm') S.plan = palmGrip(HD, P);
     else if (kind === 'handle') S.plan = handleGrip(HD);
     else if (kind === 'box') S.plan = { kind: 'box', hp: flatPose() };
+    else if (S.look === 'lightstick' && S.source === 'box') { const hh = P.H - P.W - 0.025 * S.scale; S.plan = objectGrip(HD, { W: P.W * 0.42, D: P.D * 0.42, H: P.H }, true, 0.5 - (hh * 0.45) / P.H); S.plan.lsW = P.W; } // the fist closed round the handle, under the globe
     else S.plan = objectGrip(HD, P, roundGrip(), 0.1);
     return;
   }
@@ -3770,9 +3789,16 @@ function planHands() {
     const hp = { f: HD.fingers.map((g) => solve(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85])), tm: new V3(0.45, 0.35, -0.82).normalize(), tq: new V3(0, 1, 0), t: [deg(8), deg(12)] };
     S.plan = { kind: 'bar', hp, F, W: bar.clone().sub(inHand(F, c)) };
     S.pressLocal = bar;
+  } else if (S.source === 'box' && holder.userData.potHandles) { // a pot: one hand on each side handle, palms down, fingers hooked under the loops
+    const k = S.scale, rr = 0.006 * k, hs = holder.userData.potHandles.map((p) => human.worldToLocal(product.localToWorld(p.clone().multiplyScalar(k))));
+    const c = new V3(HD.palmT / 2 + rr + 0.002, 0.58 * HD.palmLen, 0), shape = { kind: 'c', cx: c.x, cy: c.y, r: rr, z0: -0.08, z1: 0.08 };
+    const hp = { f: HD.fingers.map((g) => solve(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85])), tm: new V3(0.45, 0.35, -0.82).normalize(), tq: new V3(0, 1, 0), t: [deg(8), deg(12)] };
+    const side = (s) => { const b = hs.find((p) => Math.sign(p.x) === Math.sign(s)) || hs[0], F = handFrame(new V3(0, -1, 0), new V3(-Math.sign(b.x), -0.25, 0.15)); return { F, W: b.clone().sub(inHand(F, c)) }; };
+    S.plan = { kind: 'pot2', hp, side };
+    S.pressLocal = hs[0].clone().add(hs[1]).multiplyScalar(0.5);
   } else if (S.source === 'box' && holder.userData.handle) { // a handle in a fist: upright (a fridge or oven door's edge), along x (a door lever) or toward you (a pan)
     const k = S.scale, ax = holder.userData.handleAxis || 'y', bar = human.worldToLocal(product.localToWorld(holder.userData.handle.clone().multiplyScalar(k))), rr = (holder.userData.handleR || 0.008) * k;
-    const F = ax === 'yr' ? handFrame(new V3(-1, 0, 0), new V3(0, 0, -1)) : ax === 'x' ? handFrame(new V3(0, -1, 0), new V3(0, 0, -1)) : ax === 'z' ? handFrame(new V3(1, 0, 0), new V3(0, -1, 0)) : handFrame(new V3(1, 0, 0), new V3(0, 0, 1)), c = new V3(HD.palmT / 2 + rr + 0.002, 0.58 * HD.palmLen, 0);
+    const F = ax === 'yr' ? handFrame(new V3(-1, 0, 0), new V3(0, 0, 1)) : ax === 'x' ? handFrame(new V3(0, -1, 0), new V3(0, 0, 1)) : ax === 'z' ? handFrame(new V3(1, 0, 0), new V3(0, -1, 0)) : handFrame(new V3(1, 0, 0), new V3(0, 0, 1)), c = new V3(HD.palmT / 2 + rr + 0.002, 0.58 * HD.palmLen, 0);
     const shape = { kind: 'c', cx: c.x, cy: c.y, r: rr, z0: -0.08, z1: 0.08 };
     const hp = { f: HD.fingers.map((g) => solve(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85])), tm: new V3(0.45, 0.35, -0.82).normalize(), tq: new V3(0, 1, 0), t: [deg(8), deg(12)] };
     S.plan = { kind: 'bar', hp, F, W: bar.clone().sub(inHand(F, c)) };
@@ -3807,7 +3833,11 @@ function handGoal(plan, s, P, sh) {
     case 'sheet': case 'face': {
       if (plan.kind === 'face' && !right) return null;
       const ff = faceFrame(P), h = edgeHand(ff, s, plan.g);
-      if (S.source === 'box' && S.pkey === 'card') h.W.addScaledVector(ff.Xp, -s * S.A.hd.palmW * 0.62).addScaledVector(ff.Yp, -0.012); // pinched at its edge: only the fingertips behind it, the thumb in front
+      if (S.source === 'box' && S.pkey === 'card') { // pinched at its lower right corner between the thumb (in front) and the index finger (behind), the other fingers curled away
+        h.W.addScaledVector(ff.Xp, -s * S.A.hd.palmW * 1.05).addScaledVector(ff.Yp, -dims().H * 0.3);
+        const hp = { ...plan.hp, f: plan.hp.f.map((a, i) => (i === 0 ? [deg(12), deg(14), deg(8)] : [deg(78), deg(95), deg(70)])) };
+        return { F: h.F, W: h.W, pole: new V3(s * 0.6, -1, -0.3), hp };
+      }
       return { F: h.F, W: h.W, pole: new V3(s * 0.6, -1, -0.3), hp: plan.hp };
     }
     case 'box': { const h = twoHandHold(P).hand(s); return { F: h.F, W: h.W, pole: new V3(s * 0.6, -1, -0.3), hp: plan.hp }; }
@@ -3827,9 +3857,11 @@ function handGoal(plan, s, P, sh) {
       return { F, W: S.pressLocal.clone().add(new V3(0, A.hd.palmT / 2 + 0.003, 0)).addScaledVector(F.y, -0.5 * A.hd.palmLen), pole: new V3(-0.55, -1, -0.35), hp: plan.hp };
     }
     case 'pull': { if (!right) return null; const dr = holder.userData.drawers, dz = dr ? anim.open * dr.travel * S.scale : 0; return { F: plan.F, W: plan.W.clone().add(new V3(0, 0, -dz)), pole: new V3(-0.5, -1, -0.4), hp: plan.hp }; }
+    case 'pot2': { const h = plan.side(s); return { F: h.F, W: h.W, pole: new V3(s * 0.7, -1, -0.2), hp: plan.hp }; }
     case 'bar': {
       if (!right) return null;
       const wd = holder.userData.door;
+      if (wd && wd.release && anim.open > 0.45) return null; // the door swung open: let go, the hand back at the side
       if (wd && anim.open > 0 && wd.axis !== 'x' && !wd.stay) { // the hand goes round with the door it is pulling
         const th = anim.open * wd.max * (wd.sign || 1), R = new THREE.Matrix4().makeRotationY(th), hg = human.worldToLocal(holder.localToWorld(wd.hinge.clone())), F2 = handFrame(plan.F.x.clone().applyMatrix4(R), plan.F.y.clone().applyMatrix4(R));
         return { F: F2, W: plan.W.clone().sub(hg).applyMatrix4(R).add(hg), pole: new V3(-0.7, -1, -0.15), hp: plan.hp };
@@ -3840,7 +3872,7 @@ function handGoal(plan, s, P, sh) {
     case 'hang': { if (!right) return null; const W = restWrist(A, P, s), rc = armIK(sh, W, A, new V3(s * 0.25, -0.3, -1)); return { F: handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)), W, pole: new V3(s * 0.25, -0.3, -1), hp: plan.hp }; } // the right arm hangs, the bag in its hand
     case 'clutch': { if (right) return null; /* the left hand */ const W = restWrist(A, P, s), rc = armIK(sh, W, A, new V3(s * 0.25, -0.3, -1)); return { F: handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)), W, pole: new V3(s * 0.25, -0.3, -1), hp: plan.hp }; }
     case 'palm': if (S.source === 'box' && S.look === 'cushion') { // a cushion compact: held up open on one palm at chin height, the mirror toward the face; the other hand dabs the puff on the cheek
-        if (right) return { F: handFrame(new V3(0, 0.55, 0.85).normalize(), new V3(0.35, 0.25, 1).normalize()), W: new V3(P.shR.x + 0.06, P.eye.y - 0.26, P.eye.z + 0.27), pole: new V3(-0.6, -1, -0.2), hp: plan.hp };
+        if (right) return { F: handFrame(new V3(0, 1, -0.3).normalize(), new V3(0.3, 0.1, 1).normalize()), W: new V3(P.shR.x + 0.08, P.eye.y - 0.36, P.eye.z + 0.2), pole: new V3(-0.6, -1, -0.2), hp: plan.hp };
         const ck = new V3(0.075, P.eye.y - 0.075, P.eye.z + 0.01), F = handFrame(new V3(-0.75, 0, -0.65).normalize(), new V3(-0.15, 1, 0.1).normalize());
         return { F, W: ck.addScaledVector(F.y, -A.hd.palmLen * 1.2).addScaledVector(F.x, -0.025), pole: new V3(0.7, -1, -0.1), hp: S.handRest };
       }
@@ -3866,7 +3898,7 @@ const drinking = () => S.place === 'hand' && drinkware() && !!S.plan && (S.plan.
 const mouthPoint = (P) => P.headCenter.clone().addScaledVector(P.neckDir, -0.32 * S.A.headH).addScaledVector(P.headFwd, 0.6 * S.A.headH); // on the lower lip (body frame)
 function handToProduct(plan) { // where the held thing sits in the hand: hand frame to product frame
   if (plan.kind !== 'grip') return plan.rel.clone();
-  const D3 = dims(), t = drinkware() ? -1 : 1, Yp = new V3(0, 0, -1), Xp = (plan.swap ? new V3(0, -1, 0) : new V3(1, 0, 0)).multiplyScalar(t), Zp = (plan.swap ? new V3(1, 0, 0) : new V3(0, 1, 0)).multiplyScalar(t);
+  const D3 = plan.dims ? { W: plan.dims.W * S.scale, D: plan.dims.D * S.scale, H: plan.dims.H * S.scale } : dims(), t = drinkware() ? -1 : 1, Yp = new V3(0, 0, -1), Xp = (plan.swap ? new V3(0, -1, 0) : new V3(1, 0, 0)).multiplyScalar(t), Zp = (plan.swap ? new V3(1, 0, 0) : new V3(0, 1, 0)).multiplyScalar(t);
   return new THREE.Matrix4().makeBasis(Xp, Yp, Zp).setPosition(plan.off.clone().addScaledVector(Yp, -D3.H / 2).addScaledVector(Zp, D3.D / 2));
 }
 /* the cup tipped to the lips: its rim (a tumbler's mouthpiece) on the lower lip, tilted back toward the face; the right hand's frame and
@@ -3882,9 +3914,9 @@ function drinkGoal(plan, P) {
   return { q, W };
 }
 /* the right hand round a thing where it stands: the grip it would be carried in, turned about the thing's upright axis so the hand comes from the shoulder's side */
-function grabGoal(g) {
+function grabGoal(g, X) {
   product.updateMatrixWorld(true); human.updateMatrixWorld(true);
-  const P = dims(), Mp = human.matrixWorld.clone().invert().multiply(product.matrixWorld), inv = handToProduct(g).invert(), shR = new V3(-0.2, S.A.H * 0.8, 0.05);
+  const P = g.dims ? { ...dims(), D: g.dims.D * S.scale } : dims(), Mp = human.matrixWorld.clone().invert().multiply(product.matrixWorld); if (X) Mp.multiply(X); const inv = handToProduct(g).invert(), shR = new V3(-0.2, S.A.H * 0.8, 0.05);
   const toC = new THREE.Matrix4().makeTranslation(0, 0, -P.D / 2), fromC = new THREE.Matrix4().makeTranslation(0, 0, P.D / 2);
   let best = null;
   for (let i = 0; i < 8; i++) {
@@ -4003,10 +4035,11 @@ const effReach = () => (S.mode === 'use' && !carried() && !anim.played && anim.p
 const anim = { played: false, reach: 1, pour: 0, fill: 0, lift: 0, open: 0, drink: 0, phase: 'idle', t: 0 };
 
 function isFlat(P) { return S.shape === 'box' && S.source === 'box' && Math.min(P.W, P.D) / Math.max(P.W, P.D) < 0.35; }
-const roundGrip = () => S.source === 'box' && (['cyl', 'cup', 'sphere'].includes(S.shape) || (S.look === 'jar' && dv('form') !== 'cube'));
+const roundGrip = () => S.source === 'box' && (['cyl', 'cup', 'sphere'].includes(S.shape) || S.look === 'lightstick' || (S.look === 'jar' && dv('form') !== 'cube'));
 /* the width the fingers close around */
 function gripSize(P) {
   if (S.shape === 'cup') return P.W * (S.style === 'latte' ? 0.72 : S.style === 'glass' ? 0.92 : 1);
+  if (S.source === 'box' && S.look === 'lightstick') return P.W * 0.42; // the handle, not the globe
   if (roundGrip()) return P.W;
   return isFlat(P) ? Math.max(P.W, P.D) : (P.W + P.D) / 2;
 }
@@ -4229,7 +4262,7 @@ function evaluate() {
     const tl = human.worldToLocal(c.clone()), dz = Math.max(0.05, tl.z - b0.eye.z), dy = eyeY - tl.y, dist = Math.hypot(dz, dy), ang = Math.atan2(dy, dz) * 180 / Math.PI;
     S.nod = clamp(deg(ang) - deg(22), 0, deg(40)); // the eyes drop about 22°, the neck bows for the rest
     out.target = c; out.targetLocal = tl;
-    if (grabbable()) { const fist = !laidFlat() && P.H >= 0.025 && Math.min(P.W, P.D) <= GRAB_MAX, tg = fist ? tl : human.worldToLocal(flatTop()), rch = (f) => basePose(A, p, f).shR.distanceTo(tg) / A.reach; let f = 0; while (f < 34 && rch(f) > 0.74) f += 2; out.flex = f; } // taking hold of it: lean in just enough that the elbow bends, the forearm doing the reaching
+    if (grabbable()) { const fist = (!laidFlat() && P.H >= 0.025 && Math.min(P.W, P.D) <= GRAB_MAX && S.look !== 'pump') || S.look === 'pencase', tg = fist ? tl : human.worldToLocal(flatTop()), rch = (f) => basePose(A, p, f).shR.distanceTo(tg) / A.reach; let f = 0; while (f < 34 && rch(f) > 0.74) f += 2; out.flex = f; } // taking hold of it: lean in just enough that the elbow bends, the forearm doing the reaching
     const alv = ang > 60 || ang < -30 ? 'warn' : 'good';
     add(L('시선', 'Gaze'), Math.abs(ang) < 8 ? L(`눈에서 ${cmi(dist)}cm · 눈높이에서 봐요`, `${cmi(dist)} cm from the eyes · at eye level`) : ang >= 0 ? L(`눈에서 ${cmi(dist)}cm · 아래로 ${Math.round(ang)}°${ang > 60 ? ' · 목을 많이 숙여요' : ' · 편하게 내려다봐요'}`, `${cmi(dist)} cm from the eyes · ${Math.round(ang)}° down${ang > 60 ? ', the neck bows a lot' : ', an easy look down'}`) : L(`눈에서 ${cmi(dist)}cm · 위로 ${Math.round(-ang)}°${ang < -30 ? ' · 고개를 들어야 해요' : ' · 편하게 올려다봐요'}`, `${cmi(dist)} cm from the eyes · ${Math.round(-ang)}° up${ang < -30 ? ', the head tips back' : ', an easy look up'}`), alv);
     const top = sy + P.H;
@@ -4774,7 +4807,7 @@ function syncUI() {
   for (const b of $('modeSeg').children) b.disabled = (carried() && !(S.source === 'box' && S.look === 'parcel')) || (lookOnly() && !lookAtIt() && !(S.source === 'box' && S.look === 'parcel')); // a ring, a sheet, a phone laid on the desk or a mug set down is only looked at
   $('modelOpts').hidden = !isModel; $('backToBox').hidden = !isModel;
   syncPlay();
-  $('btnPlay').disabled = handKind() === 'clutch' || (lookAtIt() && !grabbable() && !(holder.userData.door && holder.userData.door.auto)) || (S.mode === 'compare' && S.place !== 'hand') || A.chair === 'product' || S.place === 'head' || S.place === 'back';
+  $('btnPlay').disabled = handKind() === 'clutch' || (lookAtIt() && !grabbable() && !(holder.userData.door && holder.userData.door.auto) && !(S.plan && S.plan.kind === 'pot2')) || (S.mode === 'compare' && S.place !== 'hand') || A.chair === 'product' || S.place === 'head' || S.place === 'back';
   const fpBtn = $('views').querySelector('[data-view="first"]'); // worn things can't be seen from your own eyes
   fpBtn.disabled = S.place === 'head' || S.place === 'back';
   fpBtn.title = S.place === 'head' ? L('머리에 쓰는 제품은 1인칭으로 볼 수 없어요', "Worn on the head, so there's nothing to see from the eyes") : '';
