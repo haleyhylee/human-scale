@@ -1750,6 +1750,7 @@ const DETAIL = {
   desk: TABLE_ROWS(25, 22, '옆판 두께', 'Side panel thickness'), standing: TABLE_ROWS(25, 70, '기둥 굵기', 'Column thickness'), dining: TABLE_ROWS(30, 55), bar: TABLE_ROWS(35, 44), coffee: TABLE_ROWS(30, 50, '발 굵기', 'Foot thickness'),
   frame: [DR('frameT', '프레임 두께', 'Frame thickness', 2, 100, 10), MAT_ROW],
   prop: [MAT_ROW], // the plain mockup solids
+  propR: [DR('rad', '모서리 R', 'Corner radius', 0, 50, 0), MAT_ROW], // the cube and the cylinder: sharp edges unless rounded
   pump: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], lipstick: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], tube: [MAT_ROW], // cosmetics: the body round or square
   trap: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cube', '네모', 'Square'], ['cyl', '원통', 'Round']], def: 'cube' }, { k: 'narrow', ko: '좁아지는 쪽', en: 'Narrower at', opts: [['top', '위', 'Top'], ['bottom', '아래', 'Bottom']], def: 'top' }, DR('draft', '구배 각도', 'Draft angle', 1, 40, 10, 1, '°'), MAT_ROW],
   laptop: [{ k: 'lid', ko: '덮개', en: 'Lid', opts: [['open', '열림', 'Open'], ['closed', '닫힘', 'Closed']], def: 'open' }],
@@ -1771,7 +1772,7 @@ function detKind() {
   if (S.shape === 'headphone') return 'headphone';
   if (S.shape === 'frame') return 'frame';
   if (['tube', 'pump', 'lipstick', 'trap'].includes(S.look) && S.source === 'box') return S.look; // book and disc: the plain mockups' material row
-  if (isProp()) return 'prop';
+  if (isProp()) return ['cube', 'cyl'].includes(S.pkey) ? 'propR' : 'prop';
   if (S.look === 'hobo') return 'hobo';
   if (S.shape === 'laptop') return 'laptop';
   if (S.look === 'purifier' || S.look === 'airpurifier') return S.look;
@@ -2988,9 +2989,9 @@ function parcelGeo(group, W, D, H) {
 /* a book stood up: hard covers and a rounded spine in the chosen material, the page block inset between them */
 function bookGeo(group, W, D, H) {
   const own = meshIn(group), m = propMat(), c = Math.min(0.0025, D * 0.12), inset = Math.min(0.004, W * 0.03);
-  for (const z of [-c / 2, -D + c / 2]) own(new RoundedBoxGeometry(W, H, c, 2, Math.min(0.001, c / 2.2)).translate(0, H / 2, z), m); // front and back covers
-  own(new THREE.CylinderGeometry(D / 2, D / 2, H, 24, 1, true, Math.PI, Math.PI).translate(-W / 2 + D * 0.12, H / 2, -D / 2), Object.assign(m.clone(), { side: THREE.DoubleSide })); // the spine
-  own(new THREE.BoxGeometry(W - inset - D * 0.1, H - 2 * inset, D - 2 * c).translate(D * 0.05 - inset / 2 + 0.0005, H / 2, -D / 2), mats.paper); // the pages
+  for (const z of [-c / 2, -D + c / 2]) own(new THREE.BoxGeometry(W, H, c).translate(0, H / 2, z), m); // front and back covers
+  own(new THREE.BoxGeometry(c, H, D).translate(-W / 2 + c / 2, H / 2, -D / 2), m); // a flat spine, square to the covers
+  own(new THREE.BoxGeometry(W - c - inset, H - 2 * inset, D - 2 * c).translate((c - inset) / 2, H / 2, -D / 2), mats.paper); // the pages
 }
 /* a mockup solid by its kind: the main one and any set beside it */
 function propSolid(group, W, D, H) { if (S.look === 'book') bookGeo(group, W, D, H); else if (S.look === 'tube') squeezeTubeGeo(group, W, D, H); else if (S.look === 'pump') pumpGeo(group, W, D, H); else if (S.look === 'lipstick') lipstickGeo(group, W, D, H); else if (S.look === 'trap') trapGeo(group, W, D, H); else if (S.shape === 'frame') frameSolid(group, W, D, H); else plainSolid(group, W, D, H); }
@@ -3003,10 +3004,12 @@ function frameSolid(group, W, D, Hh) {
 }
 /* a plain box, cylinder (round ends, a longer middle when deeper), cone or sphere; a sheet of paper, with your image on its face */
 function plainSolid(group, W, D, Hh) {
-  const geo = S.shape === 'cyl' ? stadiumPlate(W, D, Hh, Math.min(0.004, Math.min(W, D) * 0.05, Hh * 0.08)).applyMatrix4(ON_DECK)
+  const rr = ['cube', 'cyl'].includes(S.pkey) && S.source === 'box' ? Math.min((+dv('rad') || 0) / 1000, Math.min(W, D, Hh) / 2 - 0.0002) : null; // the cube and cylinder: the chosen edge radius, 0 = sharp
+  const geo = S.shape === 'cyl' ? stadiumPlate(W, D, Hh, rr != null ? Math.max(0, rr) : Math.min(0.004, Math.min(W, D) * 0.05, Hh * 0.08)).applyMatrix4(ON_DECK)
     : S.shape === 'cone' ? new THREE.CylinderGeometry(0.0002, W / 2, Hh, 56).translate(0, Hh / 2, -D / 2)
     : S.shape === 'sphere' ? new THREE.SphereGeometry(0.5, 48, 32).scale(W, Hh, D).translate(0, Hh / 2, -D / 2)
-    : new RoundedBoxGeometry(W, Hh, D, 3, Math.min(0.016, Math.min(W, D, Hh) * 0.12)).translate(0, Hh / 2, -D / 2);
+    : rr != null && rr <= 0 ? new THREE.BoxGeometry(W, Hh, D).translate(0, Hh / 2, -D / 2)
+    : new RoundedBoxGeometry(W, Hh, D, rr != null ? 6 : 3, rr != null ? rr : Math.min(0.016, Math.min(W, D, Hh) * 0.12)).translate(0, Hh / 2, -D / 2);
   const m = new THREE.Mesh(geo, S.look === 'paper' ? mats.paper : propMat());
   m.castShadow = true; m.receiveShadow = true; m.userData.own = true;
   group.add(m);
