@@ -3192,7 +3192,7 @@ function microwaveGeo(group, W, D, H) {
   L(new RoundedBoxGeometry(0.02, (H - ft) * 0.55, 0.022, 2, 0.006).translate(dw - 0.022, ft + (H - ft) * 0.5, 0.008), darkGloss); // the handle
   L(new THREE.BoxGeometry(dw - 0.04, H - ft - 0.05, 0.003).translate(dw / 2, ft + (H - ft) / 2, -0.021), mats.cup); // inside, seen when open
   group.userData.door = { g: door, max: deg(50), sign: -1, hinge: new V3(hx, 0, 0) };
-  group.userData.handle = new V3(hx + dw - 0.022, ft + (H - ft) * 0.5, 0.02);
+  group.userData.handle = new V3(hx + dw - 0.022, ft + (H - ft) * 0.5, 0.02); group.userData.handleAxis = 'yr'; group.userData.handleR = 0.01; // the upright handle, fingers round it from the right
 }
 /* a rice cooker: a round white body swelling a little at the middle, a silver band round its top with the display, a domed lid hinged at the back
    with the steam knob on it and the opening button at its front; open, the steel inner pot shows */
@@ -3485,8 +3485,8 @@ function layoutHuman() {
   } else if (A.seated) {
     const front = A.thigh + 0.14;
     z = S.place === 'table' ? EDGE + 0.22 : S.place === 'counter' ? EDGE + front + 0.02 : 0.15 + front;
-  } else z = S.place === 'wall' ? wallDist() + toe /* stood back far enough to take it all in, or as set */ : S.place === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + 0.06 + toe : S.place === 'counter' ? EDGE - 0.02 + toe : S.place === 'table' ? EDGE + 0.03 + toe : (APPLIANCE_GAP[S.source === 'box' && S.look] ?? (dims().H > 0.6 && S.look !== 'floorlamp' ? 0.03 : 0.1)) + toe; // up to a tall thing on the floor (a plinth): toes close
-  human.position.set(S.source === 'box' && S.look === 'fridge' ? -dims().W * 0.22 : S.source === 'box' && S.look === 'microwave' ? dims().W * 0.12 : 0, 0, z); // at a fridge: in front of the left door, clear of the right one as it swings
+  } else z = S.place === 'wall' ? wallDist() + toe /* stood back far enough to take it all in, or as set */ : S.place === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + 0.06 + toe : S.place === 'counter' ? EDGE - 0.02 + toe + (S.source === 'box' && S.look === 'microwave' ? 0.12 : 0) : S.place === 'table' ? EDGE + 0.03 + toe : (APPLIANCE_GAP[S.source === 'box' && S.look] ?? (dims().H > 0.6 && S.look !== 'floorlamp' ? 0.03 : 0.1)) + toe; // up to a tall thing on the floor (a plinth): toes close
+  human.position.set(S.source === 'box' && S.look === 'fridge' ? -dims().W * 0.22 : S.source === 'box' && S.look === 'microwave' ? dims().W * 0.25 : 0, 0, z); // at a fridge: in front of the left door, clear of the right one as it swings
   human.rotation.set(0, Math.PI, 0);
 }
 
@@ -3772,7 +3772,7 @@ function planHands() {
     S.pressLocal = bar;
   } else if (S.source === 'box' && holder.userData.handle) { // a handle in a fist: upright (a fridge or oven door's edge), along x (a door lever) or toward you (a pan)
     const k = S.scale, ax = holder.userData.handleAxis || 'y', bar = human.worldToLocal(product.localToWorld(holder.userData.handle.clone().multiplyScalar(k))), rr = (holder.userData.handleR || 0.008) * k;
-    const F = ax === 'x' ? handFrame(new V3(0, -1, 0), new V3(0, 0, -1)) : ax === 'z' ? handFrame(new V3(1, 0, 0), new V3(0, -1, 0)) : handFrame(new V3(1, 0, 0), new V3(0, 0, 1)), c = new V3(HD.palmT / 2 + rr + 0.002, 0.58 * HD.palmLen, 0);
+    const F = ax === 'yr' ? handFrame(new V3(-1, 0, 0), new V3(0, 0, -1)) : ax === 'x' ? handFrame(new V3(0, -1, 0), new V3(0, 0, -1)) : ax === 'z' ? handFrame(new V3(1, 0, 0), new V3(0, -1, 0)) : handFrame(new V3(1, 0, 0), new V3(0, 0, 1)), c = new V3(HD.palmT / 2 + rr + 0.002, 0.58 * HD.palmLen, 0);
     const shape = { kind: 'c', cx: c.x, cy: c.y, r: rr, z0: -0.08, z1: 0.08 };
     const hp = { f: HD.fingers.map((g) => solve(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85])), tm: new V3(0.45, 0.35, -0.82).normalize(), tq: new V3(0, 1, 0), t: [deg(8), deg(12)] };
     S.plan = { kind: 'bar', hp, F, W: bar.clone().sub(inHand(F, c)) };
