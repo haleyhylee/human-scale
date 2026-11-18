@@ -632,6 +632,14 @@ const PRESETS = {
   lipstick: { name: '립스틱 용기', en: 'Lipstick case', shape: 'box', look: 'lipstick', w: 22, d: 22, h: 80, place: 'plinth', face: 'front', ctrl: 40, action: 'press', prop: true, noCtrl: true }, // a small case with its cap, round or square
   disc: { name: '원판', en: 'Disc', shape: 'cyl', w: 120, d: 120, h: 10, place: 'plinth', face: 'top', ctrl: 10, action: 'press', prop: true, noCtrl: true }, // a round plate
   trap: { name: '사다리꼴', en: 'Trapezoid', shape: 'box', look: 'trap', w: 200, d: 200, h: 200, place: 'plinth', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // a tapered block or round: narrower at the top or the bottom, by a draft angle
+  // parcel boxes in the post office's standard sizes, carried in both hands from underneath
+  parcel1: { name: '택배박스 1호', en: 'Parcel box No.1', shape: 'box', look: 'parcel', w: 220, d: 190, h: 90, place: 'hand', face: 'front', ctrl: 45, action: 'press', noCtrl: true },
+  parcel2: { name: '택배박스 2호', en: 'Parcel box No.2', shape: 'box', look: 'parcel', w: 270, d: 180, h: 150, place: 'hand', face: 'front', ctrl: 75, action: 'press', noCtrl: true },
+  parcel3: { name: '택배박스 3호', en: 'Parcel box No.3', shape: 'box', look: 'parcel', w: 340, d: 250, h: 210, place: 'hand', face: 'front', ctrl: 105, action: 'press', noCtrl: true },
+  parcel4: { name: '택배박스 4호', en: 'Parcel box No.4', shape: 'box', look: 'parcel', w: 410, d: 310, h: 280, place: 'hand', face: 'front', ctrl: 140, action: 'press', noCtrl: true },
+  parcel5: { name: '택배박스 5호', en: 'Parcel box No.5', shape: 'box', look: 'parcel', w: 480, d: 380, h: 340, place: 'hand', face: 'front', ctrl: 170, action: 'press', noCtrl: true },
+  parcel6: { name: '택배박스 6호', en: 'Parcel box No.6', shape: 'box', look: 'parcel', w: 520, d: 480, h: 400, place: 'hand', face: 'front', ctrl: 200, action: 'press', noCtrl: true },
+  parcel7: { name: '택배박스 7호', en: 'Parcel box No.7', shape: 'box', look: 'parcel', w: 620, d: 480, h: 400, place: 'hand', face: 'front', ctrl: 200, action: 'press', noCtrl: true },
   book: { name: '책', en: 'Book', shape: 'box', look: 'book', w: 150, d: 22, h: 210, place: 'plinth', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // stood up: cover, spine and the block of pages
   sphere: { name: '구', en: 'Sphere', shape: 'sphere', w: 100, d: 100, h: 100, place: 'plinth', face: 'front', ctrl: 50, action: 'press', prop: true, noCtrl: true },
   cone: { name: '원뿔', en: 'Cone', shape: 'cone', w: 100, d: 100, h: 150, place: 'plinth', face: 'front', ctrl: 75, action: 'press', prop: true, noCtrl: true },
@@ -656,6 +664,7 @@ const PRESETS = {
 };
 /* one product, several sizes: the product is picked first, then its size */
 const FAMILIES = {
+  parcel: { ko: '택배박스', en: 'Parcel box', last: 'parcel4', sizes: [['parcel1', '1호', 'No.1'], ['parcel2', '2호', 'No.2'], ['parcel3', '3호', 'No.3'], ['parcel4', '4호', 'No.4'], ['parcel5', '5호', 'No.5'], ['parcel6', '6호', 'No.6'], ['parcel7', '7호', 'No.7']] },
   laptop: { ko: '노트북', en: 'Laptop', sizes: [['macbook', '13인치', '13"'], ['macbook15', '15인치', '15"'], ['macbook17', '17인치', '17"']] },
   speaker: { ko: '블루투스 스피커', en: 'Bluetooth speaker', sizes: [['speaker', '원통', 'Round'], ['speakerbox', '큐브', 'Cube']] },
   fold: { ko: '폴더블폰', en: 'Foldable phone', sizes: [['fold', '7.6인치', '7.6"'], ['foldxl', '8인치 대형', '8" large']] },
@@ -672,7 +681,7 @@ const FORMS = { box: [80, 80, 80], frame: [200, 200, 200], cyl: [80, 80, 150], s
 const roundSeat = () => S.source === 'box' && S.shape === 'chair' && (S.style === 'stool' || (S.style === 'pstool' && ['legs', 'cyl'].includes((S.det && S.det.form) || 'legs'))); // a round stool: its seat is W across, so D follows W
 const roundBase = (sh = S.shape) => sh === 'cup' || sh === 'cone' || (sh === S.shape && (S.look === 'tumbler' || roundSeat())); // W = D (a cylinder can be deeper: its middle stretches)
 const PRESET_GROUPS = [
-  [['목업·소품', 'Mockup & objects'], ['cube', 'cyl', 'sphere', 'cone', 'trap', 'plate', 'disc', 'book', 'tube', 'pump', 'lipstick', 'fam:paper', 'ring']],
+  [['목업·소품', 'Mockup & objects'], ['cube', 'cyl', 'sphere', 'cone', 'trap', 'fam:parcel', 'plate', 'disc', 'book', 'tube', 'pump', 'lipstick', 'fam:paper', 'ring']],
   [['생활 제품', 'Appliances'], ['purifier', 'coffee', 'air', 'floorlamp', 'tablelamp', 'mushroom']],
   [['전자제품', 'Electronics'], ['fam:phone', 'fam:fold', 'flip', 'fam:tablet', 'fam:laptop', 'airbuds', 'airpods', 'airmax', 'robot', 'fam:speaker']],
   [['안경·헬멧', 'Eyewear & helmets'], ['glasses', 'sunglasses', 'helmet']],
@@ -1032,6 +1041,7 @@ const mats = {
   water: new THREE.MeshStandardMaterial({ color: 0x9fd0f5, transparent: true, opacity: 0.75, roughness: 0.1 }),
   coffee: new THREE.MeshStandardMaterial({ color: 0x3b2314, roughness: 0.22 }),
   paper: new THREE.MeshStandardMaterial({ color: 0xf7f7f4, roughness: 0.92 }),
+  kraft: new THREE.MeshStandardMaterial({ color: 0xc9a26e, roughness: 0.9 }), tape: new THREE.MeshStandardMaterial({ color: 0xd8b27c, roughness: 0.35 }), seam: new THREE.MeshStandardMaterial({ color: 0x6b5233, roughness: 0.9 }),
   glass: new THREE.MeshPhysicalMaterial({ color: 0xe8f1f4, roughness: 0.06, metalness: 0, transparent: true, opacity: 0.38, clearcoat: 1, side: THREE.DoubleSide, depthWrite: false }),
   gold: new THREE.MeshStandardMaterial({ color: 0xd6b46a, roughness: 0.22, metalness: 1 }),
   gem: new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.02, metalness: 0, clearcoat: 1, transparent: true, opacity: 0.9 }),
@@ -2900,6 +2910,7 @@ function buildProduct() {
   else if (S.look === 'pouch' && S.shape === 'box') pouchGeo(holder, W, D, Hh);
   else if (S.look === 'tote' && S.shape === 'box') { DET_ON = true; try { toteGeo(holder, W, D, Hh); } finally { DET_ON = false; } }
   else if (S.look === 'hobo' && S.shape === 'box') { DET_ON = true; try { hoboGeo(holder, W, D, Hh); } finally { DET_ON = false; } }
+  else if (S.look === 'parcel' && S.shape === 'box') parcelGeo(holder, W, D, Hh);
   else if (S.look === 'robot' && S.shape === 'box') robotGeo(holder, W, D, Hh);
   else if (S.look === 'speaker') speakerGeo(holder, W, D, Hh);
   else if (S.look === 'mushroom') mushroomGeo(holder, W, D, Hh);
@@ -2956,6 +2967,14 @@ function trapGeo(group, W, D, H) {
   for (let i = 0; i < pos.count; i++) { const y = pos.getY(i), nar = top ? y > 0 : y < 0; pos.setX(i, pos.getX(i) * (nar ? W - 2 * o : W)); pos.setZ(i, pos.getZ(i) * (nar ? D - 2 * o : D)); }
   geo.computeVertexNormals(); geo.translate(0, H / 2, -D / 2);
   meshIn(group)(geo, propMat());
+}
+/* a corrugated parcel box: kraft board, the top flaps meeting along the middle under a strip of tape that runs down the front and back */
+function parcelGeo(group, W, D, H) {
+  const own = meshIn(group), tw = Math.min(0.05, W * 0.14), ov = Math.min(0.07, H * 0.3);
+  own(new RoundedBoxGeometry(W, H, D, 2, 0.002).translate(0, H / 2, -D / 2), mats.kraft);
+  own(new THREE.BoxGeometry(W - 0.004, 0.0008, 0.0016).translate(0, H + 0.0002, -D / 2), mats.seam); // where the flaps meet
+  own(new THREE.BoxGeometry(tw, 0.0006, D + 0.0012).translate(0, H + 0.0006, -D / 2), mats.tape); // tape over the seam
+  for (const z of [0.0006, -D - 0.0006]) own(new THREE.BoxGeometry(tw, ov, 0.0006).translate(0, H - ov / 2, z), mats.tape); // down the front and back
 }
 /* a book stood up: hard covers and a rounded spine in the chosen material, the page block inset between them */
 function bookGeo(group, W, D, H) {
@@ -3117,6 +3136,7 @@ function handKind() {
   const P = dims(), box = S.source === 'box', span = S.A.span;
   if (box && S.shape === 'ring') return 'ring';
   if (box && S.shape === 'cup' && S.style !== 'glass') return 'handle';
+  if (box && S.look === 'parcel') return 'box'; // a parcel box: carried in both hands from underneath
   if (box && (S.look === 'tote' || S.look === 'hobo')) return 'hang'; // a bag hanging from the hand by its handles
   if (box && S.look === 'pouch') return 'clutch'; // a pouch carried at the side, the hand over it, its back against the hip
   if (box && S.look === 'paper') return Math.max(P.W, P.H) > 0.32 ? 'sheet' : 'face'; // an A4 sheet in one hand, a poster in two
@@ -3216,6 +3236,14 @@ function handleGrip(HD) {
 function twoHandHold(P) { // a box too big for one hand: upright in front of the chest, both hands on its sides (body frame)
   const A = S.A, D3 = dims(), HD = A.hd;
   const elY = P.shR.y - A.upperArm, yh = elY + 0.03, zc = A.chestD / 2 + 0.07 + D3.D / 2;
+  if (S.look === 'parcel' && S.source === 'box') { // carried like a parcel: the bottom just under the elbows, the palms up under its sides, fingers forward
+    const yb = elY - 0.05, zb = A.chestD / 2 + 0.015 + D3.D / 2;
+    const hand = (s) => {
+      const F = handFrame(UP.clone(), new V3(-s * 0.35, 0, 1)), c = new V3(s * Math.max(0.05, D3.W / 2 - 0.05), yb - HD.palmT / 2 - 0.002, zb + D3.D * 0.08);
+      return { F, W: c.addScaledVector(F.y, -0.5 * HD.palmLen) };
+    };
+    return { origin: new V3(0, yb, zb + D3.D / 2), basis: [new V3(1, 0, 0), UP.clone(), new V3(0, 0, 1)], hand };
+  }
   const hand = (s) => {
     const F = handFrame(new V3(-s, 0, 0), new V3(0, 0.2, 1));
     return { F, W: new V3(s * (D3.W / 2 + HD.palmT / 2 + 0.003), yh, zc).addScaledVector(F.y, -0.5 * HD.palmLen) };
@@ -3680,7 +3708,7 @@ function evaluate() {
     }
     if (sheetHold() || boxHold()) { // too big for one hand: both hands
       const sheet = sheetHold(), shW = 2 * A.shoulderHalf, wide = P.W > shW + 0.25;
-      add(L('양손 들기', 'Two hands'), sheet ? L(`양손으로 가장자리를 잡고 눈 앞 40cm쯤에 기울여 봐요`, 'Held at both edges, tilted toward the eyes about 40 cm away') : L(`폭 ${cmi(P.W)}cm · 양손으로 옆면을 받쳐 들어요`, `${cmi(P.W)} cm wide · carried with both hands on its sides`), 'info');
+      add(L('양손 들기', 'Two hands'), sheet ? L(`양손으로 가장자리를 잡고 눈 앞 40cm쯤에 기울여 봐요`, 'Held at both edges, tilted toward the eyes about 40 cm away') : S.look === 'parcel' ? L(`폭 ${cmi(P.W)}cm · 양손으로 바닥을 받쳐 몸 앞에 들어요`, `${cmi(P.W)} cm wide · carried in front, both hands under it`) : L(`폭 ${cmi(P.W)}cm · 양손으로 옆면을 받쳐 들어요`, `${cmi(P.W)} cm wide · carried with both hands on its sides`), 'info');
       if (!sheet) add(L('품 넓이', 'Arm span'), wide ? L(`어깨너비 ${cmi(shW)}cm보다 ${cmi(P.W - shW)}cm 넓어 팔을 벌려야 해요`, `${cmi(P.W - shW)} cm wider than the shoulders (${cmi(shW)} cm), arms spread wide`) : L(`어깨너비 ${cmi(shW)}cm 안쪽이라 품에 들어와요`, `Within the shoulder width (${cmi(shW)} cm), easy to hug`), wide ? 'warn' : 'good');
       add(L('손과 비교', 'Against the hand'), L(`긴 변 ${mmi(Math.max(P.W, P.H))}mm = 손 길이 ${(Math.max(P.W, P.H) / A.hand).toFixed(1)}개`, `Long side ${mmi(Math.max(P.W, P.H))} mm = ${(Math.max(P.W, P.H) / A.hand).toFixed(1)} hand lengths`), 'info');
       add(L('크기 감각', 'Size'), sizeTxt, 'info');
