@@ -632,6 +632,7 @@ const PRESETS = {
   plate: { name: '판', en: 'Plate', shape: 'plate', w: 100, d: 100, h: 5, place: 'plinth', face: 'top', ctrl: 5, action: 'press', prop: true, noCtrl: true }, // an acrylic-like sheet
   tube: { name: '튜브 용기', en: 'Squeeze tube', shape: 'box', look: 'tube', w: 50, d: 34, h: 160, place: 'plinth', face: 'front', ctrl: 80, action: 'press', prop: true, noCtrl: true }, // stands on its cap, the crimped end up
   pump: { name: '펌프 용기', en: 'Pump bottle', shape: 'box', look: 'pump', w: 70, d: 70, h: 210, place: 'plinth', face: 'front', ctrl: 190, action: 'press', prop: true, noCtrl: true }, // a shampoo bottle: the pump head stays as it is, the body round or square
+  cream: { name: '크림 용기', en: 'Cream jar', shape: 'box', look: 'cream', w: 62, d: 62, h: 48, place: 'plinth', face: 'front', ctrl: 24, action: 'press', prop: true, noCtrl: true }, // a squat glass jar of cream under a wide screw lid
   lipstick: { name: '립스틱 용기', en: 'Lipstick case', shape: 'box', look: 'lipstick', w: 22, d: 22, h: 80, place: 'plinth', face: 'front', ctrl: 40, action: 'press', prop: true, noCtrl: true }, // a small case with its cap, round or square
   disc: { name: '원판', en: 'Disc', shape: 'cyl', w: 120, d: 120, h: 10, place: 'plinth', face: 'top', ctrl: 10, action: 'press', prop: true, noCtrl: true }, // a round plate
   trap: { name: '사다리꼴', en: 'Trapezoid', shape: 'box', look: 'trap', w: 200, d: 200, h: 200, place: 'plinth', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // a tapered block or round: narrower at the top or the bottom, by a draft angle
@@ -688,7 +689,7 @@ const roundSeat = () => S.source === 'box' && S.shape === 'chair' && (S.style ==
 const roundBase = (sh = S.shape) => sh === 'cup' || sh === 'cone' || (sh === S.shape && (S.look === 'tumbler' || roundSeat())); // W = D (a cylinder can be deeper: its middle stretches)
 const PRESET_GROUPS = [
   [['목업', 'Mockups'], ['cube', 'cyl', 'sphere', 'cone', 'trap', 'plate', 'disc']], // the plain forms
-  [['소품', 'Objects'], ['fam:parcel', 'fam:paper', 'book', 'ring', 'lipstick', 'tube', 'pump']],
+  [['소품', 'Objects'], ['fam:paper', 'book', 'fam:parcel', 'ring', 'lipstick', 'tube', 'pump', 'cream']],
   [['생활 제품', 'Appliances'], ['purifier', 'coffee', 'air', 'floorlamp', 'tablelamp', 'mushroom']],
   [['전자제품', 'Electronics'], ['fam:phone', 'fam:fold', 'flip', 'fam:tablet', 'fam:laptop', 'airbuds', 'airpods', 'airmax', 'robot', 'fam:speaker']],
   [['안경·헬멧', 'Eyewear & helmets'], ['glasses', 'sunglasses', 'helmet']],
@@ -1766,7 +1767,7 @@ const DETAIL = {
   frame: [DR('frameT', '프레임 두께', 'Frame thickness', 2, 100, 10), MAT_ROW],
   prop: [MAT_ROW], // the plain mockup solids
   propR: [DR('rad', '모서리 R', 'Corner radius', 0, 50, 0), MAT_ROW], // the cube and the cylinder: sharp edges unless rounded
-  pump: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], lipstick: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], tube: [MAT_ROW], // cosmetics: the body round or square
+  pump: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], cream: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl', apply: true }, { k: 'ml', ko: '용량', en: 'Volume', opts: [[15, '15ml', '15 ml'], [30, '30ml', '30 ml'], [50, '50ml', '50 ml'], [100, '100ml', '100 ml']], def: 50, apply: true }, { k: 'mat', ko: '뚜껑 재질', en: 'Lid', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['metal', '메탈', 'Metal']], def: 'solid' }], lipstick: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], tube: [MAT_ROW], // cosmetics: the body round or square
   trap: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cube', '네모', 'Square'], ['cyl', '원통', 'Round']], def: 'cube' }, { k: 'narrow', ko: '좁아지는 쪽', en: 'Narrower at', opts: [['top', '위', 'Top'], ['bottom', '아래', 'Bottom']], def: 'top' }, DR('draft', '구배 각도', 'Draft angle', 1, 40, 10, 1, '°'), MAT_ROW],
   bowl: [{ k: 'btype', ko: '종류', en: 'Type', opts: [['plate', '접시', 'Plate'], ['rice', '밥그릇', 'Rice bowl'], ['soup', '국그릇', 'Soup bowl'], ['shallow', '접시형 볼', 'Shallow bowl']], def: 'plate', apply: true },
     { k: 'bsize', ko: '크기', en: 'Size', opts: [['S', '소', 'S'], ['M', '중', 'M'], ['L', '대', 'L']], def: 'M', apply: true },
@@ -1793,12 +1794,13 @@ const JAR_SIZES = { cyl: { 250: [65, 100], 500: [80, 130], 1000: [100, 170] }, c
 function detApply() { // a bowl's type and size, or a jar's form and volume, set its outer size
   if (S.look === 'bowl') { const [w, h] = BOWL_SIZES[dv('btype')][dv('bsize')]; S.w = S.d = w; S.h = h; }
   else if (S.look === 'jar') { const [w, h] = JAR_SIZES[dv('form')][dv('ml')]; S.w = S.d = w; S.h = h; }
+  else if (S.look === 'cream') { const [w, h] = { 15: [45, 35], 30: [55, 42], 50: [62, 48], 100: [75, 58] }[dv('ml')]; const k = dv('form') === 'cube' ? 0.92 : 1; S.w = S.d = Math.round(w * k); S.h = h; }
 }
 function detKind() {
   if (S.source !== 'box') return null;
   if (S.shape === 'headphone') return 'headphone';
   if (S.shape === 'frame') return 'frame';
-  if (['tube', 'pump', 'lipstick', 'trap', 'bowl', 'jar', 'trolley'].includes(S.look) && S.source === 'box') return S.look; // book and disc: the plain mockups' material row
+  if (['tube', 'pump', 'lipstick', 'cream', 'trap', 'bowl', 'jar', 'trolley'].includes(S.look) && S.source === 'box') return S.look; // book and disc: the plain mockups' material row
   if (isProp()) return ['cube', 'cyl', 'plinthp'].includes(S.pkey) ? 'propR' : 'prop';
   if (S.look === 'hobo') return 'hobo';
   if (S.shape === 'laptop') return 'laptop';
@@ -3072,6 +3074,14 @@ function lipstickGeo(group, W, D, H) {
   own(cosmeticBody(W * 1.01, D * 1.01, H - baseH, round).translate(0, baseH, -D * 0.005), propMat()); // the cap
   own(cosmeticBody(W * 0.96, D * 0.96, 0.0012, round).translate(0, baseH - 0.0006, -D * 0.02), mats.tire); // the seam
 }
+/* a cream jar: a thick glass body with the cream showing through, a short neck, a wide screw lid */
+function creamGeo(group, W, D, H) {
+  const own = meshIn(group), round = dv('form') !== 'cube', lh = H * 0.36, bh = H - lh;
+  own(cosmeticBody(W, D, bh * 0.97, round), mats.glass);
+  own(cosmeticBody(W * 0.8, D * 0.8, bh * 0.8, round).translate(0, bh * 0.1, -D * 0.1), mats.paper); // the cream inside
+  own(cosmeticBody(W * 0.9, D * 0.9, bh * 0.06 + 0.002, round).translate(0, bh * 0.95, -D * 0.05), mats.glass); // the neck
+  own(cosmeticBody(W * 1.005, D * 1.005, lh, round).translate(0, bh, D * 0.0025), propMat()); // the lid
+}
 /* a tapered solid: square or round, the top (or bottom) drawn in by the draft angle on every side */
 function trapGeo(group, W, D, H) {
   const round = dv('form') === 'cyl', top = dv('narrow') !== 'bottom', o = Math.min(H * Math.tan((+dv('draft') || 10) * Math.PI / 180), Math.min(W, D) * 0.48);
@@ -3146,7 +3156,7 @@ function bookGeo(group, W, D, H) {
   own(new THREE.BoxGeometry(W - c - inset, H - 2 * inset, D - 2 * c).translate((c - inset) / 2, H / 2, -D / 2), mats.paper); // the pages
 }
 /* a mockup solid by its kind: the main one and any set beside it */
-function propSolid(group, W, D, H) { if (S.look === 'parcel') parcelGeo(group, W, D, H); else if (S.look === 'book') bookGeo(group, W, D, H); else if (S.look === 'tube') squeezeTubeGeo(group, W, D, H); else if (S.look === 'pump') pumpGeo(group, W, D, H); else if (S.look === 'lipstick') lipstickGeo(group, W, D, H); else if (S.look === 'trap') trapGeo(group, W, D, H); else if (S.look === 'bowl') bowlGeo(group, W, D, H); else if (S.shape === 'frame') frameSolid(group, W, D, H); else plainSolid(group, W, D, H); }
+function propSolid(group, W, D, H) { if (S.look === 'cream') creamGeo(group, W, D, H); else if (S.look === 'parcel') parcelGeo(group, W, D, H); else if (S.look === 'book') bookGeo(group, W, D, H); else if (S.look === 'tube') squeezeTubeGeo(group, W, D, H); else if (S.look === 'pump') pumpGeo(group, W, D, H); else if (S.look === 'lipstick') lipstickGeo(group, W, D, H); else if (S.look === 'trap') trapGeo(group, W, D, H); else if (S.look === 'bowl') bowlGeo(group, W, D, H); else if (S.shape === 'frame') frameSolid(group, W, D, H); else plainSolid(group, W, D, H); }
 /* a hollow cube: twelve square bars, their thickness set on its own */
 function frameSolid(group, W, D, Hh) {
   const t = Math.min(dv('frameT') / 1000, W / 2, D / 2, Hh / 2), bars = [];
