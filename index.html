@@ -509,9 +509,11 @@ input:disabled { opacity: 0.55; }
       </div>
       <div class="field" id="expField">
         <div class="label"><span data-en="Model files">모델 파일 내보내기</span> <span class="muted" data-en="as drawn, at this size, mm">지금 크기 그대로 · mm</span></div>
+        <label class="check"><input type="checkbox" id="expPerson"> <span data-en="With the person">사람도 함께</span></label>
+        <label class="check" id="expSurfRow"><input type="checkbox" id="expSurf"> <span id="expSurfT">단상도 함께</span></label>
         <button type="button" class="btn wide" id="btnExport" data-en="Download 3DM · OBJ · STL (zip)">3DM · OBJ · STL 받기 (zip)</button>
         <p class="hint" id="expMsg" aria-live="polite" hidden></p>
-        <p class="hint" data-en="Only the product goes in, without the person, the floor or the plinth. Rhino: open the .3dm (Z up). SOLIDWORKS can't be written directly: open the .stl or .obj there and pick 'Solid Body' in Options (Y up). They are meshes: in Rhino, MeshToNURB or QuadRemesh turns them into surfaces.">사람·바닥·단상은 빼고 제품만 담겨요. 라이노는 .3dm을 열면 돼요(위쪽 Z). SOLIDWORKS 전용 파일은 만들 수 없어서, SOLIDWORKS에서 .stl이나 .obj를 열고 옵션에서 ‘솔리드 바디’로 가져와요(위쪽 Y). 모두 메시라서 라이노에선 MeshToNURB나 QuadRemesh로 면을 만들 수 있어요.</p>
+        <p class="hint" data-en="The product alone, unless you tick the person or the plinth: then the scene as drawn (floor at 0), on layers in the 3DM. Rhino: open the .3dm (Z up). SOLIDWORKS can't be written directly: open the .stl or .obj there and pick 'Solid Body' in Options (Y up). They are meshes: in Rhino, MeshToNURB or QuadRemesh turns them into surfaces.">기본은 제품만 담겨요. 사람·단상을 체크하면 화면 그대로의 장면(바닥이 0)으로 담기고, 3DM에선 레이어로 나뉘어요. 라이노는 .3dm을 열면 돼요(위쪽 Z). SOLIDWORKS 전용 파일은 만들 수 없어서, SOLIDWORKS에서 .stl이나 .obj를 열고 옵션에서 ‘솔리드 바디’로 가져와요(위쪽 Y). 모두 메시라서 라이노에선 MeshToNURB나 QuadRemesh로 면을 만들 수 있어요.</p>
       </div>
     </section>
 
@@ -1648,6 +1650,8 @@ const cupOnTray = () => isDispense() && S.face === 'top';
 const isCoffee = () => /커피|coffee|espresso|에스프레소|라떼|latte|캡슐|capsule/i.test(`${S.name} ${S.pkey || ''}`);
 const plinthFit = (k) => { if (S.place !== 'plinth' || isFurniture()) return 400; const E = rowExt(), v = (k === 'w' ? E.w : E.d) * 1000 + 60; return Math.max(400, Math.ceil(v / 50) * 50); }; // big enough for what stands on it
 const plinthSize = () => ({ w: ((S.surf && S.surf.plinthW) || plinthFit('w')) / 1000, d: ((S.surf && S.surf.plinthD) || plinthFit('d')) / 1000, h: SURF.plinth });
+const SURF_NAME = { plinth: ['단상', 'plinth'], table: ['테이블', 'table'], desk: ['책상', 'desk'], counter: ['조리대', 'counter'], wall: ['벽', 'wall'] };
+function expSurfOk() { return !carried() && !!SURF_NAME[S.place] && surface.children.length > 0; } // something it stands on (or hangs on) to take along
 const carried = () => S.place === 'hand' || S.place === 'head' || S.place === 'back'; // held in the hands, or worn on the head or the back
 const setDown = () => S.source === 'box' && (S.shape === 'ring' || S.look === 'paper' || S.screen); // things that are held, or laid flat on the desk: a ring, a sheet, a phone, a tablet
 const deskItem = () => atDesk() && setDown();
@@ -4101,6 +4105,7 @@ function syncUI() {
   if (isFurniture()) $('furnHint').textContent = furnHintText();
   $('liftField').hidden = furn() !== 'coffee';
   $('unitField').hidden = !rowOn();
+  { const ok = expSurfOk(); $('expSurfRow').hidden = !ok; if (ok) { const n = SURF_NAME[S.place]; $('expSurfT').textContent = L(`${n[0]}도 함께`, `With the ${n[1]}`); } } // the export can take what it stands on
   syncDetail();
   { // the surface's own height, for a product set on a table, desk or counter
     const NM = { table: ['테이블', 'Table'], desk: ['책상', 'Desk'], counter: ['조리대', 'Counter'], plinth: ['단상 H', 'Plinth H'], air: ['공중 높이', 'Height'], wall: ['벽(중심 높이)', 'Wall (centre)'] };
@@ -5242,7 +5247,7 @@ class Bytes { // a growing little-endian buffer
   out() { return this.u.slice(0, this.n); }
 }
 const b64u8 = (s) => Uint8Array.from(atob(s), (ch) => ch.charCodeAt(0));
-const T3DM = { pre: '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AAAAAO1HrI3/////AAAAAAAAAAAWAAAQDAAAAAAAAAD/////AAAAAAAAAAAlAAAQDAAAAAAAAAD/////AAAAAAAAAAAQAAAQDAAAAAAAAAD/////AAAAAAAAAAAjAAAQDAAAAAAAAAD/////AAAAAAAAAAARAAAQDQEAAAAAAABQgAAg9QAAAAAAAAD6fwIA5QAAAAAAAAD7/wIAFAAAAAAAAAATmICVhenTEb/lABCDASLwO0cHHfz/AgCtAAAAAAAAAB8AAAAAAAAAAP//////////AAAAAN5cMgAAAAAAAAAAAAAAAAAAAAAAAADwPwwAAABIAHUAbQBhAG4AIABTAGMAYQBsAGUAAAAB//////////8AAAAAAAAAAADy7acebG1O2ZpOsslP6p0oAAAAAAAAAAAAAAAAAAAAAAEAgABAEAAAAAAAAAABAAAAAAAAAAAAAAAAinDgAAAAAAAAAAAAAAAAAAAAAABjybaC/38CgAAAAAAAAAAAAAAAAP////8AAAAAAAAAABgAABAMAAAAAAAAAP////8AAAAAAAAAABkAABAMAAAAAAAAAP////8AAAAAAAAAACAAABAMAAAAAAAAAP////8AAAAAAAAAABIAABAMAAAAAAAAAP////8AAAAAAAAAACIAABAMAAAAAAAAAP////8AAAAAAAAAACEAABAMAAAAAAAAAP////8AAAAAAAAAAA==', hist: 'JgAAEAwAAAAAAAAA/////wAAAAAAAAAA', tag: 'AIAAQKQAAAAAAAAAAQAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8D8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPA/AAAAAGk8mKM=' }; // written by rhino3dm 8 (openNURBS): header, comment, properties, settings (mm) and tables up to the objects; the empty history table; a mesh's default texture-mapping tag
+const T3DM = { pre: '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', hist: 'JgAAEAwAAAAAAAAA/////wAAAAAAAAAA', tag: 'AIAAQKQAAAAAAAAAAQAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPA/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADwPwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8D8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPA/AAAAAGk8mKM=' }; // written by rhino3dm 8 (openNURBS): header, comment, properties, settings (mm) and tables up to the objects; the empty history table; a mesh's default texture-mapping tag
 const ON_UNSET = -1.23432101234321e308, MESH_UUID = [0xe4, 0xd4, 0xd7, 0x4e, 0x47, 0xe9, 0xd3, 0x11, 0xbf, 0xe5, 0x00, 0x10, 0x83, 0x01, 0x22, 0xf0];
 /* a chunk: typecode, 8-byte length, the body; with a CRC the body ends in the CRC of its own bytes (nested chunks left out), which own() collects */
 function chunk(B, tc, body, own) { B.u32(tc).i64(body.length + (tc & 0x8000 ? 4 : 0)).raw(body); if (tc & 0x8000) B.u32(crc32(own || body)); }
@@ -5277,7 +5282,7 @@ function meshData(p) { // ON_Mesh::Write, chunk version 3.8, as rhino3dm writes 
 }
 function utf16z(s) { const b = new Bytes(s.length * 2 + 8).i32(s.length + 1); for (let i = 0; i < s.length; i++) b.u16(s.charCodeAt(i)); return b.u16(0).out(); }
 function uuid4() { const u = new Uint8Array(16); (globalThis.crypto || {}).getRandomValues ? crypto.getRandomValues(u) : u.forEach((_, i) => (u[i] = (Math.random() * 256) | 0)); u[7] = (u[7] & 0x0f) | 0x40; u[8] = (u[8] & 0x3f) | 0x80; return u; }
-function write3dm(parts) { // parts: [{ name, pos (mm, Z up), nrm, idx }]
+function write3dm(parts) { // parts: [{ name, layer (0 Product, 1 Person, 2 Scene), pos (mm, Z up), nrm, idx }]
   const pre = b64u8(T3DM.pre), hist = b64u8(T3DM.hist), OT = new Bytes(1 << 16);
   for (const p of parts) {
     if (!p.idx.length) continue;
@@ -5285,7 +5290,7 @@ function write3dm(parts) { // parts: [{ name, pos (mm, Z up), nrm, idx }]
     chunk(cls, 0x0002fffb, new Uint8Array(MESH_UUID));
     chunk(cls, 0x0002fffc, md.body, md.own);
     cls.u32(0x80027fff).i64(0);
-    const at = cat([new Uint8Array([0x2d]), uuid4(), new Bytes(4).i32(0).out(), new Uint8Array([1]), utf16z(p.name || 'part'), new Uint8Array([0])]);
+    const at = cat([new Uint8Array([0x2d]), uuid4(), new Bytes(4).i32(p.layer || 0).out(), new Uint8Array([1]), utf16z(p.name || 'part'), new Uint8Array([0])]);
     const rec = new Bytes(md.body.length + 256);
     rec.u32(0x82000071).i64(32); // a mesh object
     chunk(rec, 0x00027ffa, cls.out());
@@ -5342,41 +5347,59 @@ function zipStore(files) { // [{ name, data: Uint8Array }] → a zip, stored (no
 }
 /* EXPORT-WRITERS-END */
 
-/* the product's meshes in its own frame, at the drawn size (mm): what is shown, without a cup's water or coffee, markers or printed images;
-   the whole set moved so its bottom sits at 0, its front at 0 and its middle on the centre line */
-function exportParts() {
+/* the meshes to export, at the drawn size (mm), without a cup's water or coffee, markers or printed images. The product alone: in its own
+   frame, its bottom at 0, its front at 0, its middle on the centre line. With the person or what it stands on: the scene as drawn, the floor
+   at 0 and the product's front-centre over the origin; the person and the plinth (or table…) each one mesh on its own layer */
+function meshesOf(root, frame, cb) {
+  const skip = new Set([mats.water, mats.coffee, mats.marker]), v = new V3(), was = root.visible;
+  root.visible = true; root.updateMatrixWorld(true);
+  try {
+    root.traverseVisible((m) => {
+      if (!m.isMesh || !m.geometry || !m.geometry.attributes.position || skip.has(m.material) || m.userData.decal) return;
+      const g = m.geometry, P = g.attributes.position, N = g.attributes.normal, M = frame.clone().multiply(m.matrixWorld), NM = new THREE.Matrix3().getNormalMatrix(M);
+      const pos = new Float32Array(P.count * 3), nrm = N ? new Float32Array(P.count * 3) : null;
+      for (let i = 0; i < P.count; i++) {
+        v.fromBufferAttribute(P, i).applyMatrix4(M).multiplyScalar(1000); pos[i * 3] = v.x; pos[i * 3 + 1] = v.y; pos[i * 3 + 2] = v.z;
+        if (N) { v.fromBufferAttribute(N, i).applyMatrix3(NM).normalize(); nrm[i * 3] = v.x; nrm[i * 3 + 1] = v.y; nrm[i * 3 + 2] = v.z; }
+      }
+      const all = g.index ? g.index.array : Uint32Array.from({ length: P.count - (P.count % 3) }, (_, i) => i), keep = [], flip = M.determinant() < 0;
+      for (let i = 0; i + 2 < all.length; i += 3) { // slivers and collapsed triangles left out (CAD calls a mesh with them invalid)
+        const a = all[i] * 3, b = all[i + 1] * 3, c = all[i + 2] * 3, ux = pos[b] - pos[a], uy = pos[b + 1] - pos[a + 1], uz = pos[b + 2] - pos[a + 2], wx = pos[c] - pos[a], wy = pos[c + 1] - pos[a + 1], wz = pos[c + 2] - pos[a + 2];
+        const cx = uy * wz - uz * wy, cy = uz * wx - ux * wz, cz = ux * wy - uy * wx;
+        if (!(Math.hypot(cx, cy, cz) > 1e-9) || !(Math.hypot(ux, uy, uz) > 1e-6) || !(Math.hypot(wx, wy, wz) > 1e-6) || !(Math.hypot(wx - ux, wy - uy, wz - uz) > 1e-6)) continue;
+        if (flip) keep.push(all[i], all[i + 2], all[i + 1]); else keep.push(all[i], all[i + 1], all[i + 2]); // mirrored: faces kept outward
+      }
+      if (!keep.length) return;
+      const used = new Int32Array(P.count).fill(-1), map = []; for (const k of keep) if (used[k] < 0) { used[k] = map.length; map.push(k); } // only the vertices the faces use
+      const idx = Uint32Array.from(keep, (k) => used[k]), pos2 = new Float32Array(map.length * 3), nrm2 = nrm && new Float32Array(map.length * 3);
+      map.forEach((k, j) => { for (let q = 0; q < 3; q++) { pos2[j * 3 + q] = pos[k * 3 + q]; if (nrm2) nrm2[j * 3 + q] = nrm[k * 3 + q]; } });
+      cb(m, { pos: pos2, nrm: nrm2, idx });
+    });
+  } finally { root.visible = was; }
+}
+function mergeParts(list, name, layer) { // several meshes as one
+  const nv = list.reduce((t, p) => t + p.pos.length, 0), ni = list.reduce((t, p) => t + p.idx.length, 0), pos = new Float32Array(nv), nrm = new Float32Array(nv), idx = new Uint32Array(ni);
+  let ov = 0, oi = 0; for (const p of list) { pos.set(p.pos, ov); if (p.nrm) nrm.set(p.nrm, ov); else nrm.fill(0, ov, ov + p.pos.length); for (let i = 0; i < p.idx.length; i++) idx[oi + i] = p.idx[i] + ov / 3; ov += p.pos.length; oi += p.idx.length; }
+  for (let i = 0; i < nrm.length; i += 3) if (!(Math.hypot(nrm[i], nrm[i + 1], nrm[i + 2]) > 0.5)) nrm[i + 1] = 1;
+  return { name, layer, pos, nrm, idx };
+}
+function exportParts(opt = {}) {
+  const scene = !!(opt.person || (opt.surf && expSurfOk()));
   product.updateMatrixWorld(true);
-  const inv = new THREE.Matrix4().copy(product.matrixWorld).invert(), skip = new Set([mats.water, mats.coffee, mats.marker]), parts = [], v = new V3(), names = new Map(Object.entries(mats).map(([k, m]) => [m, k]));
+  const frame = scene ? new THREE.Matrix4() : new THREE.Matrix4().copy(product.matrixWorld).invert(), parts = [], names = new Map(Object.entries(mats).map(([k, m]) => [m, k])), count = {};
   if (typeof MIRROR_MAT !== 'undefined' && MIRROR_MAT) names.set(MIRROR_MAT, 'lens');
-  const count = {};
-  holder.traverseVisible((m) => {
-    if (!m.isMesh || !m.geometry || !m.geometry.attributes.position || skip.has(m.material) || m.userData.decal) return;
-    const g = m.geometry, P = g.attributes.position, N = g.attributes.normal, M = inv.clone().multiply(m.matrixWorld), NM = new THREE.Matrix3().getNormalMatrix(M);
-    const pos = new Float32Array(P.count * 3), nrm = N ? new Float32Array(P.count * 3) : null;
-    for (let i = 0; i < P.count; i++) {
-      v.fromBufferAttribute(P, i).applyMatrix4(M).multiplyScalar(1000); pos[i * 3] = v.x; pos[i * 3 + 1] = v.y; pos[i * 3 + 2] = v.z;
-      if (N) { v.fromBufferAttribute(N, i).applyMatrix3(NM).normalize(); nrm[i * 3] = v.x; nrm[i * 3 + 1] = v.y; nrm[i * 3 + 2] = v.z; }
-    }
-    const all = g.index ? g.index.array : Uint32Array.from({ length: P.count - (P.count % 3) }, (_, i) => i), keep = [], flip = M.determinant() < 0;
-    for (let i = 0; i + 2 < all.length; i += 3) { // slivers and collapsed triangles left out (CAD calls a mesh with them invalid)
-      const a = all[i] * 3, b = all[i + 1] * 3, c = all[i + 2] * 3, ux = pos[b] - pos[a], uy = pos[b + 1] - pos[a + 1], uz = pos[b + 2] - pos[a + 2], wx = pos[c] - pos[a], wy = pos[c + 1] - pos[a + 1], wz = pos[c + 2] - pos[a + 2];
-      const cx = uy * wz - uz * wy, cy = uz * wx - ux * wz, cz = ux * wy - uy * wx;
-      if (!(Math.hypot(cx, cy, cz) > 1e-9) || !(Math.hypot(ux, uy, uz) > 1e-6) || !(Math.hypot(wx, wy, wz) > 1e-6) || !(Math.hypot(wx - ux, wy - uy, wz - uz) > 1e-6)) continue;
-      if (flip) keep.push(all[i], all[i + 2], all[i + 1]); else keep.push(all[i], all[i + 1], all[i + 2]); // mirrored: faces kept outward
-    }
-    if (!keep.length) return;
-    const used = new Int32Array(P.count).fill(-1), map = []; for (const k of keep) if (used[k] < 0) { used[k] = map.length; map.push(k); } // only the vertices the faces use
-    const idx = Uint32Array.from(keep, (k) => used[k]), pos2 = new Float32Array(map.length * 3), nrm2 = nrm && new Float32Array(map.length * 3);
-    map.forEach((k, j) => { for (let q = 0; q < 3; q++) { pos2[j * 3 + q] = pos[k * 3 + q]; if (nrm2) nrm2[j * 3 + q] = nrm[k * 3 + q]; } });
+  meshesOf(holder, frame, (m, p) => {
     let unit = ''; for (let o = m; o && o !== holder; o = o.parent) if (o.userData.unit) unit = o.userData.unit + '-';
     const base = unit + (names.get(m.material) || 'part'); count[base] = (count[base] || 0) + 1;
-    parts.push({ name: `${base}-${count[base]}`, pos: pos2, nrm: nrm2, idx });
+    parts.push({ name: `${base}-${count[base]}`, layer: 0, ...p });
   });
   const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
   for (const p of parts) for (let i = 0; i < p.pos.length; i += 3) for (let k = 0; k < 3; k++) { lo[k] = Math.min(lo[k], p.pos[i + k]); hi[k] = Math.max(hi[k], p.pos[i + k]); }
-  const o = [(lo[0] + hi[0]) / 2, lo[1], hi[2]];
+  if (opt.person) { const l = []; meshesOf(human, frame, (m, p) => l.push(p)); if (l.length) parts.push(mergeParts(l, 'person', 1)); }
+  if (opt.surf && expSurfOk()) { const l = []; meshesOf(surface, frame, (m, p) => l.push(p)); if (l.length) parts.push(mergeParts(l, SURF_NAME[S.place][1], 2)); }
+  const o = [(lo[0] + hi[0]) / 2, scene ? 0 : lo[1], hi[2]];
   for (const p of parts) for (let i = 0; i < p.pos.length; i += 3) for (let k = 0; k < 3; k++) p.pos[i + k] -= o[k];
-  return { parts, size: parts.length ? [hi[0] - lo[0], hi[2] - lo[2], hi[1] - lo[1]].map((x) => Math.round(x)) : [0, 0, 0] }; // W D H
+  return { parts, size: parts.length ? [hi[0] - lo[0], hi[2] - lo[2], hi[1] - lo[1]].map((x) => Math.round(x)) : [0, 0, 0] }; // the product's W D H
 }
 const zUp = (p) => { const pos = new Float32Array(p.pos.length), nrm = p.nrm && new Float32Array(p.nrm.length); for (let i = 0; i < p.pos.length; i += 3) { pos[i] = p.pos[i]; pos[i + 1] = -p.pos[i + 2]; pos[i + 2] = p.pos[i + 1]; if (nrm) { nrm[i] = p.nrm[i]; nrm[i + 1] = -p.nrm[i + 2]; nrm[i + 2] = p.nrm[i + 1]; } } return { ...p, pos, nrm }; }; // Rhino: Z up, the front toward -Y
 let DL = null; // the viewer's save, where the page runs as an artifact
@@ -5391,16 +5414,16 @@ async function saveBytes(name, u8) {
   a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000);
   return 'saved';
 }
-function readme(title, size) {
+function readme(title, size, scene) {
   return '﻿' + [
     `Human Scale — ${title}`, `크기 W×D×H ${size.join(' × ')} mm`, '',
-    '· 단위는 mm예요. 화면에 그려진 그대로, 지금 크기(배율 포함)로 담았어요. 사람·바닥·단상은 빠져 있어요.',
+    scene ? '· 단위는 mm예요. 화면 그대로의 장면이에요: 바닥이 0, 제품 앞면 가운데가 원점. 3DM은 레이어 Product / Person / Scene으로 나뉘고, STL은 따로 파일이에요.' : '· 단위는 mm예요. 화면에 그려진 그대로, 지금 크기(배율 포함)로 담았어요. 사람·바닥·단상은 빠져 있어요.',
     '· .3dm — 라이노에서 바로 열어요. 위쪽이 Z, 앞면이 -Y 쪽이에요. 부품마다 따로 된 메시예요.',
     '· .obj / .stl — 위쪽이 Y, 앞면이 +Z 쪽이에요.',
     '· SOLIDWORKS: 전용 파일(.sldprt)은 만들 수 없어요. 파일 > 열기에서 파일 형식을 Mesh Files로 바꾸고, 옵션에서 가져오기를 Solid Body로 두고 .stl이나 .obj를 열어요.',
     '· 라이노에서 매끈한 면이 필요하면 QuadRemesh 뒤 ToSubD, 또는 MeshToNURB를 써요.', '',
     `Human Scale — ${title} · W×D×H ${size.join(' × ')} mm`,
-    '· Millimetres, at the size drawn (scale included). The person, floor and plinth are left out.',
+    scene ? '· Millimetres. The scene as drawn: floor at 0, the product front-centre at the origin; 3DM layers Product / Person / Scene, one STL each.' : '· Millimetres, at the size drawn (scale included). The person, floor and plinth are left out.',
     '· .3dm opens in Rhino: Z up, the front toward -Y, one mesh per part.',
     '· .obj / .stl: Y up, the front toward +Z.',
     "· SOLIDWORKS: its own files can't be written. File > Open, Files of type: Mesh Files, Options: Import as Solid Body, then open the .stl or .obj.",
@@ -5412,17 +5435,19 @@ $('btnExport').addEventListener('click', async () => {
   btn.disabled = true; say(L('파일을 만드는 중이에요…', 'Making the files…'));
   await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30)));
   try {
-    const { parts, size } = exportParts();
+    const opt = { person: $('expPerson').checked, surf: $('expSurf').checked }, { parts, size } = exportParts(opt);
     if (!parts.length) { say(L('내보낼 모양이 없어요', 'Nothing to export')); return; }
     const key = String((S.source === 'model' ? 'model' : S.pkey) || 'custom').replace(/[^a-z0-9_-]+/gi, '') || 'model', base = `${key}-${size.join('x')}mm`, title = `${prodName()} ${size.join('×')} mm`;
-    const enc = new TextEncoder(), zip = zipStore([
-      { name: `${base}.3dm`, data: write3dm(parts.map(zUp)) },
-      { name: `${base}.obj`, data: enc.encode(writeOBJ(parts, title)) },
-      { name: `${base}.stl`, data: writeSTL(parts, title) },
-      { name: 'README.txt', data: enc.encode(readme(title, size)) },
+    const extra = parts.filter((p) => p.layer), tag = extra.map((p) => '-' + p.name).join(''), enc = new TextEncoder();
+    const zip = zipStore([
+      { name: `${base}${tag}.3dm`, data: write3dm(parts.map(zUp)) },
+      { name: `${base}${tag}.obj`, data: enc.encode(writeOBJ(parts, title)) },
+      { name: `${base}.stl`, data: writeSTL(parts.filter((p) => !p.layer), title) },
+      ...extra.map((p) => ({ name: `${base}-${p.name}.stl`, data: writeSTL([p], `${title} · ${p.name}`) })), // one STL each, to place as separate parts
+      { name: 'README.txt', data: enc.encode(readme(title, size, extra.length > 0)) },
     ]);
-    const r = await saveBytes(`human-scale-${base}.zip`, zip);
-    say(r === 'saved' ? L(`${base}.zip · ${(zip.length / 1048576).toFixed(1)}MB`, `${base}.zip · ${(zip.length / 1048576).toFixed(1)} MB`) : r === 'declined' ? L('저장을 취소했어요', 'Not saved') : r === 'busy' ? L('저장 창이 이미 열려 있어요. 잠시 뒤 다시 눌러 주세요', 'A save is already open; try again in a moment') : L('파일이 너무 커서 저장하지 못했어요', 'Too large to save here'));
+    const r = await saveBytes(`human-scale-${base}${tag}.zip`, zip);
+    say(r === 'saved' ? L(`${base}${tag}.zip · ${(zip.length / 1048576).toFixed(1)}MB`, `${base}${tag}.zip · ${(zip.length / 1048576).toFixed(1)} MB`) : r === 'declined' ? L('저장을 취소했어요', 'Not saved') : r === 'busy' ? L('저장 창이 이미 열려 있어요. 잠시 뒤 다시 눌러 주세요', 'A save is already open; try again in a moment') : L('파일이 너무 커서 저장하지 못했어요', 'Too large to save here'));
   } catch (e) { console.error(e); say(L('파일을 만들지 못했어요', "Couldn't make the files")); }
   finally { btn.disabled = false; }
 });
