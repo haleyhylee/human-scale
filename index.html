@@ -640,6 +640,9 @@ const PRESETS = {
   parcel5: { name: '택배박스 5호', en: 'Parcel box No.5', shape: 'box', look: 'parcel', w: 480, d: 380, h: 340, place: 'hand', face: 'front', ctrl: 170, action: 'press', noCtrl: true },
   parcel6: { name: '택배박스 6호', en: 'Parcel box No.6', shape: 'box', look: 'parcel', w: 520, d: 480, h: 400, place: 'hand', face: 'front', ctrl: 200, action: 'press', noCtrl: true },
   parcel7: { name: '택배박스 7호', en: 'Parcel box No.7', shape: 'box', look: 'parcel', w: 620, d: 480, h: 400, place: 'hand', face: 'front', ctrl: 200, action: 'press', noCtrl: true },
+  trolley: { name: '수납 트롤리', en: 'Storage trolley', shape: 'box', look: 'trolley', w: 450, d: 350, h: 800, place: 'floor', face: 'top', ctrl: 860, action: 'press', noHand: true }, // tiers of trays on castors, pushed by a bar at the back
+  bowl: { name: '그릇', en: 'Bowl', shape: 'box', look: 'bowl', w: 180, d: 180, h: 55, place: 'table', face: 'top', ctrl: 30, action: 'press', prop: true, noCtrl: true }, // a rice bowl, a soup bowl or a shallow bowl, S/M/L
+  jar: { name: '유리병', en: 'Glass jar', shape: 'box', look: 'jar', w: 80, d: 80, h: 130, place: 'hand', face: 'front', ctrl: 60, action: 'press', noCtrl: true }, // a glass jar with a screw metal lid, 250/500/1000 ml
   book: { name: '책', en: 'Book', shape: 'box', look: 'book', w: 150, d: 22, h: 210, place: 'plinth', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // stood up: cover, spine and the block of pages
   sphere: { name: '구', en: 'Sphere', shape: 'sphere', w: 100, d: 100, h: 100, place: 'plinth', face: 'front', ctrl: 50, action: 'press', prop: true, noCtrl: true },
   cone: { name: '원뿔', en: 'Cone', shape: 'cone', w: 100, d: 100, h: 150, place: 'plinth', face: 'front', ctrl: 75, action: 'press', prop: true, noCtrl: true },
@@ -681,7 +684,7 @@ const FORMS = { box: [80, 80, 80], frame: [200, 200, 200], cyl: [80, 80, 150], s
 const roundSeat = () => S.source === 'box' && S.shape === 'chair' && (S.style === 'stool' || (S.style === 'pstool' && ['legs', 'cyl'].includes((S.det && S.det.form) || 'legs'))); // a round stool: its seat is W across, so D follows W
 const roundBase = (sh = S.shape) => sh === 'cup' || sh === 'cone' || (sh === S.shape && (S.look === 'tumbler' || roundSeat())); // W = D (a cylinder can be deeper: its middle stretches)
 const PRESET_GROUPS = [
-  [['목업·소품', 'Mockup & objects'], ['cube', 'cyl', 'sphere', 'cone', 'trap', 'fam:parcel', 'plate', 'disc', 'book', 'tube', 'pump', 'lipstick', 'fam:paper', 'ring']],
+  [['목업·소품', 'Mockup & objects'], ['cube', 'cyl', 'sphere', 'cone', 'trap', 'fam:parcel', 'bowl', 'jar', 'trolley', 'plate', 'disc', 'book', 'tube', 'pump', 'lipstick', 'fam:paper', 'ring']],
   [['생활 제품', 'Appliances'], ['purifier', 'coffee', 'air', 'floorlamp', 'tablelamp', 'mushroom']],
   [['전자제품', 'Electronics'], ['fam:phone', 'fam:fold', 'flip', 'fam:tablet', 'fam:laptop', 'airbuds', 'airpods', 'airmax', 'robot', 'fam:speaker']],
   [['안경·헬멧', 'Eyewear & helmets'], ['glasses', 'sunglasses', 'helmet']],
@@ -1664,7 +1667,7 @@ function kind() {
   if (S.look === 'tote' || S.look === 'hobo') return 'bag';
   if (S.screen || S.look === 'paper' || S.shape === 'ring') return 'flat';
   if (S.look === 'backpack') return 'pack';
-  if (S.look === 'luggage') return 'luggage';
+  if (S.look === 'luggage' || S.look === 'trolley') return 'luggage';
   if (S.look === 'tablelamp' || S.look === 'mushroom') return 'lamp';
   if (S.shape === 'laptop') return 'laptop';
   if (S.shape === 'cup' || S.look === 'tumbler' || S.look === 'case' || S.look === 'pouch') return 'small';
@@ -1735,7 +1738,7 @@ function stoolRing(H, W, y) {
 /* ---------- detail sizes: each part of a chair, a table or headphones set on its own (mm, tilt in degrees) ----------
    The H field stays the overall height (for an office chair: its seat, set by the gas lift between lowest and highest to suit the person).
    Only the product being checked takes them; a desk under someone's laptop keeps the defaults. */
-const TOP_MAT = { wood: new THREE.MeshStandardMaterial({ color: 0x9c6b43, roughness: 0.72 }), glass: new THREE.MeshStandardMaterial({ color: 0xcfe2e4, roughness: 0.06, transparent: true, opacity: 0.4, depthWrite: false }), metal: mats.metal };
+const TOP_MAT = { ceramic: new THREE.MeshPhysicalMaterial({ color: 0xf3f1ec, roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.12 }), wood: new THREE.MeshStandardMaterial({ color: 0x9c6b43, roughness: 0.72 }), glass: new THREE.MeshStandardMaterial({ color: 0xcfe2e4, roughness: 0.06, transparent: true, opacity: 0.4, depthWrite: false }), metal: mats.metal };
 const MAT_ROW = { k: 'mat', ko: '재질', en: 'Material', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['glass', '유리', 'Glass'], ['metal', '메탈', 'Metal']], def: 'solid' };
 const SFORM = () => (S.det && S.det.sform) || 'square'; // the sunglasses' shape sets their default lens and rim sizes
 const DR = (k, ko, en, min, max, def, step = 1, unit = 'mm') => ({ k, ko, en, min, max, def, step, unit });
@@ -1754,6 +1757,12 @@ const DETAIL = {
   propR: [DR('rad', '모서리 R', 'Corner radius', 0, 50, 0), MAT_ROW], // the cube and the cylinder: sharp edges unless rounded
   pump: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], lipstick: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], tube: [MAT_ROW], // cosmetics: the body round or square
   trap: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cube', '네모', 'Square'], ['cyl', '원통', 'Round']], def: 'cube' }, { k: 'narrow', ko: '좁아지는 쪽', en: 'Narrower at', opts: [['top', '위', 'Top'], ['bottom', '아래', 'Bottom']], def: 'top' }, DR('draft', '구배 각도', 'Draft angle', 1, 40, 10, 1, '°'), MAT_ROW],
+  bowl: [{ k: 'btype', ko: '종류', en: 'Type', opts: [['rice', '밥그릇', 'Rice bowl'], ['soup', '국그릇', 'Soup bowl'], ['shallow', '접시형 볼', 'Shallow bowl']], def: 'shallow', apply: true },
+    { k: 'bsize', ko: '크기', en: 'Size', opts: [['S', '소', 'S'], ['M', '중', 'M'], ['L', '대', 'L']], def: 'M', apply: true },
+    { k: 'mat', ko: '재질', en: 'Material', opts: [['ceramic', '도자기', 'Ceramic'], ['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['glass', '유리', 'Glass'], ['metal', '메탈', 'Metal']], def: 'ceramic' }],
+  jar: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '사각', 'Square']], def: 'cyl', apply: true },
+    { k: 'ml', ko: '용량', en: 'Volume', opts: [[250, '250ml', '250 ml'], [500, '500ml', '500 ml'], [1000, '1000ml', '1000 ml']], def: 500, apply: true }],
+  trolley: [{ k: 'tiers', ko: '단 수', en: 'Tiers', opts: [[2, '2단', '2'], [3, '3단', '3'], [4, '4단', '4']], def: 2 }, MAT_ROW],
   laptop: [{ k: 'lid', ko: '덮개', en: 'Lid', opts: [['open', '열림', 'Open'], ['closed', '닫힘', 'Closed']], def: 'open' }],
   purifier: [{ k: 'form', ko: '형태', en: 'Form', opts: [['box', '네모', 'Box'], ['cyl', '원통', 'Round']], def: 'box' }],
   airpurifier: [{ k: 'form', ko: '형태', en: 'Form', opts: [['box', '네모', 'Box'], ['cyl', '원통', 'Round']], def: 'box' }],
@@ -1768,11 +1777,17 @@ const DETAIL = {
     DR('lensW', '렌즈 가로', 'Lens width', 40, 66, () => ({ square: 52, round: 49, aviator: 58 })[SFORM()]), DR('lensH', '렌즈 세로', 'Lens height', 30, 60, () => ({ square: 44, round: 47, aviator: 50 })[SFORM()])],
   headphone: [DR('cupH', '귀마개 높이', 'Ear cushion height', 60, 130, () => Math.round(clamp(0.5 * S.h, 75, 115))), DR('cupL', '귀마개 폭', 'Ear cushion width', 50, 115, () => Math.round(clamp(0.88 * S.d, 58, 95))), DR('cupT', '귀마개 두께', 'Ear cup thickness', 12, 45, () => Math.round(clamp(0.13 * S.w, 17, 30))), DR('bandW', '머리띠 폭', 'Headband width', 12, 45, 29), DR('slide', '슬라이더 길이', 'Slider extension', 0, 50, 20)],
 };
+const BOWL_SIZES = { rice: { S: [105, 55], M: [115, 65], L: [125, 72] }, soup: { S: [130, 62], M: [145, 70], L: [160, 80] }, shallow: { S: [150, 45], M: [180, 55], L: [210, 62] } }; // diameter, height (mm)
+const JAR_SIZES = { cyl: { 250: [65, 100], 500: [80, 130], 1000: [100, 170] }, cube: { 250: [60, 95], 500: [75, 120], 1000: [95, 150] } }; // width, height (mm)
+function detApply() { // a bowl's type and size, or a jar's form and volume, set its outer size
+  if (S.look === 'bowl') { const [w, h] = BOWL_SIZES[dv('btype')][dv('bsize')]; S.w = S.d = w; S.h = h; }
+  else if (S.look === 'jar') { const [w, h] = JAR_SIZES[dv('form')][dv('ml')]; S.w = S.d = w; S.h = h; }
+}
 function detKind() {
   if (S.source !== 'box') return null;
   if (S.shape === 'headphone') return 'headphone';
   if (S.shape === 'frame') return 'frame';
-  if (['tube', 'pump', 'lipstick', 'trap'].includes(S.look) && S.source === 'box') return S.look; // book and disc: the plain mockups' material row
+  if (['tube', 'pump', 'lipstick', 'trap', 'bowl', 'jar', 'trolley'].includes(S.look) && S.source === 'box') return S.look; // book and disc: the plain mockups' material row
   if (isProp()) return ['cube', 'cyl'].includes(S.pkey) ? 'propR' : 'prop';
   if (S.look === 'hobo') return 'hobo';
   if (S.shape === 'laptop') return 'laptop';
@@ -2922,6 +2937,8 @@ function buildProduct() {
   else if (S.look === 'tote' && S.shape === 'box') { DET_ON = true; try { toteGeo(holder, W, D, Hh); } finally { DET_ON = false; } }
   else if (S.look === 'hobo' && S.shape === 'box') { DET_ON = true; try { hoboGeo(holder, W, D, Hh); } finally { DET_ON = false; } }
   else if (S.look === 'parcel' && S.shape === 'box') parcelGeo(holder, W, D, Hh);
+  else if (S.look === 'jar' && S.shape === 'box') jarGeo(holder, W, D, Hh);
+  else if (S.look === 'trolley' && S.shape === 'box') trolleyGeo(holder, W, D, Hh);
   else if (S.look === 'robot' && S.shape === 'box') robotGeo(holder, W, D, Hh);
   else if (S.look === 'speaker') speakerGeo(holder, W, D, Hh);
   else if (S.look === 'mushroom') mushroomGeo(holder, W, D, Hh);
@@ -2987,6 +3004,45 @@ function parcelGeo(group, W, D, H) {
   own(new THREE.BoxGeometry(tw, 0.0006, D + 0.0012).translate(0, H + 0.0006, -D / 2), mats.tape); // tape over the seam
   for (const z of [0.0006, -D - 0.0006]) own(new THREE.BoxGeometry(tw, ov, 0.0006).translate(0, H - ov / 2, z), mats.tape); // down the front and back
 }
+/* a bowl turned on a lathe: a foot ring, the wall curving out to the rim (deep and round for rice, wider for soup, flared and shallow for the plate-like bowl), its inside following */
+function bowlGeo(group, W, D, H) {
+  const R = W / 2, ty = dv('btype') || 'shallow', [fr, p] = { rice: [0.46, 2.4], soup: [0.42, 2], shallow: [0.5, 1.5] }[ty], rf = R * fr, fh = Math.min(0.008, H * 0.14), t = Math.min(0.004, R * 0.05), pts = [new THREE.Vector2(0, 0.003), new THREE.Vector2(rf * 0.86, 0.003), new THREE.Vector2(rf * 0.86, 0), new THREE.Vector2(rf, 0), new THREE.Vector2(rf, fh)];
+  const r = (u) => rf + (R - rf) * (1 - Math.pow(1 - u, p));
+  for (let i = 1; i <= 24; i++) { const u = i / 24; pts.push(new THREE.Vector2(r(u), fh + u * (H - fh))); }
+  pts.push(new THREE.Vector2(R - t, H));
+  for (let i = 23; i >= 0; i--) { const u = i / 24, y = fh + t + u * (H - fh - t); pts.push(new THREE.Vector2(Math.max(0.001, r(u) - t), y)); }
+  pts.push(new THREE.Vector2(0, fh + t));
+  meshIn(group)(new THREE.LatheGeometry(pts, 72).translate(0, 0, -D / 2), propMat());
+}
+/* a glass jar: the body (round or square) narrowing at the shoulder to a short neck, a metal screw lid with fine ridges on it */
+function jarGeo(group, W, D, H) {
+  const own = meshIn(group), sq = dv('form') === 'cube', lh = Math.min(0.022, H * 0.15), neck = W * (sq ? 0.78 : 0.8), bh = H - lh;
+  const body = sq ? new RoundedBoxGeometry(W, bh * 0.86, D, 4, Math.min(0.008, W * 0.1)).translate(0, bh * 0.43, -D / 2) : new THREE.CylinderGeometry(W / 2, W / 2, bh * 0.86, 64).translate(0, bh * 0.43, -D / 2);
+  own(body, mats.glass);
+  own(new THREE.CylinderGeometry(neck / 2, sq ? W * 0.5 : W / 2, bh * 0.1, sq ? 4 : 64, 1, true).rotateY(sq ? Math.PI / 4 : 0).scale(sq ? 1.41 * 0.72 : 1, 1, sq ? 1.41 * 0.72 : 1).translate(0, bh * 0.91, -D / 2), mats.glass); // the shoulder
+  own(new THREE.CylinderGeometry(neck / 2, neck / 2, bh * 0.04 + 0.002, 48, 1, true).translate(0, bh * 0.98, -D / 2), mats.glass); // the neck
+  own(new THREE.CylinderGeometry(neck / 2 + 0.003, neck / 2 + 0.003, lh, 64).translate(0, bh + lh / 2 - 0.001, -D / 2), steel); // the lid
+  for (let i = 0; i < 3; i++) own(new THREE.TorusGeometry(neck / 2 + 0.003, 0.0006, 6, 64).rotateX(Math.PI / 2).translate(0, bh + lh * (0.25 + i * 0.25), -D / 2), steel); // its grip ridges
+}
+/* a storage trolley: four posts on castors, two to four trays between them, a push bar standing up behind at the handle height */
+function trolleyGeo(group, W, D, H) {
+  const own = meshIn(group), n = +dv('tiers') || 2, ch = Math.min(0.075, H * 0.1), pr = 0.009, m = propMat(), wr = ch * 0.42, hb = luggageHandle() / S.scale;
+  for (const sx of [-1, 1]) for (const sz of [0, 1]) {
+    const x = sx * (W / 2 - 0.02), z = -0.02 - sz * (D - 0.04);
+    own(new THREE.CylinderGeometry(pr, pr, H - ch, 14).translate(x, ch + (H - ch) / 2, z), steel); // the post
+    own(new THREE.CylinderGeometry(wr, wr, 0.02, 20).rotateZ(Math.PI / 2).translate(x, wr, z - 0.01), mats.tire); // the castor wheel
+    own(new THREE.BoxGeometry(0.026, ch - wr, 0.016).translate(x, wr + (ch - wr) / 2 + 0.004, z), steel); // its fork
+  }
+  const sp = (H - ch - 0.02) / n;
+  for (let i = 0; i < n; i++) { // a tray: a bottom and a low rim
+    const y = ch + 0.02 + i * sp, rh = Math.min(0.09, sp * 0.4), tw = W - 0.03, td = D - 0.03;
+    own(new RoundedBoxGeometry(tw, 0.006, td, 2, 0.0025).translate(0, y, -D / 2), m);
+    for (const s of [-1, 1]) { own(new THREE.BoxGeometry(tw, rh, 0.004).translate(0, y + rh / 2, -D / 2 + s * (td / 2 - 0.002)), m); own(new THREE.BoxGeometry(0.004, rh, td).translate(s * (tw / 2 - 0.002), y + rh / 2, -D / 2), m); }
+  }
+  const zb = 0.03; // the push bar on the side toward the person: two uprights off the front posts, the grip across
+  for (const sx of [-1, 1]) { const x = sx * (W / 2 - 0.02); own(new THREE.CylinderGeometry(pr * 0.8, pr * 0.8, hb - H + 0.06, 12).translate(x, H - 0.06 + (hb - H + 0.06) / 2, zb), steel); own(new THREE.CylinderGeometry(pr * 0.8, pr * 0.8, zb + 0.02, 12).rotateX(Math.PI / 2).translate(x, H - 0.06, (zb - 0.02) / 2), steel); }
+  own(new THREE.CylinderGeometry(0.014, 0.014, W - 0.04, 20).rotateZ(Math.PI / 2).translate(0, hb, zb), mats.pad); // the grip
+}
 /* a book stood up: hard covers and a rounded spine in the chosen material, the page block inset between them */
 function bookGeo(group, W, D, H) {
   const own = meshIn(group), m = propMat(), c = Math.min(0.0025, D * 0.12), inset = Math.min(0.004, W * 0.03);
@@ -2996,7 +3052,7 @@ function bookGeo(group, W, D, H) {
   own(new THREE.BoxGeometry(W - c - inset, H - 2 * inset, D - 2 * c).translate((c - inset) / 2, H / 2, -D / 2), mats.paper); // the pages
 }
 /* a mockup solid by its kind: the main one and any set beside it */
-function propSolid(group, W, D, H) { if (S.look === 'book') bookGeo(group, W, D, H); else if (S.look === 'tube') squeezeTubeGeo(group, W, D, H); else if (S.look === 'pump') pumpGeo(group, W, D, H); else if (S.look === 'lipstick') lipstickGeo(group, W, D, H); else if (S.look === 'trap') trapGeo(group, W, D, H); else if (S.shape === 'frame') frameSolid(group, W, D, H); else plainSolid(group, W, D, H); }
+function propSolid(group, W, D, H) { if (S.look === 'book') bookGeo(group, W, D, H); else if (S.look === 'tube') squeezeTubeGeo(group, W, D, H); else if (S.look === 'pump') pumpGeo(group, W, D, H); else if (S.look === 'lipstick') lipstickGeo(group, W, D, H); else if (S.look === 'trap') trapGeo(group, W, D, H); else if (S.look === 'bowl') bowlGeo(group, W, D, H); else if (S.shape === 'frame') frameSolid(group, W, D, H); else plainSolid(group, W, D, H); }
 /* a hollow cube: twelve square bars, their thickness set on its own */
 function frameSolid(group, W, D, Hh) {
   const t = Math.min(dv('frameT') / 1000, W / 2, D / 2, Hh / 2), bars = [];
@@ -3118,6 +3174,7 @@ function controlWorld() {
   if (isFurniture()) return furnPoint(false);
   if (S.shape === 'laptop' && S.source === 'box' && holder.userData.laptop) return keyboardPoint(); // you type on it
   if (S.look === 'luggage' && S.source === 'box') return new V3(0, sy + luggageHandle(), -P.D * 0.82); // the pulled-out trolley handle
+  if (S.look === 'trolley' && S.source === 'box') return new V3(0, sy + luggageHandle(), 0.03); // the push bar
   if (S.face === 'top') return new V3(0, sy + P.H, -topCtrlZ(P.D));
   return new V3(0, sy + ctrlM(), 0);
 }
@@ -3340,7 +3397,7 @@ function planHands() {
     const hp = { f: HD.fingers.map((g) => solve(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85])), tm: new V3(0.45, 0.35, -0.82).normalize(), tq: new V3(0, 1, 0), t: [deg(8), deg(12)] };
     S.plan = { kind: 'bar', hp, F, W: bar.clone().sub(inHand(F, c)) };
     S.pressLocal = bar;
-  } else if (S.look === 'luggage' && S.source === 'box') { // the trolley handle's bar in an overhand grip, fingers wrapped round it
+  } else if ((S.look === 'luggage' || S.look === 'trolley') && S.source === 'box') { // the trolley handle's bar in an overhand grip, fingers wrapped round it
     const rb = 0.012 * S.scale, bar = human.worldToLocal(controlWorld()), F = handFrame(new V3(0, -1, 0), new V3(0.05, -0.25, 1)), c = new V3(HD.palmT / 2 + rb + 0.002, 0.55 * HD.palmLen, 0);
     const shape = { kind: 'c', cx: c.x, cy: c.y, r: rb, z0: -0.08, z1: 0.08 };
     const hp = { f: HD.fingers.map((g) => solve(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85])), tm: new V3(0.55, 0.45, -0.7).normalize(), tq: new V3(0.3, 0.3, -0.9).normalize(), t: [deg(10), deg(18)] };
@@ -3557,7 +3614,7 @@ const effReach = () => (S.mode === 'use' && !carried() && !anim.played && anim.p
 const anim = { played: false, reach: 1, pour: 0, fill: 0, lift: 0, open: 0, drink: 0, phase: 'idle', t: 0 };
 
 function isFlat(P) { return S.shape === 'box' && S.source === 'box' && Math.min(P.W, P.D) / Math.max(P.W, P.D) < 0.35; }
-const roundGrip = () => S.source === 'box' && ['cyl', 'cup', 'sphere'].includes(S.shape);
+const roundGrip = () => S.source === 'box' && (['cyl', 'cup', 'sphere'].includes(S.shape) || (S.look === 'jar' && dv('form') !== 'cube'));
 /* the width the fingers close around */
 function gripSize(P) {
   if (S.shape === 'cup') return P.W * (S.style === 'latte' ? 0.72 : S.style === 'glass' ? 0.92 : 1);
@@ -4174,7 +4231,7 @@ function renderDims() {
 const tgLabel = () => {
   const st = furn();
   if (st) return st === 'sink' ? L('개수대 바닥', 'Bowl bottom') : st === 'drawer' ? (drawerCols() ? L('문 손잡이', 'Door handle') : L('위 서랍', 'Top drawer')) : st === 'wardrobe' ? L('문 손잡이', 'Door handle') : S.shape === 'chair' ? L('좌면', 'Seat') : L('상판', 'Top');
-  if (S.look === 'luggage' && S.source === 'box') return L('손잡이', 'Handle');
+  if ((S.look === 'luggage' || S.look === 'trolley') && S.source === 'box') return L('손잡이', 'Handle');
   return cupInHand() ? L('출수구', 'Outlet') : S.shape === 'laptop' && S.source === 'box' ? L('키보드', 'Keyboard') : L('조작부', 'Control');
 };
 function updateTags() {
@@ -4921,7 +4978,7 @@ $('surfReset').addEventListener('click', () => { if (!S.surf) return; const n = 
 $('surfNum').addEventListener('change', (e) => setSurf(+e.target.value));
 for (const [id, k] of [['plW', 'plinthW'], ['plD', 'plinthD'], ['wallD', 'wallD']]) { $(id).addEventListener('input', (e) => setSurf(+e.target.value, k)); $(id + 'n').addEventListener('change', (e) => setSurf(+e.target.value, k)); }
 /* detail sizes: a slider or a number sets one part; a button picks a material or armrests on/off */
-function setDet(k, v) { const sp = detSpec().find((x) => x.k === k); if (!sp) return; if (!sp.opts) v = clamp(Math.round(+v / sp.step) * sp.step, sp.min, sp.max); else v = sp.opts.find((o) => String(o[0]) === String(v))[0]; S.det = { ...(S.det || {}), [k]: v }; refresh({ rebuild: true }); }
+function setDet(k, v) { const sp = detSpec().find((x) => x.k === k); if (!sp) return; if (!sp.opts) v = clamp(Math.round(+v / sp.step) * sp.step, sp.min, sp.max); else v = sp.opts.find((o) => String(o[0]) === String(v))[0]; S.det = { ...(S.det || {}), [k]: v }; if (sp.apply) { detApply(); refresh({ rebuild: true, refit: true }); } else refresh({ rebuild: true }); }
 $('detRows').addEventListener('input', (e) => { const el = e.target; if (el.dataset.det && el.value !== '' && (el.type === 'range' || !isNaN(+el.value))) { if (el.type === 'number' && (+el.value < +el.min || +el.value > +el.max)) return; setDet(el.dataset.det, el.value); } });
 $('detRows').addEventListener('change', (e) => { const el = e.target; if (el.type === 'number' && el.dataset.det) setDet(el.dataset.det, el.value); });
 $('detRows').addEventListener('click', (e) => { const b = e.target.closest('button[data-v]'); if (b) setDet(b.parentElement.dataset.det, b.dataset.v); });
