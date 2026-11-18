@@ -516,6 +516,7 @@ input:disabled { opacity: 0.55; }
         <div id="plinthRows" hidden>
           <div class="dimrow surfrow"><label for="plW" data-en="Plinth W">단상 W</label><input type="range" id="plW" min="100" max="1500" step="10"><input type="number" id="plWn" inputmode="decimal" min="100" max="1500" step="1"></div>
           <div class="dimrow surfrow"><label for="plD" data-en="Plinth D">단상 D</label><input type="range" id="plD" min="100" max="1500" step="10"><input type="number" id="plDn" inputmode="decimal" min="100" max="1500" step="1"></div>
+          <div class="dimrow surfrow"><label for="plR" data-en="Corner R">모서리 R</label><input type="range" id="plR" min="0" max="200" step="1"><input type="number" id="plRn" inputmode="decimal" min="0" max="200" step="1"></div>
         </div>
       </div>
       <div class="field" id="expField">
@@ -1796,7 +1797,7 @@ function detKind() {
   if (S.shape === 'headphone') return 'headphone';
   if (S.shape === 'frame') return 'frame';
   if (['tube', 'pump', 'lipstick', 'trap', 'bowl', 'jar', 'trolley'].includes(S.look) && S.source === 'box') return S.look; // book and disc: the plain mockups' material row
-  if (isProp()) return ['cube', 'cyl'].includes(S.pkey) ? 'propR' : 'prop';
+  if (isProp()) return ['cube', 'cyl', 'plinthp'].includes(S.pkey) ? 'propR' : 'prop';
   if (S.look === 'hobo') return 'hobo';
   if (S.shape === 'laptop') return 'laptop';
   if (S.look === 'purifier' || S.look === 'airpurifier') return S.look;
@@ -3074,7 +3075,7 @@ function frameSolid(group, W, D, Hh) {
 }
 /* a plain box, cylinder (round ends, a longer middle when deeper), cone or sphere; a sheet of paper, with your image on its face */
 function plainSolid(group, W, D, Hh) {
-  const rr = ['cube', 'cyl'].includes(S.pkey) && S.source === 'box' ? Math.min((+dv('rad') || 0) / 1000, Math.min(W, D, Hh) / 2 - 0.0002) : null; // the cube and cylinder: the chosen edge radius, 0 = sharp
+  const rr = ['cube', 'cyl', 'plinthp'].includes(S.pkey) && S.source === 'box' ? Math.min((+dv('rad') || 0) / 1000, Math.min(W, D, Hh) / 2 - 0.0002) : null; // the cube and cylinder: the chosen edge radius, 0 = sharp
   const geo = S.shape === 'cyl' ? stadiumPlate(W, D, Hh, rr != null ? Math.max(0, rr) : Math.min(0.004, Math.min(W, D) * 0.05, Hh * 0.08)).applyMatrix4(ON_DECK)
     : S.shape === 'cone' ? new THREE.CylinderGeometry(0.0002, W / 2, Hh, 56).translate(0, Hh / 2, -D / 2)
     : S.shape === 'sphere' ? new THREE.SphereGeometry(0.5, 48, 32).scale(W, Hh, D).translate(0, Hh / 2, -D / 2)
@@ -3106,7 +3107,9 @@ function buildSurface() {
     box(surface, w, 2.6, 0.12, E.c, 1.3, -P.D - 0.06, mats.surfaceTop); // a shade darker, so a white sheet on it shows
   } else if (S.place === 'plinth') { // a plain cube, its size set on its own
     const pl = plinthSize();
-    box(surface, pl.w, pl.h, pl.d, E.c, pl.h / 2, -E.d / 2, mats.surface); // centred under the product (or the row of mockups, fronts in line)
+    const pr = Math.min(((S.surf && S.surf.plinthR) || 0) / 1000, Math.min(pl.w, pl.d) / 2 - 0.001);
+    if (pr > 0) { const m = new THREE.Mesh(new RoundedBoxGeometry(pl.w, pl.h, pl.d, 6, pr), mats.surface); m.position.set(E.c, pl.h / 2, -E.d / 2); m.castShadow = m.receiveShadow = true; m.userData.own = true; surface.add(m); } // rounded edges, as set
+    else box(surface, pl.w, pl.h, pl.d, E.c, pl.h / 2, -E.d / 2, mats.surface); // centred under the product (or the row of mockups, fronts in line)
   } else if (S.place === 'table') {
     const w = Math.max(1.0, E.w + 0.6), d = Math.max(0.7, E.d + 0.25), h = SURF.table;
     box(surface, w, 0.03, d, E.c, h - 0.015, EDGE - d / 2, mats.surfaceTop);
@@ -4372,12 +4375,12 @@ function syncUI() {
     const NM = { table: ['테이블', 'Table'], desk: ['책상', 'Desk'], counter: ['조리대', 'Counter'], plinth: ['단상 H', 'Plinth H'], air: ['공중 높이', 'Height'], wall: ['벽(중심 높이)', 'Wall (centre)'] };
     const on = !!NM[S.place] && !isFurniture(), mm = S.place === 'wall' ? (S.surf && S.surf.wall) || 1450 : Math.round(SURF[S.place] * 1000), lim = S.place === 'air' ? [0, 2000] : S.place === 'wall' ? [300, 2200] : S.place === 'plinth' ? [50, 1500] : [400, 1200];
     $('surfRow').hidden = !on;
-    $('surfReset').hidden = !on; $('surfReset').disabled = !(S.surf && (S.surf[S.place] != null || (S.place === 'plinth' && (S.surf.plinthW != null || S.surf.plinthD != null))));
+    $('surfReset').hidden = !on; $('surfReset').disabled = !(S.surf && (S.surf[S.place] != null || (S.place === 'plinth' && (S.surf.plinthW != null || S.surf.plinthD != null || S.surf.plinthR != null))));
     if (on) { $('surfLab').textContent = L(...NM[S.place]); for (const id of ['surfIn', 'surfNum']) { $(id).min = lim[0]; $(id).max = lim[1]; if (document.activeElement !== $(id)) $(id).value = mm; } }
     const pl = S.place === 'plinth' && !isFurniture();
     $('plinthRows').hidden = !pl;
     $('wallRow').hidden = S.place !== 'wall'; if (S.place === 'wall') { const v = Math.round(wallDist() * 1000); for (const id of ['wallD', 'wallDn']) if (document.activeElement !== $(id)) $(id).value = v; }
-    if (pl) { const ps = plinthSize(); for (const [id, v] of [['plW', ps.w], ['plWn', ps.w], ['plD', ps.d], ['plDn', ps.d]]) if (document.activeElement !== $(id)) $(id).value = Math.round(v * 1000); }
+    if (pl) { const ps = plinthSize(); for (const [id, v] of [['plW', ps.w], ['plWn', ps.w], ['plD', ps.d], ['plDn', ps.d], ['plR', ((S.surf && S.surf.plinthR) || 0) / 1000], ['plRn', ((S.surf && S.surf.plinthR) || 0) / 1000]]) if (document.activeElement !== $(id)) $(id).value = Math.round(v * 1000); }
     for (const b of $('placeSeg').children) { const k = b.dataset.place; if (!NM[k]) continue; const c = k === 'wall' ? Math.round(((S.surf && S.surf.wall) || 1450) / 10) : Math.round(SURF[k] * 100), nm = { plinth: ['단상', 'Plinth'], air: ['공중', 'Midair'], wall: ['벽', 'Wall'] }[k] || NM[k]; b.dataset.ko = `${nm[0]} ${c}`; b.dataset.en = `${nm[1]} ${c}`; b.textContent = LANG === 'en' ? b.dataset.en : b.dataset.ko; }
   }
   for (const id of ['rH', 'pH']) $(id).disabled = detKind() === 'office' || (S.source === 'box' && (S.shape === 'glasses' || S.shape === 'sunglasses')); // a gas lift, or eyewear sized by its lenses
@@ -5000,11 +5003,11 @@ function addUnit(left) {
   refresh({ rebuild: true, refit: true });
 }
 $('unitAddL').addEventListener('click', () => addUnit(true));
-function setSurf(v, key) { const k = key || S.place, lim = k === 'wallD' ? [200, 3000] : k === 'air' ? [0, 2000] : k === 'wall' ? [300, 2200] : k === 'plinth' || k === 'plinthW' || k === 'plinthD' ? [50, 1500] : [400, 1200]; if (!['table', 'desk', 'counter', 'plinth', 'air', 'wall', 'wallD', 'plinthW', 'plinthD'].includes(k) || !(v >= lim[0] && v <= lim[1])) return; S.surf = { ...(S.surf || {}), [k]: Math.round(v) }; refresh({ rebuild: true, refit: true }); }
+function setSurf(v, key) { const k = key || S.place, lim = k === 'wallD' ? [200, 3000] : k === 'air' ? [0, 2000] : k === 'wall' ? [300, 2200] : k === 'plinthR' ? [0, 200] : k === 'plinth' || k === 'plinthW' || k === 'plinthD' ? [50, 1500] : [400, 1200]; if (!['table', 'desk', 'counter', 'plinth', 'air', 'wall', 'wallD', 'plinthW', 'plinthD', 'plinthR'].includes(k) || !(v >= lim[0] && v <= lim[1])) return; S.surf = { ...(S.surf || {}), [k]: Math.round(v) }; refresh({ rebuild: true, refit: true }); }
 $('surfIn').addEventListener('input', (e) => setSurf(+e.target.value));
-$('surfReset').addEventListener('click', () => { if (!S.surf) return; const n = { ...S.surf }; delete n[S.place]; if (S.place === 'plinth') { delete n.plinthW; delete n.plinthD; } if (S.place === 'wall') delete n.wallD; S.surf = n; refresh({ rebuild: true, refit: true }); }); // the table, desk, counter, plinth or height back to its default
+$('surfReset').addEventListener('click', () => { if (!S.surf) return; const n = { ...S.surf }; delete n[S.place]; if (S.place === 'plinth') { delete n.plinthW; delete n.plinthD; delete n.plinthR; } if (S.place === 'wall') delete n.wallD; S.surf = n; refresh({ rebuild: true, refit: true }); }); // the table, desk, counter, plinth or height back to its default
 $('surfNum').addEventListener('change', (e) => setSurf(+e.target.value));
-for (const [id, k] of [['plW', 'plinthW'], ['plD', 'plinthD'], ['wallD', 'wallD']]) { $(id).addEventListener('input', (e) => setSurf(+e.target.value, k)); $(id + 'n').addEventListener('change', (e) => setSurf(+e.target.value, k)); }
+for (const [id, k] of [['plW', 'plinthW'], ['plD', 'plinthD'], ['plR', 'plinthR'], ['wallD', 'wallD']]) { $(id).addEventListener('input', (e) => setSurf(+e.target.value, k)); $(id + 'n').addEventListener('change', (e) => setSurf(+e.target.value, k)); }
 /* detail sizes: a slider or a number sets one part; a button picks a material or armrests on/off */
 function setDet(k, v) { const sp = detSpec().find((x) => x.k === k); if (!sp) return; if (!sp.opts) v = clamp(Math.round(+v / sp.step) * sp.step, sp.min, sp.max); else v = sp.opts.find((o) => String(o[0]) === String(v))[0]; S.det = { ...(S.det || {}), [k]: v }; if (sp.apply) { detApply(); refresh({ rebuild: true, refit: true }); } else refresh({ rebuild: true }); }
 $('detRows').addEventListener('input', (e) => { const el = e.target; if (el.dataset.det && el.value !== '' && (el.type === 'range' || !isNaN(+el.value))) { if (el.type === 'number' && (+el.value < +el.min || +el.value > +el.max)) return; setDet(el.dataset.det, el.value); } });
