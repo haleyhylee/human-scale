@@ -3967,7 +3967,7 @@ function furnitureChecks(out, add, push, b0) {
       else { lv = 'info'; txt = L(`팔꿈치보다 ${cmi(Lm.elY - topH)}cm 낮아요`, `${cmi(Lm.elY - topH)} cm below the elbow`); }
       const cols = drawerCols(), what = cols ? L('여는 문', 'The door opened') : L('맨 위 서랍', 'Top drawer'), whatTxt = cols ? L('여는 문은', 'The door it opens:') : L('맨 위 서랍은', 'The top drawer:');
       add(what, `${whatTxt} ${L('손잡이', 'handle')} ${cmi(topH)}cm · ${txt}`, lv); // the one the person opens comes first
-      out.drawerMain = `${whatTxt} ${L('손잡이', 'handle')} ${cmi(topH)}cm · ${txt}`;
+      out.drawerMain = `${whatTxt} ${L('손잡이', 'handle')} ${cmi(topH)}cm · ${txt}`; out.drawerLv = lv;
       if (!cols && n > 1) {
         const rb = reachSolve(A, p, human.worldToLocal(new V3(0.03, botH, 0.03)), p.maxFlex ?? 60), [bt, bl] = reachText(rb, A, careful), low = !rb.ok || rb.f > 44;
         add(L('맨 아랫칸', 'Bottom drawer'), `${L('맨 아랫칸은', 'The bottom one:')} ${L('손잡이', 'handle')} ${cmi(botH)}cm · ${low ? L('쪼그려 앉아야 열어요', 'you have to crouch to open it') : bt}`, low ? 'warn' : bl === 'bad' ? 'warn' : bl);
@@ -4033,6 +4033,7 @@ function furnitureChecks(out, add, push, b0) {
   add(L('크기 감각', 'Size'), `W ${mmi(P.W)} · D ${mmi(P.D)} · H ${mmi(P.H)}mm`, 'info');
   for (const c of out.checks) if (RANK[c.level] > RANK[out.verdict]) out.verdict = c.level;
   const first = out.checks.find((c) => RANK[c.level] > 0);
+  if (out.drawerLv) out.verdict = out.drawerLv; // the icon follows the drawer or door actually opened
   out.summary = out.drawerMain || (first ? first.v : out.checks[0].v); // a drawer unit: lead with the one the person actually opens
   out.sug.sort((a, b) => RANK[b.level] - RANK[a.level]);
   return out;
