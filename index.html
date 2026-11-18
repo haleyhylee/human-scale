@@ -631,6 +631,7 @@ const PRESETS = {
   pump: { name: '펌프 용기', en: 'Pump bottle', shape: 'box', look: 'pump', w: 70, d: 70, h: 210, place: 'plinth', face: 'front', ctrl: 190, action: 'press', prop: true, noCtrl: true }, // a shampoo bottle: the pump head stays as it is, the body round or square
   lipstick: { name: '립스틱 용기', en: 'Lipstick case', shape: 'box', look: 'lipstick', w: 22, d: 22, h: 80, place: 'plinth', face: 'front', ctrl: 40, action: 'press', prop: true, noCtrl: true }, // a small case with its cap, round or square
   disc: { name: '원판', en: 'Disc', shape: 'cyl', w: 120, d: 120, h: 10, place: 'plinth', face: 'top', ctrl: 10, action: 'press', prop: true, noCtrl: true }, // a round plate
+  trap: { name: '사다리꼴', en: 'Trapezoid', shape: 'box', look: 'trap', w: 200, d: 200, h: 200, place: 'plinth', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // a tapered block or round: narrower at the top or the bottom, by a draft angle
   book: { name: '책', en: 'Book', shape: 'box', look: 'book', w: 150, d: 22, h: 210, place: 'plinth', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // stood up: cover, spine and the block of pages
   sphere: { name: '구', en: 'Sphere', shape: 'sphere', w: 100, d: 100, h: 100, place: 'plinth', face: 'front', ctrl: 50, action: 'press', prop: true, noCtrl: true },
   cone: { name: '원뿔', en: 'Cone', shape: 'cone', w: 100, d: 100, h: 150, place: 'plinth', face: 'front', ctrl: 75, action: 'press', prop: true, noCtrl: true },
@@ -671,7 +672,7 @@ const FORMS = { box: [80, 80, 80], frame: [200, 200, 200], cyl: [80, 80, 150], s
 const roundSeat = () => S.source === 'box' && S.shape === 'chair' && (S.style === 'stool' || (S.style === 'pstool' && ['legs', 'cyl'].includes((S.det && S.det.form) || 'legs'))); // a round stool: its seat is W across, so D follows W
 const roundBase = (sh = S.shape) => sh === 'cup' || sh === 'cone' || (sh === S.shape && (S.look === 'tumbler' || roundSeat())); // W = D (a cylinder can be deeper: its middle stretches)
 const PRESET_GROUPS = [
-  [['목업·소품', 'Mockup & objects'], ['cube', 'cyl', 'sphere', 'cone', 'plate', 'disc', 'book', 'tube', 'pump', 'lipstick', 'fam:paper', 'ring']],
+  [['목업·소품', 'Mockup & objects'], ['cube', 'cyl', 'sphere', 'cone', 'trap', 'plate', 'disc', 'book', 'tube', 'pump', 'lipstick', 'fam:paper', 'ring']],
   [['생활 제품', 'Appliances'], ['purifier', 'coffee', 'air', 'floorlamp', 'tablelamp', 'mushroom']],
   [['전자제품', 'Electronics'], ['fam:phone', 'fam:fold', 'flip', 'fam:tablet', 'fam:laptop', 'airbuds', 'airpods', 'airmax', 'robot', 'fam:speaker']],
   [['안경·헬멧', 'Eyewear & helmets'], ['glasses', 'sunglasses', 'helmet']],
@@ -1731,6 +1732,7 @@ const DETAIL = {
   frame: [DR('frameT', '프레임 두께', 'Frame thickness', 2, 100, 10), MAT_ROW],
   prop: [MAT_ROW], // the plain mockup solids
   pump: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], lipstick: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], tube: [MAT_ROW], // cosmetics: the body round or square
+  trap: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cube', '네모', 'Square'], ['cyl', '원통', 'Round']], def: 'cube' }, { k: 'narrow', ko: '좁아지는 쪽', en: 'Narrower at', opts: [['top', '위', 'Top'], ['bottom', '아래', 'Bottom']], def: 'top' }, DR('draft', '구배 각도', 'Draft angle', 1, 40, 10, 1, '°'), MAT_ROW],
   laptop: [{ k: 'lid', ko: '덮개', en: 'Lid', opts: [['open', '열림', 'Open'], ['closed', '닫힘', 'Closed']], def: 'open' }],
   purifier: [{ k: 'form', ko: '형태', en: 'Form', opts: [['box', '네모', 'Box'], ['cyl', '원통', 'Round']], def: 'box' }],
   airpurifier: [{ k: 'form', ko: '형태', en: 'Form', opts: [['box', '네모', 'Box'], ['cyl', '원통', 'Round']], def: 'box' }],
@@ -1749,7 +1751,7 @@ function detKind() {
   if (S.source !== 'box') return null;
   if (S.shape === 'headphone') return 'headphone';
   if (S.shape === 'frame') return 'frame';
-  if (['tube', 'pump', 'lipstick'].includes(S.look) && S.source === 'box') return S.look; // book and disc: the plain mockups' material row
+  if (['tube', 'pump', 'lipstick', 'trap'].includes(S.look) && S.source === 'box') return S.look; // book and disc: the plain mockups' material row
   if (isProp()) return 'prop';
   if (S.look === 'hobo') return 'hobo';
   if (S.shape === 'laptop') return 'laptop';
@@ -1991,6 +1993,21 @@ function tableGeo(group, style, W, D, H, mat, keys = true) {
     const cols = drawerCols(), u = drawerUsed(n), cw = cols ? (W - 0.012) / n : W - 0.012, dh = cols ? H - base - t : fh, dd = Math.max(0.1, D - 0.08), wall = 0.012;
     const wire = open ? meshMat() : null; // a frame cabinet's drawers are wire mesh baskets
     const mb = (g, w, h, d, x, y, z) => { const geo = new THREE.BoxGeometry(w, h, d), uv = geo.attributes.uv, dims3 = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]]; for (let f = 0; f < 6; f++) for (let k = 0; k < 4; k++) { const i = f * 4 + k; uv.setXY(i, uv.getX(i) * dims3[f][0] / 0.025, uv.getY(i) * dims3[f][1] / 0.025); } const m = new THREE.Mesh(geo, wire); m.position.set(x, y, z); m.castShadow = true; m.userData.own = true; g.add(m); return m; };
+    if (cols) { // side by side: each a door on a hinge at its right edge, a shelf inside; the person opens the middle one, like a wardrobe's
+      const hy = drawerDoorY(H, base), xh0 = -W / 2 + 0.006 + (u + 1) * cw, door = new THREE.Group(); door.position.set(xh0, 0, 0); group.add(door);
+      for (let i = 0; i < n; i++) {
+        const x0 = -W / 2 + 0.006 + (i + 0.5) * cw, g = i === u ? door : group, ox = i === u ? -xh0 : 0, fw = cw - 0.006, Xd = kit(g, mats.frame), hx = x0 - cw / 2 + 0.035 + ox;
+        if (open) mb(g, fw, dh - 0.006, 0.006, x0 + ox, base + dh / 2, -0.014); else kit(g, mat).box(fw, dh - 0.006, 0.018, x0 + ox, base + dh / 2, -0.011, 0, 0.003);
+        Xd.rod(new V3(hx, hy - 0.12, 0.014), new V3(hx, hy + 0.12, 0.014), 0.006);
+        for (const py of [hy - 0.11, hy + 0.11]) Xd.rod(new V3(hx, py, -0.001), new V3(hx, py, 0.014), 0.004);
+        const sy = base + dh * 0.5, sw = cw - 0.03; // a shelf halfway up
+        if (open) mb(group, sw, 0.004, dd, x0, sy, -0.02 - dd / 2); else kit(group, mat).box(sw, 0.012, dd, x0, sy, -0.02 - dd / 2);
+      }
+      if (!open) T.box(cw - 0.03, dh - 0.03, 0.002, -W / 2 + 0.006 + (u + 0.5) * cw, base + dh / 2, -0.03 - dd); // the inside's back, dark
+      group.userData.door = { g: door, max: deg(85), hinge: new V3(xh0, 0, 0) };
+      group.userData.drawers = null;
+      return;
+    }
     for (let i = 0; i < n; i++) {
       const x0 = cols ? -W / 2 + 0.006 + (i + 0.5) * cw : 0, y0 = cols ? base : base + i * fh, g = i === u ? top : group, Kd = kit(g, mat), Xd = kit(g, mats.frame), fw = cw - 0.006 * (cols ? 1 : 0), hy = y0 + dh * (cols ? 0.86 : 0.72), hw = Math.min(0.07, fw * 0.3);
       if (open) mb(g, fw, dh - 0.006, 0.006, x0, y0 + dh / 2, -0.014); else Kd.box(fw, dh - 0.006, 0.018, x0, y0 + dh / 2, -0.011, 0, 0.003);
@@ -2015,7 +2032,8 @@ function tableGeo(group, style, W, D, H, mat, keys = true) {
 const drawerCount = (H) => (detKind() === 'drawer' && S.source === 'box' && dv('tiers') ? +dv('tiers') : clamp(Math.round((H - 0.08) / 0.19), 1, 5)); // as many as chosen (1 to 5), or as the height suits
 const drawerCols = () => detKind() === 'drawer' && dv('split') === 'cols'; // side by side, each the full height, instead of stacked
 const drawerUsed = (n) => (drawerCols() ? Math.floor(n / 2) : n - 1); // the one the person opens: the top one, or the middle column
-const drawerX = () => { if (!drawerCols()) return 0; const n = drawerCount(S.h / 1000), cw = (S.w / 1000 - 0.012) / n; return (-S.w / 2000 + 0.006 + (drawerUsed(n) + 0.5) * cw) * S.scale; };
+const drawerX = () => { if (!drawerCols()) return 0; const n = drawerCount(S.h / 1000), cw = (S.w / 1000 - 0.012) / n; return (-S.w / 2000 + 0.006 + drawerUsed(n) * cw + 0.035) * S.scale; }; // side by side: the door's bar, near its free left edge
+const drawerDoorY = (H, base) => Math.min(1.05, base + (H - base) * 0.8); // a door's bar handle: about halfway, never above a hand's easy reach
 let MESH_MAT = null;
 function meshMat() { // wire mesh: a grid of thin bars, see-through between them
   if (MESH_MAT) return MESH_MAT;
@@ -2047,7 +2065,7 @@ const rowExt = () => { // the whole row at scale (m): reach left and right of th
   return { l, r: rr, c: (rr - l) / 2, w: l + rr, d: Math.max(...r.map((u) => (roundBase() ? u.w : u.d))) * k, h: Math.max(...r.map((u) => u.h)) * k };
 };
 const drawerBase = () => (detKind() === 'drawer' && dv('casters') ? dv('caster') / 1000 + 0.012 : 0.06); // a plinth, or casters under the carcass
-const drawerHandle = (i) => { const H = S.h / 1000, n = drawerCount(H), b = drawerBase(), fh = (H - b - 0.02) / n; return (drawerCols() ? b + (H - b - 0.02) * 0.86 : b + i * fh + fh * 0.72) * S.scale; }; // drawer 0 is the bottom one; side by side, all at the same height
+const drawerHandle = (i) => { const H = S.h / 1000, n = drawerCount(H), b = drawerBase(), fh = (H - b - 0.02) / n; return (drawerCols() ? drawerDoorY(H, b) : b + i * fh + fh * 0.72) * S.scale; }; // drawer 0 is the bottom one; side by side, all at the same height
 /* lift-up top: k = 0 closed, 1 fully raised (up 20 cm and 12 cm toward the sofa) */
 function setLift(group, k) {
   const u = group.userData.lift;
@@ -2931,6 +2949,14 @@ function lipstickGeo(group, W, D, H) {
   own(cosmeticBody(W * 1.01, D * 1.01, H - baseH, round).translate(0, baseH, -D * 0.005), propMat()); // the cap
   own(cosmeticBody(W * 0.96, D * 0.96, 0.0012, round).translate(0, baseH - 0.0006, -D * 0.02), mats.tire); // the seam
 }
+/* a tapered solid: square or round, the top (or bottom) drawn in by the draft angle on every side */
+function trapGeo(group, W, D, H) {
+  const round = dv('form') === 'cyl', top = dv('narrow') !== 'bottom', o = Math.min(H * Math.tan((+dv('draft') || 10) * Math.PI / 180), Math.min(W, D) * 0.48);
+  const geo = round ? new THREE.CylinderGeometry(0.5, 0.5, H, 72, 1) : new THREE.BoxGeometry(1, H, 1), pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) { const y = pos.getY(i), nar = top ? y > 0 : y < 0; pos.setX(i, pos.getX(i) * (nar ? W - 2 * o : W)); pos.setZ(i, pos.getZ(i) * (nar ? D - 2 * o : D)); }
+  geo.computeVertexNormals(); geo.translate(0, H / 2, -D / 2);
+  meshIn(group)(geo, propMat());
+}
 /* a book stood up: hard covers and a rounded spine in the chosen material, the page block inset between them */
 function bookGeo(group, W, D, H) {
   const own = meshIn(group), m = propMat(), c = Math.min(0.0025, D * 0.12), inset = Math.min(0.004, W * 0.03);
@@ -2939,7 +2965,7 @@ function bookGeo(group, W, D, H) {
   own(new THREE.BoxGeometry(W - inset - D * 0.1, H - 2 * inset, D - 2 * c).translate(D * 0.05 - inset / 2 + 0.0005, H / 2, -D / 2), mats.paper); // the pages
 }
 /* a mockup solid by its kind: the main one and any set beside it */
-function propSolid(group, W, D, H) { if (S.look === 'book') bookGeo(group, W, D, H); else if (S.look === 'tube') squeezeTubeGeo(group, W, D, H); else if (S.look === 'pump') pumpGeo(group, W, D, H); else if (S.look === 'lipstick') lipstickGeo(group, W, D, H); else if (S.shape === 'frame') frameSolid(group, W, D, H); else plainSolid(group, W, D, H); }
+function propSolid(group, W, D, H) { if (S.look === 'book') bookGeo(group, W, D, H); else if (S.look === 'tube') squeezeTubeGeo(group, W, D, H); else if (S.look === 'pump') pumpGeo(group, W, D, H); else if (S.look === 'lipstick') lipstickGeo(group, W, D, H); else if (S.look === 'trap') trapGeo(group, W, D, H); else if (S.shape === 'frame') frameSolid(group, W, D, H); else plainSolid(group, W, D, H); }
 /* a hollow cube: twelve square bars, their thickness set on its own */
 function frameSolid(group, W, D, Hh) {
   const t = Math.min(dv('frameT') / 1000, W / 2, D / 2, Hh / 2), bars = [];
@@ -3250,6 +3276,13 @@ function planHands() {
     if (st === 'dining') { r.copy(product.localToWorld(new V3(0.19 * S.scale, dims().H, -0.13 * S.scale))); l.set(-0.19 * S.scale, dims().H, -0.13 * S.scale); }
     S.plan = twoGoal('flat2', flatPose(), [r, product.localToWorld(l)], (s) => handFrame(new V3(0, -1, 0), new V3(-s * 0.15, 0, 1)), new V3(HD.palmT / 2 + 0.003, 0.5 * HD.palmLen, 0), (s) => new V3(s * 0.6, -1, -0.3));
     S.pressLocal = human.worldToLocal(furnPoint(true));
+  } else if (st === 'drawer' && drawerCols()) { // a door's upright bar in a sideways fist, as on the wardrobe
+    const k = S.scale, bar = human.worldToLocal(product.localToWorld(new V3(drawerX(), drawerHandle(0), 0.014 * k))), rr = 0.006 * k;
+    const F = handFrame(new V3(1, 0, 0), new V3(0, 0, 1)), c = new V3(HD.palmT / 2 + rr + 0.002, 0.58 * HD.palmLen, 0);
+    const shape = { kind: 'c', cx: c.x, cy: c.y, r: rr, z0: -0.08, z1: 0.08 };
+    const hp = { f: HD.fingers.map((g) => solve(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85])), tm: new V3(0.45, 0.35, -0.82).normalize(), tq: new V3(0, 1, 0), t: [deg(8), deg(12)] };
+    S.plan = { kind: 'bar', hp, F, W: bar.clone().sub(inHand(F, c)) };
+    S.pressLocal = bar;
   } else if (st === 'drawer') { // the top drawer's bar pull hooked in the fingers, palm down
     const bar = product.localToWorld(new V3(drawerX(), drawerHandle(drawerCount(S.h / 1000) - 1), 0.012 * S.scale)), rb = 0.006 * S.scale;
     const F = handFrame(new V3(0, -1, 0.15), new V3(0.1, -0.15, 1)), c = new V3(HD.fingers[1].r[0] + rb + 0.002, HD.palmLen + 0.022, 0);
@@ -3932,10 +3965,14 @@ function furnitureChecks(out, add, push, b0) {
       else if (topH > Lm.shY + 0.015) { lv = 'warn'; txt = L(`어깨보다 ${cmi(topH - Lm.shY)}cm 높아요`, `${cmi(topH - Lm.shY)} cm above the shoulder`); }
       else if (topH >= Lm.elY - 0.15) { lv = 'good'; txt = L('팔꿈치~어깨 사이라 편해요', 'between elbow and shoulder, comfortable'); }
       else { lv = 'info'; txt = L(`팔꿈치보다 ${cmi(Lm.elY - topH)}cm 낮아요`, `${cmi(Lm.elY - topH)} cm below the elbow`); }
-      add(L('맨 위 서랍', 'Top drawer'), `${L('손잡이', 'handle')} ${cmi(topH)}cm · ${txt}`, lv);
-      const rb = reachSolve(A, p, human.worldToLocal(new V3(0.03, botH, 0.03)), p.maxFlex ?? 60), [bt, bl] = reachText(rb, A, careful), low = !rb.ok || rb.f > 44;
-      add(L('맨 아래 서랍', 'Bottom drawer'), `${L('손잡이', 'handle')} ${cmi(botH)}cm · ${low ? L('쪼그려 앉아야 열어요', 'you have to crouch to open it') : bt}`, low ? 'warn' : bl === 'bad' ? 'warn' : bl);
-      add(L('서랍', 'Drawers'), L(`${n}단${drawerBase() !== 0.06 ? ' · 바퀴' : ''} · 한 칸 높이 ${cmi((S.h / 1000 - drawerBase() - 0.02) / n * S.scale)}cm · 깊이 ${cmi(P.D)}cm`, `${n} drawers, ${cmi((S.h / 1000 - 0.08) / n * S.scale)} cm each, ${cmi(P.D)} cm deep`), 'info');
+      const cols = drawerCols(), what = cols ? L('여는 문', 'The door opened') : L('맨 위 서랍', 'Top drawer'), whatTxt = cols ? L('여는 문은', 'The door it opens:') : L('맨 위 서랍은', 'The top drawer:');
+      add(what, `${whatTxt} ${L('손잡이', 'handle')} ${cmi(topH)}cm · ${txt}`, lv); // the one the person opens comes first
+      out.drawerMain = `${whatTxt} ${L('손잡이', 'handle')} ${cmi(topH)}cm · ${txt}`;
+      if (!cols && n > 1) {
+        const rb = reachSolve(A, p, human.worldToLocal(new V3(0.03, botH, 0.03)), p.maxFlex ?? 60), [bt, bl] = reachText(rb, A, careful), low = !rb.ok || rb.f > 44;
+        add(L('맨 아랫칸', 'Bottom drawer'), `${L('맨 아랫칸은', 'The bottom one:')} ${L('손잡이', 'handle')} ${cmi(botH)}cm · ${low ? L('쪼그려 앉아야 열어요', 'you have to crouch to open it') : bt}`, low ? 'warn' : bl === 'bad' ? 'warn' : bl);
+      }
+      add(cols ? L('칸', 'Compartments') : L('서랍', 'Drawers'), cols ? L(`${n}칸 · 세로로 나눠 문으로 열어요 · 깊이 ${cmi(P.D)}cm`, `${n} side by side, opening as doors · ${cmi(P.D)} cm deep`) : L(`${n}단${drawerBase() !== 0.06 ? ' · 바퀴' : ''} · 한 칸 높이 ${cmi((S.h / 1000 - drawerBase() - 0.02) / n * S.scale)}cm · 깊이 ${cmi(P.D)}cm`, `${n} drawers, ${cmi((S.h / 1000 - 0.08) / n * S.scale)} cm each, ${cmi(P.D)} cm deep`), 'info');
     } else if (st === 'wardrobe') { // the rail and the shelf above it against the person's reach, the doors' swing
       const k = S.scale, rail = (S.h / 1000 - 0.12) * k, reach = Lm.shY + A.armLen * 0.95, d = rail - reach;
       add(L('옷봉', 'Hanging rail'), `${cmi(rail)}cm · ${L('손이 닿는 높이', 'reach')} ${cmi(reach)}cm · ` + (d > 0.05 ? L(`${cmi(d)}cm 높아 발돋움해야 걸어요`, `${cmi(d)} cm too high, on tiptoe to hang`) : d > -0.15 ? L('팔을 뻗어 걸 수 있어요', 'reachable with the arm up') : L('편하게 걸어요', 'easy to hang on')), d > 0.15 ? 'bad' : d > 0.05 ? 'warn' : 'good');
@@ -3996,7 +4033,7 @@ function furnitureChecks(out, add, push, b0) {
   add(L('크기 감각', 'Size'), `W ${mmi(P.W)} · D ${mmi(P.D)} · H ${mmi(P.H)}mm`, 'info');
   for (const c of out.checks) if (RANK[c.level] > RANK[out.verdict]) out.verdict = c.level;
   const first = out.checks.find((c) => RANK[c.level] > 0);
-  out.summary = first ? first.v : out.checks[0].v;
+  out.summary = out.drawerMain || (first ? first.v : out.checks[0].v); // a drawer unit: lead with the one the person actually opens
   out.sug.sort((a, b) => RANK[b.level] - RANK[a.level]);
   return out;
 }
@@ -4093,7 +4130,7 @@ function renderDims() {
 
 const tgLabel = () => {
   const st = furn();
-  if (st) return st === 'sink' ? L('개수대 바닥', 'Bowl bottom') : st === 'drawer' ? L('위 서랍', 'Top drawer') : st === 'wardrobe' ? L('문 손잡이', 'Door handle') : S.shape === 'chair' ? L('좌면', 'Seat') : L('상판', 'Top');
+  if (st) return st === 'sink' ? L('개수대 바닥', 'Bowl bottom') : st === 'drawer' ? (drawerCols() ? L('문 손잡이', 'Door handle') : L('위 서랍', 'Top drawer')) : st === 'wardrobe' ? L('문 손잡이', 'Door handle') : S.shape === 'chair' ? L('좌면', 'Seat') : L('상판', 'Top');
   if (S.look === 'luggage' && S.source === 'box') return L('손잡이', 'Handle');
   return cupInHand() ? L('출수구', 'Outlet') : S.shape === 'laptop' && S.source === 'box' ? L('키보드', 'Keyboard') : L('조작부', 'Control');
 };
