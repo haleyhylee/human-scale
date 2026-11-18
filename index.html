@@ -606,7 +606,7 @@ const PRESETS = {
   a3: { name: '포스터 A3', en: 'Poster A3', shape: 'box', look: 'paper', w: 297, d: 1, h: 420, place: 'plinth', face: 'front', ctrl: 210, action: 'press' },
   a2: { name: '포스터 A2', en: 'Poster A2', shape: 'box', look: 'paper', w: 420, d: 1, h: 594, place: 'plinth', face: 'front', ctrl: 300, action: 'press' },
   a1: { name: '포스터 A1', en: 'Poster A1', shape: 'box', look: 'paper', w: 594, d: 1, h: 841, place: 'plinth', face: 'front', ctrl: 420, action: 'press' },
-  backpack: { name: '백팩', en: 'Backpack', shape: 'box', look: 'backpack', w: 300, d: 160, h: 450, place: 'back', face: 'front', ctrl: 400, action: 'press' }, // a 20 L daypack, worn
+  backpack: { name: '백팩', en: 'Backpack', shape: 'box', look: 'backpack', w: 280, d: 130, h: 430, place: 'back', face: 'front', ctrl: 400, action: 'press' }, // a 20 L daypack, worn
   wallet: { name: '지갑', en: 'Wallet', shape: 'box', look: 'pouch', w: 190, d: 24, h: 98, place: 'hand', face: 'front', ctrl: 60, action: 'press' },
   ecobag: { name: '에코백', en: 'Tote bag', shape: 'box', look: 'tote', w: 360, d: 100, h: 360, place: 'back', face: 'front', ctrl: 200, action: 'press' },
   hobo: { name: '호보백', en: 'Hobo bag', shape: 'box', look: 'hobo', w: 380, d: 130, h: 300, place: 'back', face: 'front', ctrl: 150, action: 'press' },
@@ -2593,7 +2593,7 @@ const lampShade = new THREE.MeshStandardMaterial({ color: 0xf1e7d6, emissive: 0x
 const bulbMat = new THREE.MeshStandardMaterial({ color: 0xfff4dc, emissive: 0xffe2a8, emissiveIntensity: 1.2 });
 /* where a worn backpack sits (body frame): its top just under the shoulders, its back panel on the person's back; bag frame is turned round */
 function backFrame(P) {
-  const A = S.A, D3 = dims(), top = P.shR.y - 0.035, z = -(A.chestD / 2 + 0.03);
+  const A = S.A, D3 = dims(), top = P.shR.y - 0.008 * A.H / 1.6, z = -(A.chestD / 2 + 0.03); // the top level with the shoulders
   return { origin: new V3(0, top - D3.H, z - D3.D), top, z };
 }
 /* a flat band along a curve (body frame), w wide and t thick, lying across the normal nf(p); mapped into the bag frame by toBag */
@@ -2621,10 +2621,11 @@ function backpackGeo(group, W, D, H) {
   if (!worn) { for (const sx of [-1, 1]) own(new RoundedBoxGeometry(0.055, H * 0.7, 0.014, 2, 0.006), mats.pad).position.set(sx * W * 0.25, H * 0.5, -D - 0.006); return; } // straps lying on the back panel
   const P0 = basePose(S.A, PP(), 0), f = backFrame(P0), toBag = (v) => new V3(-(v.x - f.origin.x), v.y - f.origin.y, -(v.z - f.origin.z)); // body frame to bag frame
   for (const s of [-1, 1]) {
-    const sh = s < 0 ? P0.shR : P0.shL, cx = sh.x * 0.62, fz = Math.max(S.A.chestD / 2, sh.z + S.A.chestD * 0.5) + 0.03; // in front of the chest, wherever a stoop carries it
-    const pts = [new V3(s * 0.06, f.top - 0.02, f.z), new V3(cx, sh.y + 0.062, f.z * 0.5), new V3(cx, sh.y + 0.06, fz * 0.55), new V3(cx * 1.02, sh.y - 0.08, fz + 0.022), new V3(Math.sign(sh.x) * (S.A.chestW / 2 - 0.006), sh.y - 0.17, fz * 0.45), new V3(Math.sign(sh.x) * (S.A.chestW / 2 - 0.006), sh.y - 0.24, -S.A.chestD * 0.15), new V3(s * W * 0.38, f.top - H + 0.05, f.z)] // down the chest, under the arm close to the side, to the bag's lower corner;
+    const sh = s < 0 ? P0.shR : P0.shL, cx = sh.x * 0.62, fz = Math.max(S.A.chestD / 2, sh.z + S.A.chestD * 0.5) + 0.02; // in front of the chest, wherever a stoop carries it
+    const sy = sh.y + 0.048 * S.A.H / 1.6; // just on top of the shoulder: its surface sits ~4.5 cm above the joint, the band 5 mm thick
+    const pts = [new V3(s * 0.06, f.top - 0.02, f.z), new V3(cx, sy - 0.004, f.z * 0.5), new V3(cx, sy, fz * 0.55), new V3(cx * 1.02, sh.y - 0.08, fz + 0.012), new V3(Math.sign(sh.x) * (S.A.chestW / 2 - 0.006), sh.y - 0.17, fz * 0.45), new V3(Math.sign(sh.x) * (S.A.chestW / 2 - 0.006), sh.y - 0.24, -S.A.chestD * 0.15), new V3(s * W * 0.38, f.top - H + 0.05, f.z)] // down the chest, under the arm close to the side, to the bag's lower corner;
     const C = new V3(0, sh.y - 0.16, 0); // the chest's middle: each band lies flat on the body, facing away from it
-    own(bandGeo(new THREE.CatmullRomCurve3(pts), 0.065, 0.008, (p) => p.clone().sub(C).normalize(), toBag), mats.pad);
+    own(bandGeo(new THREE.CatmullRomCurve3(pts), 0.06, 0.005, (p) => p.clone().sub(C).normalize(), toBag), mats.pad);
   }
 }
 /* pouch: a soft flat case, its edges puffed, a zip along the top with a pull */
