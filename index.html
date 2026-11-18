@@ -283,6 +283,7 @@ input:disabled { opacity: 0.55; }
       </div>
     </div>
     <div class="zoom" role="group" aria-label="화면 확대" data-en-aria="Zoom">
+      <button type="button" class="btn" id="btnSnap" aria-label="이미지로 저장" title="이미지로 저장 (PNG)" data-en-aria="Save as image" data-en-title="Save as image (PNG)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></button>
       <button type="button" class="btn" id="zoomIn" aria-label="확대" title="확대" data-en-aria="Zoom in" data-en-title="Zoom in">+</button>
       <button type="button" class="btn" id="zoomOut" aria-label="축소" title="축소" data-en-aria="Zoom out" data-en-title="Zoom out">−</button>
       <button type="button" class="btn txt" id="viewReset" aria-label="기본 시점으로" title="기본 시점으로 (더블클릭)" data-en-aria="Reset view" data-en-title="Reset view (double-click)" data-en="Reset">기본</button>
@@ -5478,13 +5479,13 @@ function exportParts(opt = {}) {
 const zUp = (p) => { const pos = new Float32Array(p.pos.length), nrm = p.nrm && new Float32Array(p.nrm.length); for (let i = 0; i < p.pos.length; i += 3) { pos[i] = p.pos[i]; pos[i + 1] = -p.pos[i + 2]; pos[i + 2] = p.pos[i + 1]; if (nrm) { nrm[i] = p.nrm[i]; nrm[i + 1] = -p.nrm[i + 2]; nrm[i + 2] = p.nrm[i + 1]; } } return { ...p, pos, nrm }; }; // Rhino: Z up, the front toward -Y
 let DL = null; // the viewer's save, where the page runs as an artifact
 (async () => { try { if (window.claude && typeof window.claude.use === 'function') DL = await window.claude.use('downloads'); } catch { DL = null; } })();
-async function saveBytes(name, u8) {
+async function saveBytes(name, u8, type = 'application/zip') {
   if (!DL && window.claude && typeof window.claude.use === 'function') { try { DL = await window.claude.use('downloads'); } catch { DL = null; } } // asked again: the answer may have come late
   if (DL) {
-    try { await DL.save({ filename: name, data: new Blob([u8], { type: 'application/zip' }) }); return 'saved'; }
+    try { await DL.save({ filename: name, data: new Blob([u8], { type }) }); return 'saved'; }
     catch (e) { const c = e && e.code; if (c === 'declined') return 'declined'; if (c === 'rate_limited') return 'busy'; if (c === 'too_large') return 'big'; }
   }
-  const url = URL.createObjectURL(new Blob([u8], { type: 'application/zip' })), a = document.createElement('a'); // an ordinary page: a link to the bytes
+  const url = URL.createObjectURL(new Blob([u8], { type })), a = document.createElement('a'); // an ordinary page: a link to the bytes
   a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000);
   return 'saved';
 }
@@ -5525,5 +5526,21 @@ $('btnExport').addEventListener('click', async () => {
   } catch (e) { console.error(e); say(L('파일을 만들지 못했어요', "Couldn't make the files")); }
   finally { btn.disabled = false; }
 });
+
+/* the view as a picture: the 3D scene alone (no buttons, tags or guide lines, no control marker), drawn again at twice the screen's sharpness, as a PNG */
+async function snapPNG() {
+  const btn = $('btnSnap'); if (btn.disabled) return; btn.disabled = true;
+  const pr = renderer.getPixelRatio(), size = renderer.getSize(new THREE.Vector2()), k = Math.min(2 * pr, 4096 / Math.max(size.x, size.y)), mk = marker.visible;
+  try {
+    marker.visible = false; renderer.setPixelRatio(k); renderer.setSize(size.x, size.y, false); renderer.render(scene, cam);
+    const blob = await new Promise((res) => renderer.domElement.toBlob(res, 'image/png'));
+    if (!blob) throw new Error('no image');
+    const key = String((S.source === 'model' ? 'model' : S.pkey) || 'custom').replace(/[^a-z0-9_-]+/gi, '') || 'view', d = new Date(), stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}-${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}${String(d.getSeconds()).padStart(2, '0')}`;
+    const r = await saveBytes(`human-scale-${key}-${S.view}-${stamp}.png`, new Uint8Array(await blob.arrayBuffer()), 'image/png');
+    if (r !== 'saved' && r !== 'declined') console.warn('image not saved', r);
+  } catch (e) { console.error(e); }
+  finally { marker.visible = mk; renderer.setPixelRatio(pr); renderer.setSize(size.x, size.y, false); btn.disabled = false; }
+}
+$('btnSnap').addEventListener('click', snapPNG);
 </script>
 </body></html>
