@@ -641,7 +641,7 @@ const PRESETS = {
   parcel6: { name: '택배박스 6호', en: 'Parcel box No.6', shape: 'box', look: 'parcel', w: 520, d: 480, h: 400, place: 'hand', face: 'front', ctrl: 200, action: 'press', noCtrl: true },
   parcel7: { name: '택배박스 7호', en: 'Parcel box No.7', shape: 'box', look: 'parcel', w: 620, d: 480, h: 400, place: 'hand', face: 'front', ctrl: 200, action: 'press', noCtrl: true },
   trolley: { name: '수납 트롤리', en: 'Storage trolley', shape: 'box', look: 'trolley', w: 450, d: 350, h: 800, place: 'floor', face: 'top', ctrl: 860, action: 'press', noHand: true }, // tiers of trays on castors, pushed by a bar at the back
-  bowl: { name: '그릇', en: 'Bowl', shape: 'box', look: 'bowl', w: 180, d: 180, h: 55, place: 'table', face: 'top', ctrl: 30, action: 'press', prop: true, noCtrl: true }, // a rice bowl, a soup bowl or a shallow bowl, S/M/L
+  bowl: { name: '그릇', en: 'Bowl', shape: 'box', look: 'bowl', w: 180, d: 180, h: 55, place: 'table', face: 'top', ctrl: 30, action: 'press', posture: 'sit', prop: true, noCtrl: true }, // a rice bowl, a soup bowl or a shallow bowl, S/M/L
   jar: { name: '유리병', en: 'Glass jar', shape: 'box', look: 'jar', w: 80, d: 80, h: 130, place: 'hand', face: 'front', ctrl: 60, action: 'press', noCtrl: true }, // a glass jar with a screw metal lid, 250/500/1000 ml
   book: { name: '책', en: 'Book', shape: 'box', look: 'book', w: 150, d: 22, h: 210, place: 'plinth', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // stood up: cover, spine and the block of pages
   sphere: { name: '구', en: 'Sphere', shape: 'sphere', w: 100, d: 100, h: 100, place: 'plinth', face: 'front', ctrl: 50, action: 'press', prop: true, noCtrl: true },
@@ -1548,7 +1548,7 @@ function poseNow() {
     const rc = armIK(sh, restW, A, new V3(s * 0.25, -0.3, -1));
     const Fr = A.seated ? handFrame(new V3(0, -1, 0), new V3(-s * 0.15, 0, 1)) : handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el));
     let out = { ...rc, q: Fr.q, hp: S.handRest };
-    const g = plan && k > 0 ? handGoal(plan, s, P, sh) : null; // where this hand goes, if anywhere
+    const g = plan && k > 0 && (S.mode === 'use' || carried()) ? handGoal(plan, s, P, sh) : null; // side by side: the arms hang at rest // where this hand goes, if anywhere
     if (g) {
       const ch = armIK(sh, restW.clone().lerp(g.W, k), A, g.pole);
       out = { ...ch, q: Fr.q.clone().slerp(g.F.q, k), hp: blendPose(S.handRest, tapPose(g.hp, s), k) };
@@ -1657,6 +1657,12 @@ function dims() { // a book foldable keeps its folded size for the hold: it open
   return laidFlat() || plateUp() ? { W, D: H, H: D } : { W, D, H }; // a sheet set down on the desk or a plinth lies flat; a plate on a wall hangs flat against it
 }
 const ctrlM = () => (S.ctrl / 1000) * S.scale;
+const lampCtrl = () => { // a lamp's switch spot (product frame, scaled): on the front of the table lamp's base, or on the floor lamp's pole
+  if (S.source !== 'box' || S.face !== 'front') return null; const k = S.scale, W = S.w / 1000, D = S.d / 1000;
+  if (S.look === 'tablelamp') return new V3(0, Math.min(ctrlM(), 0.022 * k), (-D / 2 + Math.min(0.085, W * 0.275) * 0.96) * k);
+  if (S.look === 'floorlamp') return new V3(0, ctrlM(), (-D / 2 + 0.013) * k);
+  return null;
+};
 /* filling a cup: held under the outlet when the control is on the front (water purifier),
    standing on the drip tray when the button is on top (coffee machine) */
 /* what the box is: an example keeps its own use, so only places and controls that make sense for it are offered (a tablet is held or laid
@@ -2081,12 +2087,13 @@ function meshMat() { // wire mesh: a grid of thin bars, see-through between them
    tolerance); the person uses the picked one, which stays at the product's centre and the others sit beside it. Mockup solids: the main one
    (A) stays where it is and the person uses it; the others, each its own size, sit their own gap out from the neighbour toward A, fronts in
    line (backs, on a wall). Not in the hands or at the desk */
-const propRowOn = () => isProp() && !carried() && !atDesk();
+const rowProp = () => isProp() || (S.source === 'box' && S.look === 'parcel'); // mockups set in a row: the plain solids, and parcel boxes set down
+const propRowOn = () => rowProp() && !carried() && !atDesk();
 const rowOn = () => (isFurniture() && furn() === 'drawer' && S.source === 'box') || propRowOn();
 const rowUnits = () => (rowOn() && S.row && S.row.length ? S.row : null);
 const ROW_GAP = 50; // mm between one mockup and the next, to start with
 const rowMain = () => { const r = rowUnits(); return !r ? 0 : isProp() ? Math.max(0, r.findIndex((u) => u.n === 'A')) : S.pick || 0; }; // the one the person uses, at the product's place
-const sizeUnit = () => (isProp() && rowUnits() && (S.pick || 0) !== rowMain() && S.row[S.pick]) || null; // a mockup beside the main one whose size the W, D, H fields show
+const sizeUnit = () => (rowProp() && rowUnits() && (S.pick || 0) !== rowMain() && S.row[S.pick]) || null; // a mockup beside the main one whose size the W, D, H fields show
 function rowOffsets() { // each unit's centre from the main one's, mm, left to right
   const r = rowUnits(); if (!r) return [0];
   const m = rowMain(), xs = new Array(r.length).fill(0), gap = (i) => (isProp() ? r[i].gap ?? ROW_GAP : 1);
@@ -2909,7 +2916,6 @@ function lampGeo(group, W, D, H, floor) {
   own(new THREE.CylinderGeometry(0.012, 0.012, H - sh * 0.7, 16).translate(0, (H - sh * 0.7) / 2, cz), mats.frame);
   own(new THREE.CylinderGeometry(R * 0.6, R, sh, 64, 1, true).translate(0, H - sh / 2, cz), lampShade);
   own(new THREE.SphereGeometry(0.03, 20, 14).translate(0, H - sh * 0.6, cz), bulbMat);
-  own(new THREE.CylinderGeometry(0.009, 0.009, 0.006, 20).rotateX(Math.PI / 2).translate(0, 0.016, cz + br * 0.92), mats.trim); // the switch
 }
 function buildProduct() {
   disposeGroup(holder);
@@ -2952,7 +2958,7 @@ function buildProduct() {
   else if (S.shape === 'parts' && S.parts && S.pbase) partsGeo(holder, W, D, Hh);
   else if (S.shape === 'frame' || isProp()) propSolid(holder, W, D, Hh);
   else plainSolid(holder, W, D, Hh);
-  if (isProp() && rowUnits() && S.row.length > 1) { // the other mockups beside the main one, each its own size
+  if (rowProp() && rowUnits() && S.row.length > 1) { // the other mockups beside the main one, each its own size
     const off = rowOffsets(), m = rowMain();
     S.row.forEach((u, i) => { if (i === m) return; const g = new THREE.Group(), w = u.w / 1000, d = (roundBase() ? u.w : u.d) / 1000, h = u.h / 1000; g.position.set(off[i] / 1000, 0, S.place === 'wall' ? (d - D) / 2 : 0); g.userData.own = true; g.userData.unit = u.n; holder.add(g); propSolid(g, w, d, h); });
   }
@@ -3039,6 +3045,7 @@ function trolleyGeo(group, W, D, H) {
     own(new RoundedBoxGeometry(tw, 0.006, td, 2, 0.0025).translate(0, y, -D / 2), m);
     for (const s of [-1, 1]) { own(new THREE.BoxGeometry(tw, rh, 0.004).translate(0, y + rh / 2, -D / 2 + s * (td / 2 - 0.002)), m); own(new THREE.BoxGeometry(0.004, rh, td).translate(s * (tw / 2 - 0.002), y + rh / 2, -D / 2), m); }
   }
+  own(new RoundedBoxGeometry(W - 0.012, 0.014, D - 0.012, 2, 0.004).translate(0, H - 0.007, -D / 2), m); // the top board across the posts
   const zb = 0.03; // the push bar on the side toward the person: two uprights off the front posts, the grip across
   for (const sx of [-1, 1]) { const x = sx * (W / 2 - 0.02); own(new THREE.CylinderGeometry(pr * 0.8, pr * 0.8, hb - H + 0.06, 12).translate(x, H - 0.06 + (hb - H + 0.06) / 2, zb), steel); own(new THREE.CylinderGeometry(pr * 0.8, pr * 0.8, zb + 0.02, 12).rotateX(Math.PI / 2).translate(x, H - 0.06, (zb - 0.02) / 2), steel); }
   own(new THREE.CylinderGeometry(0.014, 0.014, W - 0.04, 20).rotateZ(Math.PI / 2).translate(0, hb, zb), mats.pad); // the grip
@@ -3052,7 +3059,7 @@ function bookGeo(group, W, D, H) {
   own(new THREE.BoxGeometry(W - c - inset, H - 2 * inset, D - 2 * c).translate((c - inset) / 2, H / 2, -D / 2), mats.paper); // the pages
 }
 /* a mockup solid by its kind: the main one and any set beside it */
-function propSolid(group, W, D, H) { if (S.look === 'book') bookGeo(group, W, D, H); else if (S.look === 'tube') squeezeTubeGeo(group, W, D, H); else if (S.look === 'pump') pumpGeo(group, W, D, H); else if (S.look === 'lipstick') lipstickGeo(group, W, D, H); else if (S.look === 'trap') trapGeo(group, W, D, H); else if (S.look === 'bowl') bowlGeo(group, W, D, H); else if (S.shape === 'frame') frameSolid(group, W, D, H); else plainSolid(group, W, D, H); }
+function propSolid(group, W, D, H) { if (S.look === 'parcel') parcelGeo(group, W, D, H); else if (S.look === 'book') bookGeo(group, W, D, H); else if (S.look === 'tube') squeezeTubeGeo(group, W, D, H); else if (S.look === 'pump') pumpGeo(group, W, D, H); else if (S.look === 'lipstick') lipstickGeo(group, W, D, H); else if (S.look === 'trap') trapGeo(group, W, D, H); else if (S.look === 'bowl') bowlGeo(group, W, D, H); else if (S.shape === 'frame') frameSolid(group, W, D, H); else plainSolid(group, W, D, H); }
 /* a hollow cube: twelve square bars, their thickness set on its own */
 function frameSolid(group, W, D, Hh) {
   const t = Math.min(dv('frameT') / 1000, W / 2, D / 2, Hh / 2), bars = [];
@@ -3124,7 +3131,7 @@ function layoutHuman() {
   } else if (A.seated) {
     const front = A.thigh + 0.14;
     z = S.place === 'table' ? EDGE + 0.22 : S.place === 'counter' ? EDGE + front + 0.02 : 0.15 + front;
-  } else z = S.place === 'wall' ? wallDist() + toe /* stood back far enough to take it all in, or as set */ : S.place === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + 0.06 + toe : S.place === 'counter' ? EDGE - 0.02 + toe : S.place === 'table' ? EDGE + 0.03 + toe : 0.1 + toe;
+  } else z = S.place === 'wall' ? wallDist() + toe /* stood back far enough to take it all in, or as set */ : S.place === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + 0.06 + toe : S.place === 'counter' ? EDGE - 0.02 + toe : S.place === 'table' ? EDGE + 0.03 + toe : (dims().H > 0.6 && S.look !== 'floorlamp' ? 0.03 : 0.1) + toe; // up to a tall thing on the floor (a plinth): toes close
   human.position.set(0, 0, z);
   human.rotation.set(0, Math.PI, 0);
 }
@@ -3152,6 +3159,7 @@ function layoutProduct() {
   if (isDispense()) setSpoutLook();
   if (S.face === 'top') { marker.position.set(0, P.H + 0.003, -topCtrlZ(P.D)); marker.rotation.set(-Math.PI / 2, 0, 0); }
   else if (S.action === 'dispense') { marker.position.set(0, ctrlM() - 0.024, 0.035); marker.rotation.set(-Math.PI / 2, 0, 0); }
+  else if (lampCtrl()) { marker.position.copy(lampCtrl()).add(new V3(0, 0, 0.003)); marker.rotation.set(0, 0, 0); }
   else { marker.position.set(0, ctrlM(), 0.003); marker.rotation.set(0, 0, 0); }
 }
 
@@ -3176,6 +3184,7 @@ function controlWorld() {
   if (S.look === 'luggage' && S.source === 'box') return new V3(0, sy + luggageHandle(), -P.D * 0.82); // the pulled-out trolley handle
   if (S.look === 'trolley' && S.source === 'box') return new V3(0, sy + luggageHandle(), 0.03); // the push bar
   if (S.face === 'top') return new V3(0, sy + P.H, -topCtrlZ(P.D));
+  if (lampCtrl()) return lampCtrl().add(new V3(0, sy, 0));
   return new V3(0, sy + ctrlM(), 0);
 }
 function targetWorld() {
@@ -3333,6 +3342,13 @@ function keyboardPoint() {
 function twoGoal(kind, hp, pts, frame, tip, pole) {
   return { kind, hp, at: pts.map((p) => human.worldToLocal(p.clone())), frame, tip, pole };
 }
+/* where the palm rests on top of something too big or flat to grip (world): near the front edge, in front of the right shoulder as far as the top allows */
+function flatTop() {
+  const A = S.A, b = mainBox(), t = new V3((b.min.x + b.max.x) / 2, b.max.y, b.max.z - Math.min(0.08, (b.max.z - b.min.z) * 0.3));
+  const off = A.shoulderHalf * 0.7, lx = (x) => human.worldToLocal(new V3(x, t.y, t.z)).x, x0 = t.x;
+  t.x = lx(x0 + off) < lx(x0 - off) ? x0 + off : x0 - off; t.x = clamp(t.x, Math.min(x0, b.min.x + 0.04), Math.max(x0, b.max.x - 0.04));
+  return t;
+}
 function planHands() {
   const A = S.A, HD = A.hd;
   S.handRest = restPose();
@@ -3342,7 +3358,8 @@ function planHands() {
   if (grabbable()) {
     const P = dims();
     if (!laidFlat() && P.H >= 0.025 && Math.min(P.W, P.D) <= GRAB_MAX) { const g = objectGrip(HD, P, ['cyl', 'sphere', 'cone', 'parts'].includes(S.shape), 0.5); S.plan = { ...g, kind: 'grab', grab: grabGoal(g) }; } // a fist round its middle
-    else { const b = mainBox(), t = new V3((b.min.x + b.max.x) / 2, b.max.y, b.max.z - Math.min(0.08, (b.max.z - b.min.z) * 0.3)); S.pressLocal = human.worldToLocal(t); S.plan = { kind: 'flat', hp: flatPose() }; } // too big or too flat for a fist (a sheet, a plate, a ring): the palm rests on it
+    else { const t = flatTop();
+      S.pressLocal = human.worldToLocal(t); S.plan = { kind: 'flat', hp: flatPose() }; } // too big or too flat for a fist (a sheet, a plate, a ring): the palm rests on it
     return;
   }
   if (S.place === 'hand') {
@@ -3835,11 +3852,11 @@ function evaluate() {
     human.updateMatrixWorld(true);
     const b = mainBox(), c = b.getCenter(new V3()); if (S.place !== 'wall') c.y = b.max.y; // on a wall: its middle
     if (grabbable()) { const w = Math.min(P.W, P.D), fist = !laidFlat() && P.H >= 0.025 && w <= GRAB_MAX; add(L('쥐기', 'Grasp'), fist ? L(`동작 보기를 누르면 한 손으로 쥐어요 · 쥐는 폭 ${mmi(w)}mm`, `Play takes it in one hand · ${mmi(w)} mm across`) : laidFlat() || P.H < 0.025 ? L('얇아서 쥐기보다 손바닥을 얹어요 · 동작 보기에서 보여요', 'Too thin to grip · Play rests a palm on it') : L(`한 손에 쥐기엔 커요(${mmi(w)}mm) · 동작 보기를 누르면 손바닥을 위에 얹어요`, `Too big for one hand (${mmi(w)} mm) · Play rests a palm on top`), fist ? 'good' : 'info'); }
-    if (isProp() && rowUnits() && S.row.length > 1) add(L('여러 개', 'Side by side'), L(`${S.row.length}개 · 전체 폭 ${mmi((rowSpan().total / 1000) * S.scale)}mm · 사람은 메인 A를 봐요`, `${S.row.length} of them · ${mmi((rowSpan().total / 1000) * S.scale)} mm overall · the person looks at A, the main one`), 'info');
+    if (rowProp() && rowUnits() && S.row.length > 1) add(L('여러 개', 'Side by side'), L(`${S.row.length}개 · 전체 폭 ${mmi((rowSpan().total / 1000) * S.scale)}mm · 사람은 메인 A를 봐요`, `${S.row.length} of them · ${mmi((rowSpan().total / 1000) * S.scale)} mm overall · the person looks at A, the main one`), 'info');
     const tl = human.worldToLocal(c.clone()), dz = Math.max(0.05, tl.z - b0.eye.z), dy = eyeY - tl.y, dist = Math.hypot(dz, dy), ang = Math.atan2(dy, dz) * 180 / Math.PI;
     S.nod = clamp(deg(ang) - deg(22), 0, deg(40)); // the eyes drop about 22°, the neck bows for the rest
     out.target = c; out.targetLocal = tl;
-    if (grabbable()) { const rch = (f) => basePose(A, p, f).shR.distanceTo(tl) / A.reach; let f = 0; while (f < 34 && rch(f) > 0.74) f += 2; out.flex = f; } // taking hold of it: lean in just enough that the elbow bends, the forearm doing the reaching
+    if (grabbable()) { const fist = !laidFlat() && P.H >= 0.025 && Math.min(P.W, P.D) <= GRAB_MAX, tg = fist ? tl : human.worldToLocal(flatTop()), rch = (f) => basePose(A, p, f).shR.distanceTo(tg) / A.reach; let f = 0; while (f < 34 && rch(f) > 0.74) f += 2; out.flex = f; } // taking hold of it: lean in just enough that the elbow bends, the forearm doing the reaching
     const alv = ang > 60 || ang < -30 ? 'warn' : 'good';
     add(L('시선', 'Gaze'), Math.abs(ang) < 8 ? L(`눈에서 ${cmi(dist)}cm · 눈높이에서 봐요`, `${cmi(dist)} cm from the eyes · at eye level`) : ang >= 0 ? L(`눈에서 ${cmi(dist)}cm · 아래로 ${Math.round(ang)}°${ang > 60 ? ' · 목을 많이 숙여요' : ' · 편하게 내려다봐요'}`, `${cmi(dist)} cm from the eyes · ${Math.round(ang)}° down${ang > 60 ? ', the neck bows a lot' : ', an easy look down'}`) : L(`눈에서 ${cmi(dist)}cm · 위로 ${Math.round(-ang)}°${ang < -30 ? ' · 고개를 들어야 해요' : ' · 편하게 올려다봐요'}`, `${cmi(dist)} cm from the eyes · ${Math.round(-ang)}° up${ang < -30 ? ', the head tips back' : ', an easy look up'}`), alv);
     const top = sy + P.H;
@@ -4158,7 +4175,7 @@ function refresh(o = {}) {
   seatSetup(p);
   buildBody(S.A, p);
   if (o.rebuild) { anim.fill = 0; anim.open = 0; }
-  { const rk = isProp() && rowUnits() ? JSON.stringify(S.row) : ''; if (rk !== builtRow) { builtRow = rk; o = { ...o, rebuild: true }; } } // mockups beside the main one come and go with the place (none in the hands or at the desk)
+  { const rk = rowProp() && rowUnits() ? JSON.stringify(S.row) : ''; if (rk !== builtRow) { builtRow = rk; o = { ...o, rebuild: true }; } } // mockups beside the main one come and go with the place (none in the hands or at the desk)
   if (o.rebuild || S.place === 'head' || S.place === 'back' || S.look === 'backpack') buildProduct(); // worn things are fitted to this person
   buildSurface();
   buildChair(S.A);
@@ -4381,7 +4398,7 @@ function syncUI() {
   $('cIn').max = Math.round(isModel ? S.model.h : S.h);
   $('cIn').value = S.ctrl;
   $('cOut').textContent = `${mmi(ctrlM())}mm`;
-  for (const b of $('modeSeg').children) b.disabled = carried() || (lookOnly() && !lookAtIt()); // a ring, a sheet, a phone laid on the desk or a mug set down is only looked at
+  for (const b of $('modeSeg').children) b.disabled = (carried() && !(S.source === 'box' && S.look === 'parcel')) || (lookOnly() && !lookAtIt() && !(S.source === 'box' && S.look === 'parcel')); // a ring, a sheet, a phone laid on the desk or a mug set down is only looked at
   $('modelOpts').hidden = !isModel; $('backToBox').hidden = !isModel;
   syncPlay();
   $('btnPlay').disabled = handKind() === 'clutch' || (lookAtIt() && !grabbable()) || (S.mode === 'compare' && S.place !== 'hand') || A.chair === 'product' || S.place === 'head' || S.place === 'back';
@@ -4948,7 +4965,7 @@ function setLang(v) {
 const setMsg = (id, text) => { const el = $(id); el.textContent = text; el.dataset.dyn = '1'; }; // a status line that stays put when the language changes
 segBind('actSeg', 'act', (v) => { S.action = v; refresh(); });
 segBind('ctrlOnSeg', 'on', (v) => { S.noCtrl = v === '0'; refresh({ refit: true }); }); // off: no control point, the person simply stands beside it
-segBind('modeSeg', 'mode', (v) => { S.mode = v; refresh({ refit: true }); });
+segBind('modeSeg', 'mode', (v) => { S.mode = v; if (S.source === 'box' && S.look === 'parcel') { S.place = v === 'compare' ? 'floor' : 'hand'; refresh({ rebuild: true, refit: true }); return; } refresh({ refit: true }); }); // a parcel box: carried in use, set on the floor beside the person side by side
 for (const b of $('views').querySelectorAll('[data-view]')) b.addEventListener('click', () => { if (!b.disabled) setView(b.dataset.view); });
 for (const t of document.querySelectorAll('[role="tab"][aria-controls]')) { // the panel tabs (the example tabs have their own)
   t.addEventListener('click', () => {
