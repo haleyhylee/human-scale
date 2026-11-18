@@ -627,6 +627,9 @@ const PRESETS = {
   cube: { name: '큐브', en: 'Cube', shape: 'box', w: 80, d: 80, h: 80, place: 'plinth', face: 'front', ctrl: 40, action: 'press', prop: true, noCtrl: true, forms: ['box', 'frame'] }, // solid, or a frame of square bars
   cyl: { name: '원통', en: 'Cylinder', shape: 'cyl', w: 80, d: 80, h: 150, place: 'plinth', face: 'front', ctrl: 75, action: 'press', prop: true, noCtrl: true },
   plate: { name: '판', en: 'Plate', shape: 'plate', w: 100, d: 100, h: 5, place: 'plinth', face: 'top', ctrl: 5, action: 'press', prop: true, noCtrl: true }, // an acrylic-like sheet
+  tube: { name: '튜브 용기', en: 'Squeeze tube', shape: 'box', look: 'tube', w: 50, d: 34, h: 160, place: 'plinth', face: 'front', ctrl: 80, action: 'press', prop: true, noCtrl: true }, // stands on its cap, the crimped end up
+  pump: { name: '펌프 용기', en: 'Pump bottle', shape: 'box', look: 'pump', w: 70, d: 70, h: 210, place: 'plinth', face: 'front', ctrl: 190, action: 'press', prop: true, noCtrl: true }, // a shampoo bottle: the pump head stays as it is, the body round or square
+  lipstick: { name: '립스틱 용기', en: 'Lipstick case', shape: 'box', look: 'lipstick', w: 22, d: 22, h: 80, place: 'plinth', face: 'front', ctrl: 40, action: 'press', prop: true, noCtrl: true }, // a small case with its cap, round or square
   sphere: { name: '구', en: 'Sphere', shape: 'sphere', w: 100, d: 100, h: 100, place: 'plinth', face: 'front', ctrl: 50, action: 'press', prop: true, noCtrl: true },
   cone: { name: '원뿔', en: 'Cone', shape: 'cone', w: 100, d: 100, h: 150, place: 'plinth', face: 'front', ctrl: 75, action: 'press', prop: true, noCtrl: true },
   ring: { name: '반지', en: 'Ring', shape: 'ring', w: 3, d: 1.6, h: 5, size: 11, place: 'hand', face: 'front', ctrl: 0, action: 'press' }, // band width, band thickness, stone (mm); worn on the ring finger
@@ -666,7 +669,7 @@ const FORMS = { box: [80, 80, 80], frame: [200, 200, 200], cyl: [80, 80, 150], s
 const roundSeat = () => S.source === 'box' && S.shape === 'chair' && (S.style === 'stool' || (S.style === 'pstool' && ['legs', 'cyl'].includes((S.det && S.det.form) || 'legs'))); // a round stool: its seat is W across, so D follows W
 const roundBase = (sh = S.shape) => sh === 'cup' || sh === 'cone' || (sh === S.shape && (S.look === 'tumbler' || roundSeat())); // W = D (a cylinder can be deeper: its middle stretches)
 const PRESET_GROUPS = [
-  [['목업·소품', 'Mockup & objects'], ['cube', 'cyl', 'sphere', 'cone', 'plate', 'fam:paper', 'ring']],
+  [['목업·소품', 'Mockup & objects'], ['cube', 'cyl', 'sphere', 'cone', 'plate', 'tube', 'pump', 'lipstick', 'fam:paper', 'ring']],
   [['생활 제품', 'Appliances'], ['purifier', 'coffee', 'air', 'floorlamp', 'tablelamp', 'mushroom']],
   [['전자제품', 'Electronics'], ['fam:phone', 'fam:fold', 'flip', 'fam:tablet', 'fam:laptop', 'airbuds', 'airpods', 'airmax', 'robot', 'fam:speaker']],
   [['안경·헬멧', 'Eyewear & helmets'], ['glasses', 'sunglasses', 'helmet']],
@@ -1724,6 +1727,7 @@ const DETAIL = {
   desk: TABLE_ROWS(25, 22, '옆판 두께', 'Side panel thickness'), standing: TABLE_ROWS(25, 70, '기둥 굵기', 'Column thickness'), dining: TABLE_ROWS(30, 55), bar: TABLE_ROWS(35, 44), coffee: TABLE_ROWS(30, 50, '발 굵기', 'Foot thickness'),
   frame: [DR('frameT', '프레임 두께', 'Frame thickness', 2, 100, 10), MAT_ROW],
   prop: [MAT_ROW], // the plain mockup solids
+  pump: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], lipstick: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], tube: [MAT_ROW], // cosmetics: the body round or square
   laptop: [{ k: 'lid', ko: '덮개', en: 'Lid', opts: [['open', '열림', 'Open'], ['closed', '닫힘', 'Closed']], def: 'open' }],
   purifier: [{ k: 'form', ko: '형태', en: 'Form', opts: [['box', '네모', 'Box'], ['cyl', '원통', 'Round']], def: 'box' }],
   airpurifier: [{ k: 'form', ko: '형태', en: 'Form', opts: [['box', '네모', 'Box'], ['cyl', '원통', 'Round']], def: 'box' }],
@@ -1742,6 +1746,7 @@ function detKind() {
   if (S.source !== 'box') return null;
   if (S.shape === 'headphone') return 'headphone';
   if (S.shape === 'frame') return 'frame';
+  if (['tube', 'pump', 'lipstick'].includes(S.look) && S.source === 'box') return S.look;
   if (isProp()) return 'prop';
   if (S.look === 'hobo') return 'hobo';
   if (S.shape === 'laptop') return 'laptop';
@@ -2862,15 +2867,46 @@ function buildProduct() {
   else if (S.look === 'airpurifier' && S.shape === 'box') airPurifierGeo(holder, W, D, Hh);
   else if (S.look === 'tumbler' && S.shape === 'cyl') tumblerGeo(holder, W, Hh);
   else if (S.shape === 'parts' && S.parts && S.pbase) partsGeo(holder, W, D, Hh);
-  else if (S.shape === 'frame') frameSolid(holder, W, D, Hh);
+  else if (S.shape === 'frame' || isProp()) propSolid(holder, W, D, Hh);
   else plainSolid(holder, W, D, Hh);
   if (isProp() && rowUnits() && S.row.length > 1) { // the other mockups beside the main one, each its own size
     const off = rowOffsets(), m = rowMain();
-    S.row.forEach((u, i) => { if (i === m) return; const g = new THREE.Group(), w = u.w / 1000, d = (roundBase() ? u.w : u.d) / 1000, h = u.h / 1000; g.position.set(off[i] / 1000, 0, S.place === 'wall' ? (d - D) / 2 : 0); g.userData.own = true; g.userData.unit = u.n; holder.add(g); (S.shape === 'frame' ? frameSolid : plainSolid)(g, w, d, h); });
+    S.row.forEach((u, i) => { if (i === m) return; const g = new THREE.Group(), w = u.w / 1000, d = (roundBase() ? u.w : u.d) / 1000, h = u.h / 1000; g.position.set(off[i] / 1000, 0, S.place === 'wall' ? (d - D) / 2 : 0); g.userData.own = true; g.userData.unit = u.n; holder.add(g); propSolid(g, w, d, h); });
   }
   holder.scale.setScalar(S.scale);
 }
 
+/* cosmetics mockups. A squeeze tube standing on its cap, round at the cap and flattening to a crimped seal at the top; a pump bottle (the
+   body round or square, the pump head as it is: collar, stem, head with its nozzle to the front); a lipstick-size case with its cap */
+function squeezeTubeGeo(group, W, D, H) {
+  const own = meshIn(group), capH = Math.min(0.03, H * 0.18), r0 = Math.min(W, D) / 2, crimp = Math.min(0.012, H * 0.08), bodyH = H - capH - crimp, n = 48, m = 28, pos = [], idx = [];
+  own(new THREE.CylinderGeometry(r0 * 0.92, r0 * 0.98, capH, 40).translate(0, capH / 2, -D / 2), mats.trim);
+  for (let j = 0; j <= m; j++) { const t = j / m, s = t * t * (3 - 2 * t), a = r0 + (W / 2 - r0) * s, b = r0 + (0.0012 - r0) * s, y = capH + t * bodyH;
+    for (let i = 0; i < n; i++) { const u = (i / n) * Math.PI * 2; pos.push(a * Math.sin(u), y, -D / 2 + b * Math.cos(u)); } }
+  for (let j = 0; j < m; j++) for (let i = 0; i < n; i++) { const p = j * n + i, q = j * n + ((i + 1) % n); idx.push(p, q, p + n, q, q + n, p + n); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+  own(g, Object.assign(propMat().clone(), { side: THREE.DoubleSide }));
+  own(new RoundedBoxGeometry(W, crimp, 0.003, 2, 0.001).translate(0, H - crimp / 2, -D / 2), propMat()); // the crimped seal
+}
+const cosmeticBody = (W, D, h, round) => (round ? stadiumPlate(W, D, h, Math.min(0.006, Math.min(W, D) * 0.08)).applyMatrix4(ON_DECK) : new RoundedBoxGeometry(W, h, D, 3, Math.min(0.006, Math.min(W, D) * 0.1)).translate(0, h / 2, -D / 2));
+function pumpGeo(group, W, D, H) {
+  const own = meshIn(group), round = dv('form') !== 'cube', m = Math.min(W, D), pumpH = Math.min(0.075, H * 0.36), bodyH = H - pumpH, cz = -D / 2;
+  own(cosmeticBody(W, D, bodyH, round), propMat());
+  const cr = Math.min(0.015, m * 0.24), collarH = Math.min(0.016, pumpH * 0.24); // the pump: as it comes, whatever the bottle
+  own(new THREE.CylinderGeometry(cr, cr, collarH, 32).translate(0, bodyH + collarH / 2, cz), mats.trim);
+  const stemH = pumpH * 0.42; own(new THREE.CylinderGeometry(cr * 0.42, cr * 0.42, stemH, 24).translate(0, bodyH + collarH + stemH / 2, cz), mats.trim);
+  const hy = bodyH + collarH + stemH, hh = pumpH - collarH - stemH;
+  own(new RoundedBoxGeometry(cr * 2.2, hh, cr * 2.2, 2, Math.min(0.004, hh / 3)).translate(0, hy + hh / 2, cz), mats.trim);
+  own(new THREE.CylinderGeometry(cr * 0.28, cr * 0.32, cr * 2.4, 16).rotateX(Math.PI / 2).translate(0, hy + hh * 0.62, cz + cr * 2.1), mats.trim); // the nozzle, to the front
+}
+function lipstickGeo(group, W, D, H) {
+  const own = meshIn(group), round = dv('form') !== 'cube', baseH = H * 0.58;
+  own(cosmeticBody(W, D, baseH, round), mats.trim);
+  own(cosmeticBody(W * 1.01, D * 1.01, H - baseH, round).translate(0, baseH, -D * 0.005), propMat()); // the cap
+  own(cosmeticBody(W * 0.96, D * 0.96, 0.0012, round).translate(0, baseH - 0.0006, -D * 0.02), mats.tire); // the seam
+}
+/* a mockup solid by its kind: the main one and any set beside it */
+function propSolid(group, W, D, H) { if (S.look === 'tube') squeezeTubeGeo(group, W, D, H); else if (S.look === 'pump') pumpGeo(group, W, D, H); else if (S.look === 'lipstick') lipstickGeo(group, W, D, H); else if (S.shape === 'frame') frameSolid(group, W, D, H); else plainSolid(group, W, D, H); }
 /* a hollow cube: twelve square bars, their thickness set on its own */
 function frameSolid(group, W, D, Hh) {
   const t = Math.min(dv('frameT') / 1000, W / 2, D / 2, Hh / 2), bars = [];
