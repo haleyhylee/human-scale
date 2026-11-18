@@ -116,6 +116,8 @@ button { cursor: pointer; }
 .btn.accent { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .btn[aria-pressed="false"] { color: var(--ink-2); font-weight: 500; }
 .btn:disabled { opacity: 0.5; cursor: default; }
+.ai-ask { margin: 8px 0; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--raise); }
+.ai-q { margin: 8px 0; } .ai-q .q { font-size: 13px; font-weight: 600; margin-bottom: 4px; } .ai-q .chips { flex-wrap: wrap; gap: 6px; }
 .btn.wide { width: 100%; height: 40px; margin-top: 6px; }
 .btn.icon { width: 32px; padding: 0; font-size: 17px; line-height: 1; }
 @media (max-width: 520px) {
@@ -391,6 +393,11 @@ input:disabled { opacity: 0.55; }
         <div class="ai-confirm" id="aiConfirm" hidden>
           <span data-en="Detailed mode can take a minute or two and uses more of your Claude usage. Go ahead?">정밀 모드는 1~2분쯤 걸리고 Claude 사용량을 더 써요. 계속할까요?</span>
           <div class="ai-row"><button type="button" class="btn accent" id="aiGo" data-en="Go ahead">계속</button><button type="button" class="btn" id="aiCancel" data-en="Cancel">취소</button></div>
+        </div>
+        <div class="ai-ask" id="aiAsk" hidden>
+          <p class="hint" data-en="Before making it, AI checks what it can't tell. Pick what's right; skip any you don't know.">만들기 전에, AI가 확실하지 않은 부분을 물어봐요. 맞는 것을 고르고 모르면 넘어가도 돼요.</p>
+          <div id="aiQs"></div>
+          <div class="ai-row"><button type="button" class="btn accent" id="aiAskGo" data-en="Make with these">이대로 만들기</button><button type="button" class="btn" id="aiAskSkip" data-en="Skip, AI decides">건너뛰고 AI가 정하기</button></div>
         </div>
         <button type="submit" class="btn accent" id="aiMake" data-en="Make">만들기</button>
         <p class="hint" id="aiStatus" data-en="AI doesn't search the web: pasted sizes and a photo are what it follows, else it estimates. It runs on your own Claude account.">AI는 웹 검색을 하지 않아요. 붙여넣은 치수와 사진을 따르고, 없으면 추정해요. 내 Claude 계정으로 돌아가요.</p>
@@ -1607,8 +1614,10 @@ let modelInner = null, modelRaw = null;
 
 const foldKind = () => (S.source === 'box' && PRESETS[S.pkey] && PRESETS[S.pkey].fold) || null; // a foldable phone: 'book' opens sideways, 'flip' opens upward
 const unfolded = () => !!foldKind() && anim.played;
-function dims() {
-  if (unfolded()) { const k = S.scale / 1000; return foldKind() === 'book' ? { W: (2 * S.w - 3) * k, D: S.d * 0.47 * k, H: S.h * k } : { W: S.w * k, D: S.d * 0.47 * k, H: (2 * S.h - 4) * k }; } // opened: twice as wide (or tall), half as thick
+function openDims() { const k = S.scale / 1000; return foldKind() === 'book' ? { W: (2 * S.w - 3) * k, D: S.d * 0.47 * k, H: S.h * k } : { W: S.w * k, D: S.d * 0.47 * k, H: (2 * S.h - 4) * k }; } // a foldable opened out
+function dims() { // a book foldable keeps its folded size for the hold: it opens out of the same hand
+  if (unfolded() && foldKind() === 'flip') return openDims();
+  if (false) { const k = S.scale / 1000; return foldKind() === 'book' ? { W: (2 * S.w - 3) * k, D: S.d * 0.47 * k, H: S.h * k } : { W: S.w * k, D: S.d * 0.47 * k, H: (2 * S.h - 4) * k }; } // opened: twice as wide (or tall), half as thick
   if (S.source === 'model' && S.model) return { W: (S.model.w / 1000) * S.scale, D: (S.model.d / 1000) * S.scale, H: (S.model.h / 1000) * S.scale };
   if (S.shape === 'ring') { const o = (ringD(S.ringSize) + 2 * S.d) / 1000; return laidFlat() ? { W: o, D: o + S.h / 1000, H: S.w / 1000 } : { W: o, D: S.w / 1000, H: o + S.h / 1000 }; } // set down: lying flat
   const W = (S.w / 1000) * S.scale, D = ((roundBase() ? S.w : S.d) / 1000) * S.scale, H = (S.h / 1000) * S.scale;
@@ -2290,7 +2299,7 @@ function fitUV(geo) {
    a port at the bottom. Built round its middle so the whole device turns about when the screen should face the eyes */
 /* a foldable, open: two halves on a hinge, the inner screen across both; the left (book) or top (flip) half swings round as Play unfolds it */
 function foldGeo(group) {
-  const fk = foldKind(), P = dims(), W = P.W / S.scale, D = P.D / S.scale, H = P.H / S.scale, book = fk === 'book';
+  const fk = foldKind(), P = openDims(), W = P.W / S.scale, D = P.D / S.scale, H = P.H / S.scale, book = fk === 'book';
   const hw = book ? W / 2 : W, hh = book ? H : H / 2, bev = Math.min(0.0016, D * 0.35), r = Math.min(0.009, hw * 0.12);
   const half = (g, x0, y0) => {
     const own = meshIn(g);
@@ -2298,8 +2307,14 @@ function foldGeo(group) {
     own(new THREE.ShapeGeometry(roundRect(hw - 0.004, hh - 0.004, Math.max(r - 0.002, 0.0005)), 8).translate(x0, y0 + 0.002, 0.0002), userImgMat('screen', hw - 0.004, hh - 0.004) || screenLit());
   };
   const piv = new THREE.Group(); group.add(piv);
-  if (book) { half(group, hw / 2, 0); half(piv, -hw / 2, 0); } // the right half stays in the right hand; the left half turns on the hinge at x 0
+  if (book) { half(group, 0, 0); piv.position.x = -hw / 2; half(piv, -hw / 2, 0); } // the right half stays where the folded phone was, in the right hand; the left half swings out to the left on the hinge at its left edge
   else { half(group, 0, 0); piv.position.y = hh; half(piv, 0, 0); } // the bottom half stays in the hand; the top half turns on the hinge at its bottom edge
+  if (!book) { // the flip's cover screen on the back of its top half, cameras at its bottom right as seen closed (the far edge here, the hinge folding it over)
+    const own = meshIn(piv), sw = hw - 0.006, sh = hh - 0.006, zb = -D - 0.0002;
+    own(new THREE.ShapeGeometry(roundRect(sw, sh, Math.max(r - 0.003, 0.0005)), 8).rotateY(Math.PI).translate(0, 0.003, zb), screenLit());
+    const rr = 0.0042, cy = hh - 0.003 - rr * 1.9;
+    for (const dx of [0, rr * 2.9]) { const cx = hw / 2 - 0.003 - rr * 1.9 - dx; own(new THREE.CylinderGeometry(rr * 1.3, rr * 1.36, 0.0012, 32).rotateX(Math.PI / 2).translate(cx, cy, zb - 0.0006), mats.frame); own(new THREE.CircleGeometry(rr, 28).rotateY(Math.PI).translate(cx, cy, zb - 0.0013), lensMat); }
+  }
   group.userData.fold = { g: piv, book };
 }
 function phoneGeo(group, W, D, H) {
@@ -3006,7 +3021,6 @@ function handKind() {
   if (box && (S.look === 'tote' || S.look === 'hobo')) return 'hang'; // a bag hanging from the hand by its handles
   if (box && S.look === 'pouch') return 'clutch'; // a pouch carried at the side, the hand over it, its back against the hip
   if (box && S.look === 'paper') return Math.max(P.W, P.H) > 0.32 ? 'sheet' : 'face'; // an A4 sheet in one hand, a poster in two
-  if (box && unfolded() && foldKind() === 'book') return 'sheet'; // an open foldable: both hands
   if (box && S.shape === 'box' && isFlat(P)) return S.screen ? (Math.min(P.W, P.H) <= 0.23 ? 'face' : 'sheet') : Math.max(P.W, P.H) > 0.17 ? 'sheet' : 'face';
   if (P.H >= 1.3 * Math.max(P.W, P.D) || (box && S.shape === 'cup')) return gripSize(P) > 0.5 * span ? 'box' : 'grip';
   return Math.max(P.W, P.D) <= 0.6 * span ? 'palm' : 'box';
@@ -3052,7 +3066,7 @@ function edgePose(g) {
   const front = D3.D + HD.palmT / 2 + 0.002, e0 = clamp((front + T.r[0] + 0.002 - T.base.x) / T.L[0], 0.3, 0.95), rest = Math.sqrt(1 - e0 * e0);
   const tm = h(e0, 0.86 * rest, 0.5 * rest).normalize(), tq = h(-0.05, 0.5, 0.86).normalize();
   let f = HD.fingers.map(() => [deg(2), deg(3), deg(2)]);
-  if (g.phone) {
+  if (g.phone && !(unfolded() && foldKind() === 'book')) { // opening a foldable, the fingers lie straight along its back
     const x0 = HD.palmT / 2 + 0.002, shape = { kind: 'r', cx: x0 + D3.D / 2, cy: -g.inset + D3.W / 2, ax: D3.D / 2, by: D3.W / 2, z0: -(D3.H - g.up), z1: g.up };
     f = HD.fingers.map((F) => solve(shape, new V3(0, F.y, F.z), UP, FAX, F.L, F.r, [90, 105, 85]));
   }
@@ -3152,7 +3166,7 @@ function planHands() {
   if (kb) { // typing: palms down over the keys, the middle fingertips on the home row
     const hp = typePose(), tip = fingerPts(HD, hp)[1][3].clone().add(new V3(HD.fingers[1].r[2] * 0.9, 0, 0));
     const side = (s) => holder.localToWorld(holder.worldToLocal(kb.clone()).add(new V3(-s * 0.055 / S.scale, 0, 0)));
-    S.plan = twoGoal('type', hp, [side(-1), side(1)], (s) => handFrame(new V3(0, -1, 0), new V3(-s * 0.12, -0.3, 1)), tip, (s) => new V3(s * 0.8, -1, -0.25));
+    S.plan = twoGoal('type', hp, [side(-1), side(1)], (s) => handFrame(new V3(0, -1, 0.12), new V3(-s * 0.12, 0.12, 1)), tip, (s) => new V3(s * 0.35, -1, -0.7)); // the hand in line with the forearm (a straight wrist), the elbows back by the sides
     S.pressLocal = human.worldToLocal(kb.clone());
   } else if (st === 'sink') { // both hands in the bowl, under the running water
     const sk = SINK(S.w / 1000, S.d / 1000), y = S.h / 1000 - sk.depth + 0.07, pt = (x) => holder.localToWorld(new V3(x, y, sk.bz + 0.03));
@@ -3215,10 +3229,10 @@ function handGoal(plan, s, P, sh) {
     case 'press': {
       if (!right) return null;
       const F = handFrame(new V3(0, -1, 0), new V3().subVectors(S.pressLocal, sh));
-      return { F, W: S.pressLocal.clone().sub(inHand(F, plan.tip)), pole: new V3(-0.55, -1, -0.35), hp: plan.hp };
+      return { F, W: S.pressLocal.clone().sub(inHand(F, plan.tip)), pole: S.pressLocal.y < S.A.hipY ? new V3(-0.15, 0.1, -1) : new V3(-0.55, -1, -0.35), hp: plan.hp }; // reaching down low: the elbow back, like the other arm hanging
     }
     case 'ring': return right ? { F: handFrame(new V3(0.1, 0, -1), new V3(0.3, 1, 0.12)), W: new V3(P.shR.x + 0.05, P.shR.y - 0.12, P.shR.z + 0.3), pole: new V3(-0.6, -1, 0.1), hp: plan.hp } : null;
-    case 'grab': return right ? { F: { q: plan.grab.q }, W: plan.grab.W, pole: new V3(-0.6, -1, -0.3), hp: plan.hp } : null;
+    case 'grab': return right ? { F: { q: plan.grab.q }, W: plan.grab.W, pole: new V3(-0.3, -1, -0.6), hp: plan.hp } : null; // the elbow back and down by the side
     case 'flat': {
       if (!right) return null;
       const F = handFrame(new V3(0, -1, 0), new V3(0.12, 0, 1));
@@ -3334,7 +3348,7 @@ function placeExtras(pose) {
   if (S.place === 'hand' && pose && plan && (plan.kind === 'sheet' || plan.kind === 'face')) { // the sheet or device rides on the right hand, so it travels with it
     const f = faceFrame(pose.P), h = edgeHand(f, -1, plan.g);
     rel = new THREE.Matrix4().makeBasis(h.F.x, h.F.y, h.F.z).setPosition(h.W).invert().multiply(new THREE.Matrix4().makeBasis(f.Xp, f.Yp, f.n).setPosition(f.origin));
-    if (S.look === 'paper' && S.source === 'box') rel.multiply(new THREE.Matrix4().makeTranslation(-0.045, 0, 0.004)); // a sheet sits clear of the palm, pinched at its edge
+    if (S.look === 'paper' && S.source === 'box') rel.multiply(new THREE.Matrix4().makeTranslation(0, 0, 0.002)); // a sheet held like a tablet, its edge in the palm
   } else if (S.place === 'hand' && plan && (plan.kind === 'palm' || plan.kind === 'handle' || plan.kind === 'clutch' || plan.kind === 'hang')) rel = plan.rel;
   if (rel) {
     const hh = plan.kind === 'clutch' ? hands[1].g : hr; hh.updateMatrixWorld(true);
@@ -3620,6 +3634,7 @@ function evaluate() {
     const tl = human.worldToLocal(c.clone()), dz = Math.max(0.05, tl.z - b0.eye.z), dy = eyeY - tl.y, dist = Math.hypot(dz, dy), ang = Math.atan2(dy, dz) * 180 / Math.PI;
     S.nod = clamp(deg(ang) - deg(22), 0, deg(40)); // the eyes drop about 22°, the neck bows for the rest
     out.target = c; out.targetLocal = tl;
+    if (grabbable()) { const rch = (f) => basePose(A, p, f).shR.distanceTo(tl) / A.reach; let f = 0; while (f < 34 && rch(f) > 0.74) f += 2; out.flex = f; } // taking hold of it: lean in just enough that the elbow bends, the forearm doing the reaching
     const alv = ang > 60 || ang < -30 ? 'warn' : 'good';
     add(L('시선', 'Gaze'), Math.abs(ang) < 8 ? L(`눈에서 ${cmi(dist)}cm · 눈높이에서 봐요`, `${cmi(dist)} cm from the eyes · at eye level`) : ang >= 0 ? L(`눈에서 ${cmi(dist)}cm · 아래로 ${Math.round(ang)}°${ang > 60 ? ' · 목을 많이 숙여요' : ' · 편하게 내려다봐요'}`, `${cmi(dist)} cm from the eyes · ${Math.round(ang)}° down${ang > 60 ? ', the neck bows a lot' : ', an easy look down'}`) : L(`눈에서 ${cmi(dist)}cm · 위로 ${Math.round(-ang)}°${ang < -30 ? ' · 고개를 들어야 해요' : ' · 편하게 올려다봐요'}`, `${cmi(dist)} cm from the eyes · ${Math.round(-ang)}° up${ang < -30 ? ', the head tips back' : ', an easy look up'}`), alv);
     const top = sy + P.H;
@@ -4012,7 +4027,7 @@ const tgLabel = () => {
 function updateTags() {
   const p = PERSONAS[S.persona], P = dims();
   $('t-human').textContent = `${pLabel(p)} ${fmtH(S.height)}cm`;
-  $('t-prod').textContent = rowUnits() && S.row.length > 1 ? L(`${prodName()} ${S.row.length}개 · 전체 폭 ${rowSpan().total}mm`, `${prodName()} ×${S.row.length} · overall ${rowSpan().total} mm`) : S.shape === 'ring' && S.source === 'box' ? L(`${prodName()} ${S.ringSize}호 · 폭 ${S.w}mm`, `${prodName()} · size ${S.ringSize} · ${S.w} mm band`) : `${prodName()} ${mmi(P.W)}×${mmi(P.D)}×${mmi(P.H)}`;
+  $('t-prod').textContent = rowUnits() && S.row.length > 1 ? L(`${prodName()} ${S.row.length}개 · 전체 폭 ${rowSpan().total}mm`, `${prodName()} ×${S.row.length} · overall ${rowSpan().total} mm`) : S.shape === 'ring' && S.source === 'box' ? L(`${prodName()} ${S.ringSize}호 · 폭 ${S.w}mm`, `${prodName()} · size ${S.ringSize} · ${S.w} mm band`) : (() => { const Q = unfolded() ? openDims() : P; return `${prodName()} ${mmi(Q.W)}×${mmi(Q.D)}×${mmi(Q.H)}`; })();
   $('t-tg').textContent = S.place === 'hand' ? L(`손 ${cm1(S.A.hand)}cm · 한 뼘 ${cm1(S.A.span)}cm`, `Hand ${cm1(S.A.hand)} cm · span ${cm1(S.A.span)} cm`)
     : S.place === 'head' ? (S.shape === 'earbud' ? L(`귀 길이 약 ${cm1(0.26 * S.A.headH)}cm`, `Ear about ${cm1(0.26 * S.A.headH)} cm long`) : L(`머리 폭 ${cm1(0.68 * S.A.headH)}cm`, `Head ${cm1(0.68 * S.A.headH)} cm wide`)) : `${tgLabel()} ${cmi(controlWorld().y)}cm`;
 }
@@ -5003,17 +5018,60 @@ $('aiPhoto').addEventListener('change', async (e) => {
 });
 $('aiPhotoDel').addEventListener('click', () => { aiImg = null; const t = $('aiThumb'); if (t.src) URL.revokeObjectURL(t.src); t.removeAttribute('src'); t.hidden = true; $('aiPhotoDel').hidden = true; });
 $('aiDeep').addEventListener('change', () => { if (!$('aiDeep').checked) $('aiConfirm').hidden = true; });
-$('aiGo').addEventListener('click', () => { aiDeepOk = true; $('aiConfirm').hidden = true; makeAI(); }); // asked once a visit
+$('aiGo').addEventListener('click', () => { aiDeepOk = true; $('aiConfirm').hidden = true; askFirst(); }); // asked once a visit
 $('aiCancel').addEventListener('click', () => { $('aiConfirm').hidden = true; });
 $('aiForm').addEventListener('submit', (e) => {
   e.preventDefault();
   if (aiBusy) { if (aiCtl) aiCtl.abort(); return; }
   if ($('aiDeep').checked && !aiDeepOk) { $('aiConfirm').hidden = false; return; }
-  makeAI();
+  askFirst();
 });
+/* before modelling, AI lists what it can't tell from the words or the photo (2–4 choices each); your picks go along with the request */
+let aiAnswers = null;
+const askKey = () => [$('aiDesc').value.trim(), $('aiSpec').value.trim(), aiImg ? aiImg.length : 0].join('|');
+let askedFor = '';
+function askPrompt(desc, spec, photo) {
+  return [`A product will be modelled as a few simple solids from this ${photo ? 'photo and ' : ''}description, for checking its size against a person.`,
+    `Product: ${desc}`, spec ? `Notes: ${spec}` : '',
+    'List at most 4 things about its VISIBLE SHAPE that you genuinely cannot tell and that would change the model (for example: is the top flat or domed, is there a handle and where, how many legs, is the base wider than the top, where the buttons are). Skip anything already clear.',
+    `Write each question and its 2 to 4 short options in ${LANG === 'ko' ? 'Korean' : 'English'}.`,
+    'Reply with JSON only: {"questions":[{"q":"...","options":["...","..."]}]}. If nothing is unclear, reply {"questions":[]}.'].filter(Boolean).join('\n');
+}
+async function askFirst() {
+  const desc = $('aiDesc').value.trim(), spec = $('aiSpec').value.trim();
+  if ((!desc && !spec && !aiImg) || !sample || aiBusy) return makeAI();
+  if (askedFor === askKey() && aiAnswers !== null) return makeAI(aiAnswers);
+  setAiBusy(true); aiCtl = new AbortController();
+  setMsg('aiStatus', L('AI가 헷갈리는 부분을 먼저 확인하는 중이에요…', 'AI is checking what it is unsure about…'));
+  let qs = [];
+  try {
+    const opts = { modelTier: 'default', signal: aiCtl.signal }; if (aiImg) opts.images = [aiImg];
+    const r = await sample.json(askPrompt(desc || L('사진 속 제품', 'the product in the photo'), spec, !!aiImg), opts);
+    qs = (r && Array.isArray(r.questions) ? r.questions : []).filter((x) => x && x.q && Array.isArray(x.options) && x.options.length >= 2).slice(0, 4).map((x) => ({ q: String(x.q).slice(0, 80), options: x.options.slice(0, 4).map((o) => String(o).slice(0, 40)) }));
+  } catch (err) { setAiBusy(false); if (err && (err.name === 'AbortError' || err.code === 'cancelled')) { setMsg('aiStatus', L('멈췄어요.', 'Stopped.')); return; } return makeAI(); }
+  setAiBusy(false);
+  askedFor = askKey();
+  if (!qs.length) { aiAnswers = ''; return makeAI(''); }
+  const box = $('aiQs'); box.replaceChildren();
+  qs.forEach((x, i) => {
+    const d = document.createElement('div'); d.className = 'ai-q'; d.dataset.q = x.q;
+    const t = document.createElement('div'); t.className = 'q'; t.textContent = `${i + 1}. ${x.q}`; d.appendChild(t);
+    const c = document.createElement('div'); c.className = 'chips';
+    for (const o of [...x.options, L('모르겠어요', "Don't know")]) { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = o; b.setAttribute('aria-pressed', 'false'); b.addEventListener('click', () => { for (const z of c.children) z.setAttribute('aria-pressed', String(z === b)); }); c.appendChild(b); }
+    d.appendChild(c); box.appendChild(d);
+  });
+  $('aiAsk').hidden = false;
+  setMsg('aiStatus', L('확인할 게 있어요. 위에서 골라 주세요.', 'A few things to check above.'));
+}
+$('aiAskGo').addEventListener('click', () => {
+  const dk = L('모르겠어요', "Don't know"), lines = [];
+  for (const d of $('aiQs').children) { const b = d.querySelector('[aria-pressed="true"]'); if (b && b.textContent !== dk) lines.push(`${d.dataset.q} → ${b.textContent}`); }
+  aiAnswers = lines.join('\n'); $('aiAsk').hidden = true; makeAI(aiAnswers);
+});
+$('aiAskSkip').addEventListener('click', () => { aiAnswers = ''; $('aiAsk').hidden = true; makeAI(''); });
 const BASIS = { spec: ['붙여넣은 치수 기준', 'from the sizes you pasted'], known: ['AI가 아는 공개 치수 · 검색은 안 함', 'published sizes AI knows · no web search'], photo: ['사진 비율로 추정', 'proportions read from the photo'], estimate: ['AI 추정 · 검색 안 함 — 치수를 붙여넣으면 정확해져요', 'AI estimate, no web search — paste sizes to pin it down'] };
-async function makeAI() {
-  const desc = $('aiDesc').value.trim(), spec = $('aiSpec').value.trim(), deep = $('aiDeep').checked;
+async function makeAI(answers = '') {
+  const desc = $('aiDesc').value.trim(), spec = [$('aiSpec').value.trim(), answers ? `${L('사용자가 확인한 모양', 'Confirmed by the user')}:\n${answers}` : ''].filter(Boolean).join('\n'), deep = $('aiDeep').checked;
   if ((!desc && !spec && !aiImg) || !sample || aiBusy) { if (!desc && !spec && !aiImg) setMsg('aiStatus', L('제품 이름이나 설명을 적어 주세요.', 'Type a product name or a description.')); return; }
   setAiBusy(true); aiCtl = new AbortController();
   setMsg('aiStatus', deep ? L('AI가 정밀하게 부품을 나누는 중이에요… 1~2분 걸릴 수 있어요', 'AI is working it out in detail… this can take a minute or two') : L('AI가 부품과 크기를 잡는 중이에요…', 'AI is working out the parts and size…'));
