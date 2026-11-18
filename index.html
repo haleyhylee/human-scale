@@ -581,7 +581,7 @@ const pLabel = (p) => L(p.label, p.en);
 /* furniture: shape 'desk' = anything with a top (H = top height), 'chair' = anything you sit on (H = seat height) */
 const FURN = (o) => ({ place: 'floor', face: 'top', ctrl: o.h, action: 'press', ...o });
 const PRESETS = {
-  purifier: { name: '슬림 정수기', en: 'Slim water purifier', shape: 'box', look: 'purifier', w: 180, d: 420, h: 380, place: 'plinth', face: 'front', ctrl: 230, action: 'dispense', noHand: true },
+  purifier: { name: '정수기', en: 'Water purifier', shape: 'box', look: 'purifier', w: 180, d: 420, h: 380, place: 'plinth', face: 'front', ctrl: 230, action: 'dispense', noHand: true },
   coffee: { name: '커피머신', en: 'Coffee machine', shape: 'box', look: 'coffee', w: 240, d: 400, h: 330, place: 'plinth', face: 'top', ctrl: 160, action: 'dispense', noHand: true }, // button on top, cup on the drip tray
   air: { name: '공기청정기', en: 'Air purifier', shape: 'box', look: 'airpurifier', w: 300, d: 300, h: 720, place: 'floor', face: 'top', ctrl: 720, action: 'press', noHand: true },
   tumbler: { name: '텀블러', en: 'Tumbler', shape: 'cyl', look: 'tumbler', w: 72, d: 72, h: 190, place: 'hand', face: 'front', ctrl: 120, action: 'press' },
@@ -1767,7 +1767,7 @@ const DETAIL = {
   frame: [DR('frameT', '프레임 두께', 'Frame thickness', 2, 100, 10), MAT_ROW],
   prop: [MAT_ROW], // the plain mockup solids
   propR: [DR('rad', '모서리 R', 'Corner radius', 0, 50, 0), MAT_ROW], // the cube and the cylinder: sharp edges unless rounded
-  pump: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], cream: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl', apply: true }, { k: 'ml', ko: '용량', en: 'Volume', opts: [[15, '15ml', '15 ml'], [30, '30ml', '30 ml'], [50, '50ml', '50 ml'], [100, '100ml', '100 ml']], def: 50, apply: true }, { k: 'mat', ko: '뚜껑 재질', en: 'Lid', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['metal', '메탈', 'Metal']], def: 'solid' }], lipstick: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], tube: [MAT_ROW], // cosmetics: the body round or square
+  pump: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], cream: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl', apply: true }, { k: 'ml', ko: '용량', en: 'Volume', opts: [[15, '15ml', '15 ml'], [30, '30ml', '30 ml'], [50, '50ml', '50 ml'], [100, '100ml', '100 ml']], def: 50, apply: true }, DR('rad', '모서리 R', 'Corner radius', 0, 20, 0), { k: 'mat', ko: '뚜껑 재질', en: 'Lid', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['metal', '메탈', 'Metal']], def: 'solid' }], lipstick: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], tube: [MAT_ROW], // cosmetics: the body round or square
   trap: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cube', '네모', 'Square'], ['cyl', '원통', 'Round']], def: 'cube' }, { k: 'narrow', ko: '좁아지는 쪽', en: 'Narrower at', opts: [['top', '위', 'Top'], ['bottom', '아래', 'Bottom']], def: 'top' }, DR('draft', '구배 각도', 'Draft angle', 1, 40, 10, 1, '°'), MAT_ROW],
   bowl: [{ k: 'btype', ko: '종류', en: 'Type', opts: [['plate', '접시', 'Plate'], ['rice', '밥그릇', 'Rice bowl'], ['soup', '국그릇', 'Soup bowl'], ['shallow', '접시형 볼', 'Shallow bowl']], def: 'plate', apply: true },
     { k: 'bsize', ko: '크기', en: 'Size', opts: [['S', '소', 'S'], ['M', '중', 'M'], ['L', '대', 'L']], def: 'M', apply: true },
@@ -3065,7 +3065,7 @@ function pumpGeo(group, W, D, H) {
   own(new THREE.CylinderGeometry(cr, cr, collarH, 32).translate(0, bodyH + collarH / 2, cz), mats.trim);
   const stemH = pumpH * 0.42; own(new THREE.CylinderGeometry(cr * 0.42, cr * 0.42, stemH, 24).translate(0, bodyH + collarH + stemH / 2, cz), mats.trim);
   const hy = bodyH + collarH + stemH, hh = pumpH - collarH - stemH;
-  own(new RoundedBoxGeometry(cr * 2.2, hh, cr * 2.2, 2, Math.min(0.004, hh / 3)).translate(0, hy + hh / 2, cz), mats.trim);
+  own(new THREE.CylinderGeometry(cr * 1.1, cr * 1.1, hh, 36).translate(0, hy + hh / 2, cz), mats.trim); // the head you press: round
   own(new THREE.CylinderGeometry(cr * 0.28, cr * 0.32, cr * 2.4, 16).rotateX(Math.PI / 2).translate(0, hy + hh * 0.62, cz + cr * 2.1), mats.trim); // the nozzle, to the front
 }
 function lipstickGeo(group, W, D, H) {
@@ -3076,7 +3076,8 @@ function lipstickGeo(group, W, D, H) {
 }
 /* a cream jar: a thick glass body with the cream showing through, a short neck, a wide screw lid */
 function creamGeo(group, W, D, H) {
-  const own = meshIn(group), round = dv('form') !== 'cube', lh = H * 0.36, bh = H - lh;
+  const own = meshIn(group), round = dv('form') !== 'cube', lh = H * 0.36, bh = H - lh, R0 = (+dv('rad') || 0) / 1000;
+  const cosmeticBody = (w, d, h, rd) => { const r = Math.max(0, Math.min(R0 * w / W, Math.min(w, d) / 2 - 0.0005, h / 2 - 0.0002)); return rd ? stadiumPlate(w, d, h, r).applyMatrix4(ON_DECK) : r <= 0 ? new THREE.BoxGeometry(w, h, d).translate(0, h / 2, -d / 2) : new RoundedBoxGeometry(w, h, d, 4, r).translate(0, h / 2, -d / 2); }; // sharp unless a corner radius is set
   own(cosmeticBody(W, D, bh * 0.97, round), mats.glass);
   own(cosmeticBody(W * 0.8, D * 0.8, bh * 0.8, round).translate(0, bh * 0.1, -D * 0.1), mats.paper); // the cream inside
   own(cosmeticBody(W * 0.9, D * 0.9, bh * 0.06 + 0.002, round).translate(0, bh * 0.95, -D * 0.05), mats.glass); // the neck
