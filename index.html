@@ -1698,7 +1698,8 @@ const wallDist = () => (S.surf && S.surf.wallD ? S.surf.wallD / 1000 : Math.max(
 const carried = () => S.place === 'hand' || S.place === 'head' || S.place === 'back'; // held in the hands, or worn on the head or the back
 const setDown = () => S.source === 'box' && (S.shape === 'ring' || S.look === 'paper' || S.screen); // things that are held, or laid flat on the desk: a ring, a sheet, a phone, a tablet
 const deskItem = () => atDesk() && setDown();
-const laidFlat = () => setDown() && (atDesk() || S.place === 'plinth'); // a sheet, a ring, a phone or a tablet lies flat on the desk or a plinth
+const bookFlat = () => S.source === 'box' && S.look === 'book' && ['table', 'desk', 'counter'].includes(S.place); // a book set down on a table, desk or counter lies on its back cover
+const laidFlat = () => (setDown() && (atDesk() || S.place === 'plinth')) || bookFlat(); // a sheet, a ring, a phone or a tablet lies flat on the desk or a plinth
 const tableTop = () => dims().H + (furn() === 'coffee' ? S.lift * LIFT_RISE * S.scale : 0); // a lift-up top counts where it is
 /* the computer desk a product can sit on (place 'desk'): the person sits at the keyboard in front of a 24-inch monitor and the product
    stands to the right of the monitor, past the mouse (a laptop goes in front of them instead, below the monitor). Desk frame: centred
@@ -2329,15 +2330,15 @@ function roundRect(w, h, r) {
   return s;
 }
 /* your own image on an A4 sheet or a screen, filling the face edge to edge (cropped to fit); one material per face shape, kept until the image changes */
-const USER_IMG = { paper: null, screen: null }, IMG_MATS = new Map();
-const imgSlot = () => (S.source !== 'box' ? null : S.look === 'paper' ? 'paper' : S.look === 'tote' ? 'bag' : S.screen || S.shape === 'laptop' ? 'screen' : null);
+const USER_IMG = { paper: null, screen: null, book: null }, IMG_MATS = new Map();
+const imgSlot = () => (S.source !== 'box' ? null : S.look === 'paper' ? 'paper' : S.look === 'book' ? 'book' : S.look === 'tote' ? 'bag' : S.screen || S.shape === 'laptop' ? 'screen' : null);
 function userImgMat(slot, fw, fh) {
   const u = USER_IMG[slot]; if (!u) return null;
   const fa = fw / fh, key = `${slot}|${fa.toFixed(3)}`;
   if (IMG_MATS.has(key)) return IMG_MATS.get(key);
   const tex = u.tex.clone(), ia = u.w / u.h; tex.needsUpdate = true;
   if (ia > fa) { tex.repeat.set(fa / ia, 1); tex.offset.set((1 - fa / ia) / 2, 0); } else { tex.repeat.set(1, ia / fa); tex.offset.set(0, (1 - ia / fa) / 2); }
-  const m = slot === 'paper' || slot === 'bag' ? new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9 }) : new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }); // paper takes the light, a screen gives its own
+  const m = slot === 'paper' || slot === 'bag' || slot === 'book' ? new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9 }) : new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }); // paper takes the light, a screen gives its own
   IMG_MATS.set(key, m); return m;
 }
 function setUserImg(slot, img) {
@@ -2989,7 +2990,8 @@ function parcelGeo(group, W, D, H) {
 /* a book stood up: hard covers and a rounded spine in the chosen material, the page block inset between them */
 function bookGeo(group, W, D, H) {
   const own = meshIn(group), m = propMat(), c = Math.min(0.0025, D * 0.12), inset = Math.min(0.004, W * 0.03);
-  for (const z of [-c / 2, -D + c / 2]) own(new THREE.BoxGeometry(W, H, c).translate(0, H / 2, z), m); // front and back covers
+  const im = group === holder ? userImgMat('book', W, H) : null; // your image on the front cover
+  own(new THREE.BoxGeometry(W, H, c).translate(0, H / 2, -c / 2), im ? [m, m, m, m, im, m] : m); own(new THREE.BoxGeometry(W, H, c).translate(0, H / 2, -D + c / 2), m); // front and back covers
   own(new THREE.BoxGeometry(c, H, D).translate(-W / 2 + c / 2, H / 2, -D / 2), m); // a flat spine, square to the covers
   own(new THREE.BoxGeometry(W - c - inset, H - 2 * inset, D - 2 * c).translate((c - inset) / 2, H / 2, -D / 2), mats.paper); // the pages
 }
@@ -4232,7 +4234,7 @@ function syncUI() {
   for (const b of $('presetChips').querySelectorAll('[data-family]')) b.setAttribute('aria-pressed', String(b.dataset.family === fam));
   $('variantField').hidden = !fam;
   syncExamples(); syncParts(); syncMine();
-  { const slot = imgSlot(); $('imgField').hidden = !slot; if (slot) { $('imgLbl').textContent = slot === 'paper' ? L('종이에 이미지', 'Image on the sheet') : L('화면에 이미지', 'Image on the screen'); $('imgDel').hidden = !USER_IMG[slot]; } }
+  { const slot = imgSlot(); $('imgField').hidden = !slot; if (slot) { $('imgLbl').textContent = slot === 'paper' ? L('종이에 이미지', 'Image on the sheet') : slot === 'book' ? L('표지에 이미지', 'Image on the cover') : slot === 'bag' ? L('가방에 이미지', 'Image on the bag') : L('화면에 이미지', 'Image on the screen'); $('imgDel').hidden = !USER_IMG[slot]; } }
   $('setName').textContent = prodName();
   if (fam) { FAMILIES[fam].last = S.pkey; $('variantSeg').replaceChildren(...FAMILIES[fam].sizes.map(([k, ko, en]) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.size = k; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(S.pkey === k)); return b; })); }
   segSet('shapeSeg', 'shape', S.shape); segSet('placeSeg', 'place', S.place); segSet('faceSeg', 'face', S.face); segSet('actSeg', 'act', S.action); segSet('modeSeg', 'mode', S.mode); segSet('langSeg', 'lang', LANG);
