@@ -655,7 +655,7 @@ const PRESETS = {
   frame: { name: '액자', en: 'Picture frame', shape: 'box', look: 'frame', w: 250, d: 22, h: 320, place: 'wall', face: 'front', ctrl: 160, action: 'press', noCtrl: true }, // your picture in a frame, on the wall or stood on a table
   cushion: { name: '쿠션 팩트', en: 'Cushion compact', shape: 'box', look: 'cushion', w: 84, d: 84, h: 26, place: 'hand', face: 'top', ctrl: 13, action: 'press', noCtrl: true }, // a compact: the lid lifts on a mirror, a puff inside
   door: { name: '문', en: 'Door', shape: 'box', look: 'door', w: 900, d: 140, h: 2100, place: 'floor', face: 'front', ctrl: 1000, action: 'press', noHand: true }, // a door in its frame: press the lever, pull it open
-  microwave: { name: '전자레인지', en: 'Microwave', shape: 'box', look: 'microwave', w: 480, d: 370, h: 280, place: 'counter', face: 'front', ctrl: 140, action: 'press', noHand: true }, // the door with its window swings open on the left
+  microwave: { name: '전자레인지', en: 'Microwave', shape: 'box', look: 'microwave', w: 480, d: 370, h: 280, place: 'counter', face: 'front', ctrl: 70, action: 'press', noHand: true }, // the door with its window swings open on the left
   ricecooker: { name: '전기밥솥', en: 'Rice cooker', shape: 'box', look: 'ricecooker', w: 270, d: 320, h: 290, place: 'counter', face: 'top', ctrl: 285, action: 'press', noHand: true }, // press the button at the front of the lid: it lifts on the pot
   humidifier: { name: '가습기', en: 'Humidifier', shape: 'box', look: 'humidifier', w: 180, d: 180, h: 280, place: 'table', face: 'front', ctrl: 30, action: 'press', noHand: true }, // a glowing frosted column on a white base
   pan: { name: '프라이팬', en: 'Frying pan', shape: 'box', look: 'pan', w: 280, d: 480, h: 55, place: 'counter', face: 'front', ctrl: 40, action: 'press', noHand: true }, // the handle toward you
@@ -3186,7 +3186,8 @@ function microwaveGeo(group, W, D, H) {
   own(new RoundedBoxGeometry(W, H - ft, D - 0.02, 3, 0.008).translate(0, ft + (H - ft) / 2, -0.02 - (D - 0.02) / 2), mats.foam);
   own(new THREE.BoxGeometry(pw - 0.008, H - ft - 0.02, 0.006).translate(W / 2 - pw / 2, ft + (H - ft) / 2, -0.017), mats.foam); // the panel
   own(new THREE.BoxGeometry(pw * 0.6, 0.028, 0.003).translate(W / 2 - pw / 2, H * 0.78, -0.013), darkGloss); // its display
-  for (let i = 0; i < 5; i++) own(new THREE.CylinderGeometry(0.004, 0.004, 0.002, 16).rotateX(Math.PI / 2).translate(W / 2 - pw / 2, H * (0.62 - i * 0.08), -0.013), mats.trim);
+  for (let i = 0; i < 4; i++) own(new THREE.CylinderGeometry(0.004, 0.004, 0.002, 16).rotateX(Math.PI / 2).translate(W / 2 - pw / 2, H * (0.62 - i * 0.08), -0.013), mats.trim);
+  own(new THREE.CylinderGeometry(0.009, 0.009, 0.003, 24).rotateX(Math.PI / 2).translate(W / 2 - pw / 2, S.ctrl / 1000, -0.013), mats.trim); // the start button, low on the panel
   const hx = -W / 2 + 0.002, door = new THREE.Group(); door.position.set(hx, 0, 0); group.add(door); const L = meshIn(door);
   L(new RoundedBoxGeometry(dw, H - ft - 0.012, 0.02, 2, 0.004).translate(dw / 2, ft + (H - ft) / 2, -0.01), mats.foam);
   L(new THREE.BoxGeometry(dw * 0.72, (H - ft) * 0.62, 0.003).translate(dw * 0.44, ft + (H - ft) * 0.52, 0.0005), darkGloss); // the window
@@ -3356,10 +3357,10 @@ function cushionGeo(group, W, D, H) {
   own(body(W * 0.84, D * 0.84, 0.002).translate(0, bh - 0.0015, -D * 0.08), new THREE.MeshStandardMaterial({ color: 0xe6c9ad, roughness: 0.95 })); // the cushion
   own(body(W * 0.8, D * 0.8, 0.004).translate(0, bh, -D * 0.1), new THREE.MeshStandardMaterial({ color: 0x2a2b2d, roughness: 0.85 })); // the puff on it
   own(new THREE.BoxGeometry(W * 0.7, 0.0012, 0.012).translate(0, bh + 0.0046, -D / 2), darkGloss); // its strap
-  const lid = new THREE.Group(); lid.position.set(0, bh, -0.004); group.add(lid); // hinged at the edge away from the face, so the mirror opens toward it
-  meshIn(lid)(body(W * 1.005, D * 1.005, lh).translate(0, 0, 0.004 + D * 0.0025), darkGloss);
-  meshIn(lid)(body(W * 0.8, D * 0.8, 0.0012).translate(0, -0.0007, 0.004 - D * 0.1), mats.metal); // the mirror inside
-  group.userData.door = { g: lid, max: deg(100), axis: 'x', sign: 1, hinge: new V3(0, bh, -0.004), auto: true };
+  const lid = new THREE.Group(); lid.position.set(0, bh, (-D + 0.004)); group.add(lid); // hinged at the edge away from the face, so the mirror opens toward it
+  meshIn(lid)(body(W * 1.005, D * 1.005, lh).translate(0, 0, (D - 0.004) + D * 0.0025), darkGloss);
+  meshIn(lid)(body(W * 0.8, D * 0.8, 0.0012).translate(0, -0.0007, (D - 0.004) - D * 0.1), mats.metal); // the mirror inside
+  group.userData.door = { g: lid, max: deg(100), axis: 'x', sign: -1, hinge: new V3(0, bh, (-D + 0.004)), auto: true };
 }
 /* a corrugated parcel box: kraft board, the top flaps meeting along the middle under a strip of tape that runs down the front and back */
 function parcelGeo(group, W, D, H) {
