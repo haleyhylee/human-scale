@@ -1018,6 +1018,15 @@ const fill = new THREE.DirectionalLight(0xffffff, 0.6);
 fill.position.set(-3, 2, -2);
 scene.add(fill);
 
+/* a studio for chrome to reflect: a dark ceiling, a pale floor, and tall soft-box strips (white) between dark flags all round */
+function chromeEnv() {
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 512; const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, 512); gr.addColorStop(0, '#2b2c2e'); gr.addColorStop(0.45, '#6d6f72'); gr.addColorStop(0.55, '#b9bbbe'); gr.addColorStop(1, '#e6e7e8');
+  g.fillStyle = gr; g.fillRect(0, 0, 1024, 512);
+  const strip = (x, w, col, blur) => { g.filter = `blur(${blur}px)`; g.fillStyle = col; g.fillRect(x, 70, w, 330); g.filter = 'none'; };
+  [[40, 70, '#050505', 2], [150, 34, '#ffffff', 3], [230, 110, '#0a0a0a', 2], [380, 22, '#ffffff', 2], [430, 60, '#f2f2f2', 6], [540, 90, '#060606', 2], [680, 40, '#ffffff', 3], [760, 26, '#101010', 1], [820, 120, '#f6f6f6', 8], [960, 50, '#080808', 2]].forEach(([x, w, col, b]) => strip(x, w, col, b));
+  const t = new THREE.CanvasTexture(c); t.mapping = THREE.EquirectangularReflectionMapping; t.colorSpace = THREE.SRGBColorSpace; return t;
+}
 const mats = {
   body: new THREE.MeshPhysicalMaterial({ roughness: 0.4, clearcoat: 0.55, clearcoatRoughness: 0.25 }), // satin, like a display mannequin
   foam: new THREE.MeshStandardMaterial({ roughness: 0.88 }),
@@ -1030,7 +1039,7 @@ const mats = {
   acetate: new THREE.MeshPhysicalMaterial({ color: 0x1c1d20, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.08 }), // a black acetate frame
   shade: new THREE.MeshPhysicalMaterial({ color: 0x15181c, roughness: 0.05, metalness: 0.25, clearcoat: 1, transparent: true, opacity: 0.9 }), // a dark sunglass lens
   leather: new THREE.MeshPhysicalMaterial({ roughness: 0.42, clearcoat: 0.55, clearcoatRoughness: 0.35 }), // a bag in leather: the product colour, deeper and with a sheen
-  metal: new THREE.MeshPhysicalMaterial({ color: 0xc9cdd3, metalness: 0.55, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.08 }), // polished steel, whatever the theme: bright highlights, no reflection map
+  metal: new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1, roughness: 0.035, envMap: chromeEnv(), envMapIntensity: 1 }), // mirror chrome: a studio of light and dark strips reflected in it, its own map so nothing else changes
   tire: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
   joint: new THREE.MeshPhysicalMaterial({ roughness: 0.32, clearcoat: 0.7, clearcoatRoughness: 0.18 }), // the mannequin's joint balls: the body's white, a touch glossier
   band: new THREE.MeshPhysicalMaterial({ roughness: 0.32, clearcoat: 0.7, clearcoatRoughness: 0.18, side: THREE.DoubleSide }), // the ring over its waist joint, white like the joint balls
