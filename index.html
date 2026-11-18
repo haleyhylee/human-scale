@@ -1726,7 +1726,7 @@ const DETAIL = {
   chair: [{ k: 'form', ko: '형태', en: 'Form', opts: [['legs', '다리', 'Legs'], ['solid', '솔리드', 'Solid'], ['frame', '프레임', 'Frame']], def: 'legs' }, DR('backH', '등받이 높이(좌면 위)', 'Backrest above seat', 150, 600, 400, 5), DR('seatT', '좌판 두께', 'Seat thickness', 12, 80, 30), DR('legT', '다리 굵기', 'Leg thickness', 15, 70, 32), MAT_ROW],
   pstool: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원기둥', 'Cylinder'], ['cube', '큐브', 'Cube'], ['frame', '프레임', 'Frame'], ['legs', '다리', 'Legs']], def: 'cyl' }, DR('seatT', '좌판 두께', 'Seat thickness', 15, 90, 40), DR('legT', '다리 굵기', 'Leg thickness', 15, 60, 28), MAT_ROW],
   stool: [DR('seatT', '좌판 두께', 'Seat thickness', 15, 90, 50), DR('legT', '다리 굵기', 'Leg thickness', 15, 60, 26), MAT_ROW],
-  drawer: [{ k: 'form', ko: '형태', en: 'Form', opts: [['solid', '솔리드', 'Solid'], ['frame', '프레임', 'Frame']], def: 'solid' }, { k: 'casters', ko: '바퀴', en: 'Casters', opts: [[0, '없음', 'None'], [1, '있음', 'On']], def: 0 }, DR('caster', '바퀴 지름', 'Caster diameter', 30, 100, 50, 5)],
+  drawer: [{ k: 'form', ko: '형태', en: 'Form', opts: [['solid', '솔리드', 'Solid'], ['frame', '프레임', 'Frame']], def: 'solid' }, { k: 'tiers', ko: '서랍 수', en: 'Drawers', opts: [[1, '1단', '1'], [2, '2단', '2'], [3, '3단', '3'], [4, '4단', '4'], [5, '5단', '5']], def: () => clamp(Math.round((S.h / 1000 - 0.08) / 0.19), 1, 5) }, { k: 'split', ko: '나누기', en: 'Split', opts: [['rows', '가로로 나누기', 'Stacked'], ['cols', '세로로 나누기', 'Side by side']], def: 'rows' }, { k: 'casters', ko: '바퀴', en: 'Casters', opts: [[0, '없음', 'None'], [1, '있음', 'On']], def: 0 }, DR('caster', '바퀴 지름', 'Caster diameter', 30, 100, 50, 5)],
   desk: TABLE_ROWS(25, 22, '옆판 두께', 'Side panel thickness'), standing: TABLE_ROWS(25, 70, '기둥 굵기', 'Column thickness'), dining: TABLE_ROWS(30, 55), bar: TABLE_ROWS(35, 44), coffee: TABLE_ROWS(30, 50, '발 굵기', 'Foot thickness'),
   frame: [DR('frameT', '프레임 두께', 'Frame thickness', 2, 100, 10), MAT_ROW],
   prop: [MAT_ROW], // the plain mockup solids
@@ -1981,28 +1981,30 @@ function tableGeo(group, style, W, D, H, mat, keys = true) {
       const b = 0.022, yb = base, ht = H - base;
       for (const sx of [-1, 1]) for (const sz of [0, 1]) X.box(b, ht, b, sx * (W / 2 - b / 2), yb + ht / 2, -0.02 - b / 2 - sz * (D - 0.02 - b));
       for (const y of [yb + b / 2, H - b / 2]) { for (const sz of [0, 1]) X.box(W - 2 * b, b, b, 0, y, -0.02 - b / 2 - sz * (D - 0.02 - b)); for (const sx of [-1, 1]) X.box(b, b, D - 0.02 - 2 * b, sx * (W / 2 - b / 2), y, -0.02 - (D - 0.02) / 2); }
-      for (let i = 1; i < n; i++) for (const sx of [-1, 1]) X.box(0.012, 0.012, D - 0.02 - 2 * b, sx * (W / 2 - b - 0.006), base + i * fh, -0.02 - (D - 0.02) / 2); // runners
+      if (!drawerCols()) for (let i = 1; i < n; i++) for (const sx of [-1, 1]) X.box(0.012, 0.012, D - 0.02 - 2 * b, sx * (W / 2 - b - 0.006), base + i * fh, -0.02 - (D - 0.02) / 2); // runners
     } else {
       K.box(W, H - base - t, D - 0.02, 0, base + (H - base - t) / 2, -0.02 - (D - 0.02) / 2);
       K.box(W + 0.01, t, D + 0.005, 0, H - t / 2, -D / 2 + 0.0025, 0, 0.004);
     }
-    const top = new THREE.Group(); // the top drawer slides out when it's pulled
+    const top = new THREE.Group(); // the drawer the person uses slides out when it's pulled
     group.add(top);
+    const cols = drawerCols(), u = drawerUsed(n), cw = cols ? (W - 0.012) / n : W - 0.012, dh = cols ? H - base - t : fh, dd = Math.max(0.1, D - 0.08), wall = 0.012;
+    const wire = open ? meshMat() : null; // a frame cabinet's drawers are wire mesh baskets
+    const mb = (g, w, h, d, x, y, z) => { const geo = new THREE.BoxGeometry(w, h, d), uv = geo.attributes.uv, dims3 = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]]; for (let f = 0; f < 6; f++) for (let k = 0; k < 4; k++) { const i = f * 4 + k; uv.setXY(i, uv.getX(i) * dims3[f][0] / 0.025, uv.getY(i) * dims3[f][1] / 0.025); } const m = new THREE.Mesh(geo, wire); m.position.set(x, y, z); m.castShadow = true; m.userData.own = true; g.add(m); return m; };
     for (let i = 0; i < n; i++) {
-      const y0 = base + i * fh, g = i === n - 1 ? top : group, Kd = kit(g, mat), Xd = kit(g, mats.frame);
-      Kd.box(W - 0.012, fh - 0.006, 0.018, 0, y0 + fh / 2, -0.011, 0, 0.003);
-      Xd.rod(new V3(-0.07, y0 + fh * 0.72, 0.012), new V3(0.07, y0 + fh * 0.72, 0.012), 0.006);
-      for (const px of [-0.064, 0.064]) Xd.rod(new V3(px, y0 + fh * 0.72, -0.002), new V3(px, y0 + fh * 0.72, 0.012), 0.004); // the pull's posts
+      const x0 = cols ? -W / 2 + 0.006 + (i + 0.5) * cw : 0, y0 = cols ? base : base + i * fh, g = i === u ? top : group, Kd = kit(g, mat), Xd = kit(g, mats.frame), fw = cw - 0.006 * (cols ? 1 : 0), hy = y0 + dh * (cols ? 0.86 : 0.72), hw = Math.min(0.07, fw * 0.3);
+      if (open) mb(g, fw, dh - 0.006, 0.006, x0, y0 + dh / 2, -0.014); else Kd.box(fw, dh - 0.006, 0.018, x0, y0 + dh / 2, -0.011, 0, 0.003);
+      Xd.rod(new V3(x0 - hw, hy, 0.012), new V3(x0 + hw, hy, 0.012), 0.006);
+      for (const px of [-hw + 0.006, hw - 0.006]) Xd.rod(new V3(x0 + px, hy, -0.002), new V3(x0 + px, hy, 0.012), 0.004); // the pull's posts
+      if (open || i === u) { // the drawer box behind its front: every one shows in a frame, only the used one in a closed carcass
+        const bw = fw - 0.03;
+        if (open) { for (const sx of [-1, 1]) mb(g, 0.004, dh - 0.05, dd, x0 + sx * bw / 2, y0 + dh / 2 - 0.01, -0.02 - dd / 2); mb(g, bw, 0.004, dd, x0, y0 + 0.03, -0.02 - dd / 2); mb(g, bw, dh - 0.05, 0.004, x0, y0 + dh / 2 - 0.01, -0.02 - dd + 0.002); }
+        else { const Kb = kit(g, mat); for (const sx of [-1, 1]) Kb.box(wall, dh - 0.05, dd, x0 + sx * bw / 2, y0 + dh / 2 - 0.01, -0.02 - dd / 2); Kb.box(bw, wall, dd, x0, y0 + 0.03, -0.02 - dd / 2); Kb.box(bw, dh - 0.05, wall, x0, y0 + dh / 2 - 0.01, -0.02 - dd + wall / 2); }
+      }
     }
-    const y0 = base + (n - 1) * fh, dd = Math.max(0.1, D - 0.08), wall = 0.012; // the drawer box behind its front
-    for (let i = open ? 0 : n - 1; i < n; i++) { // the drawer boxes behind their fronts: only the top one shows in a closed carcass
-      const yi = base + i * fh, Kb = kit(i === n - 1 ? top : group, mat);
-      for (const sx of [-1, 1]) Kb.box(wall, fh - 0.05, dd, sx * (W / 2 - 0.03), yi + fh / 2 - 0.01, -0.02 - dd / 2);
-      Kb.box(W - 0.06, wall, dd, 0, yi + 0.03, -0.02 - dd / 2);
-      Kb.box(W - 0.06, fh - 0.05, wall, 0, yi + fh / 2 - 0.01, -0.02 - dd + wall / 2);
-    }
-    if (!open) T.box(W - 0.04, fh - 0.02, 0.002, 0, y0 + fh / 2, -0.0205); // the dark opening the drawer leaves behind
-    group.userData.drawers = { n, fh, base, top, travel: Math.min(0.3, 0.7 * dd) };
+    if (!open) { const x0 = cols ? -W / 2 + 0.006 + (u + 0.5) * cw : 0, y0 = cols ? base : base + u * fh; T.box((cols ? cw : W) - 0.04, dh - 0.02, 0.002, x0, y0 + dh / 2, -0.0205); } // the dark opening the drawer leaves behind
+    if (open && cols) for (let i = 1; i < n; i++) X.box(0.012, H - base - 0.044, 0.012, -W / 2 + 0.006 + i * cw, base + (H - base) / 2, -0.026); // posts between the columns
+    group.userData.drawers = { n, fh: dh, base, top, travel: Math.min(0.3, 0.7 * dd) };
     return;
   }
   const t = 0.028, lg = 0.045, ins = 0.04; // plain table
@@ -2010,7 +2012,17 @@ function tableGeo(group, style, W, D, H, mat, keys = true) {
   for (const sx of [-1, 1]) for (const sz of [0, 1]) K.box(lg, H - t, lg, sx * (W / 2 - ins), (H - t) / 2, -ins - sz * (D - 2 * ins));
   K.box(W - 2 * ins, 0.07, 0.018, 0, H - t - 0.035, -D + ins);
 }
-const drawerCount = (H) => clamp(Math.round((H - 0.08) / 0.19), 1, 8);
+const drawerCount = (H) => (detKind() === 'drawer' && S.source === 'box' && dv('tiers') ? +dv('tiers') : clamp(Math.round((H - 0.08) / 0.19), 1, 5)); // as many as chosen (1 to 5), or as the height suits
+const drawerCols = () => detKind() === 'drawer' && dv('split') === 'cols'; // side by side, each the full height, instead of stacked
+const drawerUsed = (n) => (drawerCols() ? Math.floor(n / 2) : n - 1); // the one the person opens: the top one, or the middle column
+const drawerX = () => { if (!drawerCols()) return 0; const n = drawerCount(S.h / 1000), cw = (S.w / 1000 - 0.012) / n; return (-S.w / 2000 + 0.006 + (drawerUsed(n) + 0.5) * cw) * S.scale; };
+let MESH_MAT = null;
+function meshMat() { // wire mesh: a grid of thin bars, see-through between them
+  if (MESH_MAT) return MESH_MAT;
+  const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d'); x.fillStyle = '#000'; x.fillRect(0, 0, 32, 32); x.fillStyle = '#fff'; x.fillRect(0, 0, 32, 6); x.fillRect(0, 0, 6, 32);
+  const tx = new THREE.CanvasTexture(c); tx.wrapS = tx.wrapT = THREE.RepeatWrapping;
+  return (MESH_MAT = new THREE.MeshStandardMaterial({ color: 0x3a3b3e, roughness: 0.45, metalness: 0.5, alphaMap: tx, alphaTest: 0.5, side: THREE.DoubleSide }));
+}
 /* units in a row (up to three, A first). A chest of drawers: each its own width, depth and height, fronts flush, 1 mm apart (a stacking
    tolerance); the person uses the picked one, which stays at the product's centre and the others sit beside it. Mockup solids: the main one
    (A) stays where it is and the person uses it; the others, each its own size, sit their own gap out from the neighbour toward A, fronts in
@@ -2035,7 +2047,7 @@ const rowExt = () => { // the whole row at scale (m): reach left and right of th
   return { l, r: rr, c: (rr - l) / 2, w: l + rr, d: Math.max(...r.map((u) => (roundBase() ? u.w : u.d))) * k, h: Math.max(...r.map((u) => u.h)) * k };
 };
 const drawerBase = () => (detKind() === 'drawer' && dv('casters') ? dv('caster') / 1000 + 0.012 : 0.06); // a plinth, or casters under the carcass
-const drawerHandle = (i) => { const H = S.h / 1000, n = drawerCount(H), b = drawerBase(), fh = (H - b - 0.02) / n; return (b + i * fh + fh * 0.72) * S.scale; }; // drawer 0 is the bottom one
+const drawerHandle = (i) => { const H = S.h / 1000, n = drawerCount(H), b = drawerBase(), fh = (H - b - 0.02) / n; return (drawerCols() ? b + (H - b - 0.02) * 0.86 : b + i * fh + fh * 0.72) * S.scale; }; // drawer 0 is the bottom one; side by side, all at the same height
 /* lift-up top: k = 0 closed, 1 fully raised (up 20 cm and 12 cm toward the sofa) */
 function setLift(group, k) {
   const u = group.userData.lift;
@@ -3037,7 +3049,7 @@ function furnPoint(hand) {
     case 'coffee': return new V3(x, tableTop(), -0.06 * P.D - 0.06 * k + S.lift * LIFT_FWD * k); // just inside the near edge of the lifting panel
     case 'sink': { const sk = SINK(S.w / 1000, S.d / 1000); return new V3(hand ? 0.03 : 0, P.H - sk.depth * k + (hand ? 0.08 : 0), sk.bz * k + (hand ? 0.03 : 0)); } // in the bowl, where hands wash
     case 'wardrobe': return new V3(hand ? 0.04 * k : 0, Math.min(1.1, (S.h / 1000) * 0.5) * k, hand ? 0.03 : 0.015); // a door handle
-    case 'drawer': return new V3(hand ? 0.03 : 0, drawerHandle(drawerCount(S.h / 1000) - 1) + (hand ? 0.012 : 0), hand ? 0.03 : 0.012); // the top drawer's handle
+    case 'drawer': return new V3(drawerX() + (hand ? 0.03 : 0), drawerHandle(drawerCount(S.h / 1000) - 1) + (hand ? 0.012 : 0), hand ? 0.03 : 0.012); // the top drawer's handle
     case 'chair': case 'stool': case 'pstool': case 'office': case 'armchair': case 'sofa': case 'beanbag': return new V3(0, P.H, -P.D / 2);
     default: return new V3(x, P.H, -Math.min(0.12, P.D / 3));
   }
@@ -3239,7 +3251,7 @@ function planHands() {
     S.plan = twoGoal('flat2', flatPose(), [r, product.localToWorld(l)], (s) => handFrame(new V3(0, -1, 0), new V3(-s * 0.15, 0, 1)), new V3(HD.palmT / 2 + 0.003, 0.5 * HD.palmLen, 0), (s) => new V3(s * 0.6, -1, -0.3));
     S.pressLocal = human.worldToLocal(furnPoint(true));
   } else if (st === 'drawer') { // the top drawer's bar pull hooked in the fingers, palm down
-    const bar = product.localToWorld(new V3(0, drawerHandle(drawerCount(S.h / 1000) - 1), 0.012 * S.scale)), rb = 0.006 * S.scale;
+    const bar = product.localToWorld(new V3(drawerX(), drawerHandle(drawerCount(S.h / 1000) - 1), 0.012 * S.scale)), rb = 0.006 * S.scale;
     const F = handFrame(new V3(0, -1, 0.15), new V3(0.1, -0.15, 1)), c = new V3(HD.fingers[1].r[0] + rb + 0.002, HD.palmLen + 0.022, 0);
     const shape = { kind: 'c', cx: c.x, cy: c.y, r: rb, z0: -0.07 * S.scale, z1: 0.07 * S.scale };
     const hp = { f: HD.fingers.map((g) => solve(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [90, 105, 85])), tm: new V3(0.55, 0.7, -0.45).normalize(), tq: new V3(0.6, 0.1, 0.8).normalize(), t: [deg(15), deg(20)] };
