@@ -2611,12 +2611,30 @@ function bandGeo(curve, w, t, nf, toBag) {
 /* backpack: a soft rounded body with a front pocket and its zip, a grab handle on top, padded shoulder straps; worn, the straps run from the
    top of the back panel over the shoulders and down the chest to the bottom corners */
 function backpackGeo(group, W, D, H) {
-  const own = meshIn(group), r = Math.min(0.07, W * 0.24), bev = Math.min(0.03, D * 0.2);
-  own(plateGeo(W, D, H, r, bev, 6).applyMatrix4(ON_DECK), mats.foam);
-  const pw = W * 0.78, ph = H * 0.42, pd = Math.min(0.05, D * 0.32); // front pocket
-  own(plateGeo(pw, pd + 0.01, ph, Math.min(0.05, pw * 0.25), Math.min(0.015, pd * 0.4), 5).applyMatrix4(ON_DECK).translate(0, H * 0.08, pd), mats.foam);
-  own(sweepGeo(Array.from({ length: 25 }, (_, i) => { const a = Math.PI * (i / 24); return new V3(-Math.cos(a) * pw * 0.42, H * 0.08 + ph * 0.55 + Math.sin(a) * ph * 0.32, pd + 0.0005); }), rrectProfile(0.0015, 0.003, 0.001)), mats.tire); // its zip
-  own(new THREE.TorusGeometry(0.035, 0.007, 10, 24, Math.PI).translate(0, H - 0.004, -D / 2), mats.pad); // grab handle
+  const own = meshIn(group);
+  // a soft daypack: square shoulders at the bottom, a domed top, puffed edges, a little thinner toward the top
+  const soft = (w, h, d, rb, dome, thin) => { // an outline (x across, y up) extruded front to back with a pillowy bevel; front face at z = 0
+    const bs = Math.min(0.022, w * 0.08, h * 0.08), bt = d * 0.24, iw = w - 2 * bs, ih = h - 2 * bs, r = Math.min(rb, iw / 2), sh = new THREE.Shape();
+    const yd = dome ? ih - Math.min(iw * 0.5, ih * 0.55) : ih - r;
+    sh.moveTo(-iw / 2 + r, 0); sh.lineTo(iw / 2 - r, 0); sh.quadraticCurveTo(iw / 2, 0, iw / 2, r); sh.lineTo(iw / 2, yd);
+    if (dome) sh.absellipse(0, yd, iw / 2, ih - yd, 0, Math.PI, false); else { sh.quadraticCurveTo(iw / 2, ih, iw / 2 - r, ih); sh.lineTo(-iw / 2 + r, ih); sh.quadraticCurveTo(-iw / 2, ih, -iw / 2, yd); }
+    sh.lineTo(-iw / 2, r); sh.quadraticCurveTo(-iw / 2, 0, -iw / 2 + r, 0);
+    const g = new THREE.ExtrudeGeometry(sh, { depth: Math.max(0.002, d - 2 * bt), bevelEnabled: true, bevelThickness: bt, bevelSize: bs, bevelSegments: 6, curveSegments: 40 });
+    g.translate(0, bs, -(d - 2 * bt) - bt);
+    if (thin) { const ps = g.attributes.position; for (let i = 0; i < ps.count; i++) { const t = clamp(ps.getY(i) / h, 0, 1); ps.setZ(i, -d + (ps.getZ(i) + d) * (1 - thin * t * t)); } }
+    g.computeVertexNormals(); return { g, yd: yd + bs, bs };
+  };
+  const body = soft(W, H, D, Math.min(0.045, W * 0.16), true, 0.28);
+  own(body.g, mats.foam);
+  const frontZ = (y) => -D + D * (1 - 0.28 * (y / H) ** 2); // where the front face is at height y
+  const pw = W * 0.74, ph = H * 0.4, py = H * 0.05, pd = Math.min(0.05, D * 0.36); // the front pocket, sewn on low down
+  const pk = soft(pw, ph, pd, Math.min(0.04, pw * 0.18), false, 0);
+  own(pk.g.translate(0, py, frontZ(py + ph / 2) + pd * 0.82), mats.foam);
+  const pz = frontZ(py + ph / 2) + pd * 0.82 + 0.0006; // its zip, straight across under the top edge
+  own(sweepGeo([new V3(-pw * 0.4, py + ph - pk.bs * 1.6, pz), new V3(pw * 0.4, py + ph - pk.bs * 1.6, pz)], rrectProfile(0.0012, 0.0016, 0.0006)), mats.tire);
+  const rx = W / 2 - body.bs * 1.5, ry = H - body.bs * 1.5 - body.yd; // the main zip: round the dome, down to the shoulders of the bag
+  own(sweepGeo(Array.from({ length: 41 }, (_, i) => { const a = Math.PI * (-0.08 + 1.16 * i / 40), y = body.yd + Math.sin(a) * ry; return new V3(Math.cos(a) * rx, y, 0); }).map((p) => (p.z = frontZ(p.y) + 0.0008, p)), rrectProfile(0.0012, 0.0016, 0.0006)), mats.tire);
+  own(sweepGeo(Array.from({ length: 21 }, (_, i) => { const a = Math.PI * (i / 20); return new V3(Math.cos(a) * 0.028, H - 0.006 + Math.sin(a) * 0.05, 0); }), rrectProfile(0.0016, 0.012, 0.0012)).translate(0, 0, -D * 0.72), mats.pad); // the top loop, a strap of webbing
   const worn = S.place === 'back' && S.A;
   if (!worn) { for (const sx of [-1, 1]) own(new RoundedBoxGeometry(0.055, H * 0.7, 0.014, 2, 0.006), mats.pad).position.set(sx * W * 0.25, H * 0.5, -D - 0.006); return; } // straps lying on the back panel
   const P0 = basePose(S.A, PP(), 0), f = backFrame(P0), toBag = (v) => new V3(-(v.x - f.origin.x), v.y - f.origin.y, -(v.z - f.origin.z)); // body frame to bag frame
