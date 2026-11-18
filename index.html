@@ -79,6 +79,8 @@ button { cursor: pointer; }
 .unit-acts { margin-top: 8px; }
 .tipdock { position: absolute; left: 0; right: 0; bottom: 64px; display: flex; justify-content: center; padding-inline: max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; z-index: 2; } /* the tip sits just above the bottom bar */
 .surfrow { margin-top: 8px; grid-template-columns: 64px minmax(0, 1fr) 76px; }
+.lrow .big { margin-left: auto; white-space: nowrap; display: inline-flex; align-items: baseline; }
+.lrow input.bignum[type="number"] { width: 3.4em; height: auto; font: inherit; color: inherit; text-align: right; background: transparent; border: 0; border-bottom: 1px dashed var(--ink-2); border-radius: 0; padding: 0 1px; -moz-appearance: textfield; } .bignum::-webkit-inner-spin-button, .bignum::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; } .lrow input.bignum:focus { outline: none; border-bottom: 1px solid var(--accent, #e0561c); }
 .surfrow input[type=number] { box-sizing: border-box; width: 100%; }
 .det summary { cursor: pointer; list-style: revert; }
 .det .dimrows { margin-top: 8px; }
@@ -356,13 +358,13 @@ input:disabled { opacity: 0.55; }
         <p class="hint" id="seatHint"></p>
       </div>
       <div class="field">
-        <div class="lrow"><label for="hIn" data-en="Height">키</label><button type="button" class="reset" id="hReset" data-en="Default">기본값</button><output class="big" id="hOut" for="hIn"></output></div>
+        <div class="lrow"><label for="hIn" data-en="Height">키</label><button type="button" class="reset" id="hReset" data-en="Default">기본값</button><span class="big"><input type="number" class="bignum" id="hNum" inputmode="decimal" step="0.1" aria-label="키 직접 입력" data-en-aria="Type a height"><small>cm</small></span></div>
         <input type="range" id="hIn" min="90" max="200" step="0.1">
         <div class="ticks" id="hTicks" aria-label="자주 쓰는 키" data-en-aria="Common heights"></div>
         <p class="hint" id="hRange"></p>
       </div>
       <div class="field">
-        <div class="lrow"><label for="wIn" data-en="Weight">몸무게</label><button type="button" class="reset" id="wReset" data-en="Default">기본값</button><output class="big" id="wOut" for="wIn"></output></div>
+        <div class="lrow"><label for="wIn" data-en="Weight">몸무게</label><button type="button" class="reset" id="wReset" data-en="Default">기본값</button><span class="big"><input type="number" class="bignum" id="wNum" inputmode="decimal" step="0.5" aria-label="몸무게 직접 입력" data-en-aria="Type a weight"><small>kg</small></span></div>
         <input type="range" id="wIn" min="15" max="140" step="0.5">
         <p class="hint" id="bmiOut"></p>
       </div>
@@ -4290,7 +4292,7 @@ function syncUI() {
   if (+$('hIn').min !== p.hr[0] || +$('hIn').max !== p.hr[1]) { $('hIn').min = p.hr[0]; $('hIn').max = p.hr[1]; }
   $('hIn').value = S.height;
   $('hRange').textContent = L(`키 범위 ${p.hr[0]}~${p.hr[1]}cm · ${pLabel(p)}의 실제 분포 안에서 골라요`, `Heights ${p.hr[0]}–${p.hr[1]} cm, the real-world range for this person`);
-  $('hOut').innerHTML = `${fmtH(S.height)}<small>cm</small>`;
+  if (document.activeElement !== $('hNum')) { $('hNum').value = fmtH(S.height); $('hNum').min = p.hr[0]; $('hNum').max = p.hr[1]; }
   const ticks = $('hTicks');
   if (ticks.dataset.p !== S.persona) {
     ticks.dataset.p = S.persona;
@@ -4305,7 +4307,7 @@ function syncUI() {
   const kg = weightKg();
   { const h2 = (S.height / 100) ** 2; $('wIn').min = Math.ceil(p.br[0] * h2 * 2) / 2; $('wIn').max = Math.floor(p.br[1] * h2 * 2) / 2; } // a build range, not any number
   $('wIn').value = kg.toFixed(1);
-  $('wOut').innerHTML = `${Math.round(kg)}<small>kg</small>`;
+  if (document.activeElement !== $('wNum')) { $('wNum').value = Math.round(kg * 2) / 2; $('wNum').min = $('wIn').min; $('wNum').max = $('wIn').max; }
   $('bmiOut').textContent = L(`BMI ${S.bmi.toFixed(1)} · ${bodyLabel(S.bmi, p)} · 몸 두께가 체형에 맞춰 바뀌어요`, `BMI ${S.bmi.toFixed(1)} · ${bodyLabel(S.bmi, p)} · body girth follows the build`);
   for (const b of $('presetChips').querySelectorAll('[data-preset]')) b.setAttribute('aria-pressed', String(S.source === 'box' && b.dataset.preset === S.preset));
   const fam = S.source === 'box' ? familyOf(S.pkey) : null; // a product with sizes: its chip lit, and its sizes to pick from
@@ -4915,6 +4917,9 @@ $('toProducts').addEventListener('click', () => $('tb-product').click());
 buildChips();
 $('variantSeg').addEventListener('click', (e) => { const b = e.target.closest('[data-size]'); if (b) applyPreset(b.dataset.size); });
 $('hIn').addEventListener('input', (e) => { S.height = +e.target.value; refresh(); });
+$('hNum').addEventListener('change', (e) => { const p = PERSONAS[S.persona], v = parseFloat(e.target.value); if (isFinite(v)) S.height = clamp(Math.round(v * 10) / 10, p.hr[0], p.hr[1]); e.target.blur(); refresh(); }); // typed: kept within this person's range
+$('wNum').addEventListener('change', (e) => { const br = PERSONAS[S.persona].br, v = parseFloat(e.target.value); if (isFinite(v) && v > 0) S.bmi = clamp(v / (S.height / 100) ** 2, br[0], br[1]); e.target.blur(); refresh(); });
+for (const id of ['hNum', 'wNum']) $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
 $('wIn').addEventListener('input', (e) => { const br = PERSONAS[S.persona].br; S.bmi = clamp(+e.target.value / (S.height / 100) ** 2, br[0], br[1]); refresh(); });
 const dimRound = (v) => (S.shape === 'ring' ? Math.round(v * 10) / 10 : Math.round(v)); // rings in 0.1 mm
 const dimMin = (key) => (S.shape === 'ring' ? (key === 'h' ? 0 : 0.5) : 1);
