@@ -4280,7 +4280,7 @@ function setNum(id, v) { const el = $(id); if (document.activeElement !== el) el
 
 let dimR = null;
 /* slider range and step that suit the product's size: 1 mm for hand-held things, 5 mm for appliances, 10 mm for furniture */
-const dimScale = (big) => (big <= 300 ? { min: 1, max: 300, step: 1 } : big <= 1000 ? { min: 10, max: 1500, step: 5 } : { min: 10, max: 3000, step: 10 });
+const dimScale = (big) => (big <= 1000 && rowProp() ? { min: 1, max: 1000, step: 1 } /* mockup solids: up to a metre on the slider */ : big <= 300 ? { min: 1, max: 300, step: 1 } : big <= 1000 ? { min: 10, max: 1500, step: 5 } : { min: 10, max: 3000, step: 10 });
 const RING_DIMS = { w: { min: 1, max: 12, step: 0.5 }, d: { min: 0.8, max: 4, step: 0.1 }, h: { min: 0, max: 12, step: 0.5 } };
 const furnHintText = () => ({
   sink: L('H는 조리대 높이예요. 개수대 깊이는 20cm로 봐요.', 'H is the counter height. The bowl is 20 cm deep.'),
