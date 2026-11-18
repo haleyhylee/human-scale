@@ -1043,7 +1043,7 @@ const mats = {
   frame: new THREE.MeshStandardMaterial({ roughness: 0.45, metalness: 0.35 }),
   lens: new THREE.MeshPhysicalMaterial({ color: 0xeaf2f4, roughness: 0.04, transparent: true, opacity: 0.22, depthWrite: false, clearcoat: 1 }), // a clear spectacle lens
   acetate: new THREE.MeshPhysicalMaterial({ color: 0x1c1d20, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.08 }), // a black acetate frame
-  shade: new THREE.MeshPhysicalMaterial({ color: 0x15181c, roughness: 0.05, metalness: 0.25, clearcoat: 1, transparent: true, opacity: 0.9 }), // a dark sunglass lens
+  shade: new THREE.MeshPhysicalMaterial({ color: 0x0b0c0d, roughness: 0.03, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.02, transparent: true, opacity: 0.9, envMap: chromeEnv(), envMapIntensity: 0.16, depthWrite: false }), // a smoky black glass lens: the eye shows faintly through, the room glints off it
   leather: new THREE.MeshPhysicalMaterial({ roughness: 0.42, clearcoat: 0.55, clearcoatRoughness: 0.35 }), // a bag in leather: the product colour, deeper and with a sheen
   metal: new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1, roughness: 0.035, envMap: chromeEnv(), envMapIntensity: 1 }), // mirror chrome: a studio of light and dark strips reflected in it, its own map so nothing else changes
   tire: new THREE.MeshStandardMaterial({ roughness: 0.9 }),
@@ -1780,7 +1780,7 @@ const DETAIL = {
     DR('rimT', '테 두께', 'Rim thickness', 1, 9, () => ((S.det && S.det.gtype) === 'horn' ? 5 : (S.det && S.det.gtype) === 'half' ? 3 : 1.5), 0.5),
     DR('lensW', '렌즈 가로', 'Lens width', 38, 66, 46), DR('lensH', '렌즈 세로', 'Lens height', 24, 56, 36)],
   sunglasses: [{ k: 'sform', ko: '형태', en: 'Shape', opts: [['square', '스퀘어', 'Square'], ['round', '라운드', 'Round'], ['aviator', '에비에이터', 'Aviator']], def: 'square' },
-    { k: 'lens', ko: '렌즈', en: 'Lenses', opts: [['mirror', '미러', 'Mirror'], ['black', '블랙', 'Black']], def: 'mirror' },
+    { k: 'lens', ko: '렌즈', en: 'Lenses', opts: [['black', '블랙', 'Black'], ['mirror', '미러', 'Mirror']], def: 'black' },
     { k: 'fcol', ko: '테 색', en: 'Frame colour', opts: [['mock', '목업색', 'Mockup'], ['black', '블랙', 'Black']], def: 'mock' },
     DR('rimT', '테 두께', 'Rim thickness', 1, 10, () => ({ square: 6, round: 4, aviator: 1.4 })[SFORM()], 0.5),
     DR('lensW', '렌즈 가로', 'Lens width', 40, 66, () => ({ square: 52, round: 49, aviator: 58 })[SFORM()]), DR('lensH', '렌즈 세로', 'Lens height', 30, 60, () => ({ square: 44, round: 47, aviator: 50 })[SFORM()])],
@@ -2638,12 +2638,35 @@ function backpackGeo(group, W, D, H) {
   const worn = S.place === 'back' && S.A;
   if (!worn) { for (const sx of [-1, 1]) own(new RoundedBoxGeometry(0.055, H * 0.7, 0.014, 2, 0.006), mats.pad).position.set(sx * W * 0.25, H * 0.5, -D - 0.006); return; } // straps lying on the back panel
   const P0 = basePose(S.A, PP(), 0), f = backFrame(P0), toBag = (v) => new V3(-(v.x - f.origin.x), v.y - f.origin.y, -(v.z - f.origin.z)); // body frame to bag frame
+  // the straps lie on the body: each guide point is found by casting in toward the torso and sitting the band just on its skin
+  torso.position.copy(P0.pelvis); torso.quaternion.setFromUnitVectors(UP, P0.spine); human.updateMatrixWorld(true);
+  const skin = [R.torso, R.neck, ...R.arms.map((a) => a.sh)];
+  const rc = new THREE.Raycaster(), nm = new THREE.Matrix3(), onSkin = (o, dir, gap) => { // o, dir in the body frame: the first skin met coming in from outside along dir, and the skin's own normal there
+    const d = dir.clone().normalize(), from = human.localToWorld(o.clone().addScaledVector(d, 0.45)), to = human.localToWorld(o.clone());
+    rc.set(from, to.sub(from).normalize()); rc.far = 0.6; const h = rc.intersectObjects(skin, false)[0];
+    if (!h) return { p: o.clone().addScaledVector(d, 0.12), n: d };
+    nm.getNormalMatrix(h.object.matrixWorld); const nw = h.face.normal.clone().applyMatrix3(nm).normalize(), n = human.worldToLocal(h.point.clone().add(nw)).sub(human.worldToLocal(h.point.clone())).normalize();
+    if (n.dot(d) < 0) n.negate();
+    return { p: human.worldToLocal(h.point.clone()).addScaledVector(n, gap), n };
+  };
   for (const s of [-1, 1]) {
-    const sh = s < 0 ? P0.shR : P0.shL, cx = sh.x * 0.62, fz = Math.max(S.A.chestD / 2, sh.z + S.A.chestD * 0.5) + 0.02; // in front of the chest, wherever a stoop carries it
-    const sy = sh.y + 0.048 * S.A.H / 1.6; // just on top of the shoulder: its surface sits ~4.5 cm above the joint, the band 5 mm thick
-    const pts = [new V3(s * 0.06, f.top - 0.02, f.z), new V3(cx, sy - 0.004, f.z * 0.5), new V3(cx, sy, fz * 0.55), new V3(cx * 1.02, sh.y - 0.08, fz + 0.012), new V3(Math.sign(sh.x) * (S.A.chestW / 2 - 0.006), sh.y - 0.17, fz * 0.45), new V3(Math.sign(sh.x) * (S.A.chestW / 2 - 0.006), sh.y - 0.24, -S.A.chestD * 0.15), new V3(s * W * 0.38, f.top - H + 0.05, f.z)] // down the chest, under the arm close to the side, to the bag's lower corner;
-    const C = new V3(0, sh.y - 0.16, 0); // the chest's middle: each band lies flat on the body, facing away from it
-    own(bandGeo(new THREE.CatmullRomCurve3(pts), 0.06, 0.005, (p) => p.clone().sub(C).normalize(), toBag), mats.pad);
+    const sh = s < 0 ? P0.shR : P0.shL, sx = Math.sign(sh.x), ax = Math.abs(sh.x), g = 0.0045, X = (k) => sx * ax * k;
+    const G = [ // over the shoulder by the neck, flat down the chest just inside the armpit, round the side under it, back to the bag's bottom corner
+      onSkin(new V3(X(0.5), sh.y - 0.06, sh.z - 0.02), new V3(0, 0.35, -1), g + 0.004),
+      onSkin(new V3(X(0.52), sh.y - 0.1, sh.z - 0.02), new V3(0, 1, -0.45), g + 0.007),
+      onSkin(new V3(X(0.53), sh.y - 0.1, sh.z), new V3(0, 1, 0), g + 0.008), // the top of the shoulder
+      onSkin(new V3(X(0.54), sh.y - 0.1, sh.z + 0.02), new V3(0, 1, 0.5), g + 0.007),
+      onSkin(new V3(X(0.56), sh.y - 0.06, 0), new V3(0, 0.2, 1), g),
+      ...[0.09, 0.12, 0.15, 0.18].map((dy, i) => onSkin(new V3(X(0.58 + i * 0.02), sh.y - dy, 0), new V3(sx * 0.08 * i, 0, 1), g + 0.003)), // down the chest, closely, so it never cuts in over the curve
+      onSkin(new V3(X(0.68), sh.y - 0.21, 0), new V3(sx * 0.4, 0, 1), g),
+      onSkin(new V3(X(0.55), sh.y - 0.25, 0), new V3(sx, 0, 0.35), g + 0.004),
+      onSkin(new V3(X(0.55), sh.y - 0.28, -0.02), new V3(sx, 0, -0.6), g + 0.004),
+    ];
+    const pts = [new V3(sx * 0.045, f.top - 0.015, f.z + 0.004), ...G.map((q) => q.p), new V3(sx * (dims().W / 2 - 0.035), f.origin.y + 0.05, f.z + 0.004)];
+    const ns = [new V3(0, 0.3, -1), ...G.map((q) => q.n), new V3(sx, 0, -0.4)].map((v) => v.normalize());
+    const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+    const nf = (p) => { const ds = pts.map((q) => q.distanceTo(p)), o = ds.map((_, i) => i).sort((i, j) => ds[i] - ds[j]), [i, j] = o, w = ds[j] / (ds[i] + ds[j] + 1e-9); return ns[i].clone().multiplyScalar(w).addScaledVector(ns[j], 1 - w).normalize(); }; // the skin's normal, blended between the nearest two
+    own(bandGeo(curve, 0.048, 0.005, nf, toBag), mats.pad);
   }
 }
 /* pouch: a soft flat case, its edges puffed, a zip along the top with a pull */
