@@ -590,6 +590,8 @@ const PRESETS = {
   ipadmini: { name: '태블릿 8.3인치', en: 'Tablet 8.3"', shape: 'box', w: 135, d: 6, h: 195, place: 'hand', face: 'front', ctrl: 100, action: 'press', screen: true },
   ipadair: { name: '태블릿 11인치', en: 'Tablet 11"', shape: 'box', w: 179, d: 6, h: 248, place: 'hand', face: 'front', ctrl: 120, action: 'press', screen: true },
   macbook: { name: '노트북 13인치', en: 'Laptop 13"', shape: 'laptop', w: 304, d: 215, h: 11, place: 'table', face: 'top', ctrl: 11, action: 'press', posture: 'sit', noHand: true }, // opens on the table
+  macbook15: { name: '노트북 15인치', en: 'Laptop 15"', shape: 'laptop', w: 340, d: 237, h: 13, place: 'table', face: 'top', ctrl: 11, action: 'press', posture: 'sit', noHand: true }, // opens on the table
+  macbook17: { name: '노트북 17인치', en: 'Laptop 17"', shape: 'laptop', w: 383, d: 260, h: 19, place: 'table', face: 'top', ctrl: 11, action: 'press', posture: 'sit', noHand: true }, // opens on the table
   airbuds: { name: '무선 이어버드 (착용)', en: 'Wireless earbuds (worn)', shape: 'earbud', w: 19, d: 27, h: 31, place: 'head', face: 'front', ctrl: 15, action: 'press' }, // a typical stem earbud, about 19 x 27 x 31 mm, in the ears
   airpods: { name: '이어버드 케이스', en: 'Earbuds case', shape: 'box', look: 'case', w: 62, d: 22, h: 47, place: 'hand', face: 'front', ctrl: 20, action: 'press' }, // a typical charging case
   airmax: { name: '오버이어 헤드폰', en: 'Over-ear headphones', shape: 'headphone', w: 170, d: 85, h: 190, place: 'head', face: 'front', ctrl: 90, action: 'press' }, // typical over-ear headphones, worn
@@ -647,6 +649,7 @@ const PRESETS = {
 };
 /* one product, several sizes: the product is picked first, then its size */
 const FAMILIES = {
+  laptop: { ko: '노트북', en: 'Laptop', sizes: [['macbook', '13인치', '13"'], ['macbook15', '15인치', '15"'], ['macbook17', '17인치', '17"']] },
   speaker: { ko: '블루투스 스피커', en: 'Bluetooth speaker', sizes: [['speaker', '원통', 'Round'], ['speakerbox', '큐브', 'Cube']] },
   fold: { ko: '폴더블폰', en: 'Foldable phone', sizes: [['fold', '7.6인치', '7.6"'], ['foldxl', '8인치 대형', '8" large']] },
   phone: { ko: '스마트폰', en: 'Smartphone', sizes: [['phonemini', '5.4인치 미니', '5.4" mini'], ['phone', '6.3인치', '6.3"'], ['galaxy', '6.9인치', '6.9"']] },
@@ -664,7 +667,7 @@ const roundBase = (sh = S.shape) => sh === 'cup' || sh === 'cone' || (sh === S.s
 const PRESET_GROUPS = [
   [['목업·소품', 'Mockup & objects'], ['cube', 'cyl', 'sphere', 'cone', 'plate', 'fam:paper', 'ring']],
   [['생활 제품', 'Appliances'], ['purifier', 'coffee', 'air', 'floorlamp', 'tablelamp', 'mushroom']],
-  [['전자제품', 'Electronics'], ['fam:phone', 'fam:fold', 'flip', 'fam:tablet', 'macbook', 'airbuds', 'airpods', 'airmax', 'robot', 'fam:speaker']],
+  [['전자제품', 'Electronics'], ['fam:phone', 'fam:fold', 'flip', 'fam:tablet', 'fam:laptop', 'airbuds', 'airpods', 'airmax', 'robot', 'fam:speaker']],
   [['안경·헬멧', 'Eyewear & helmets'], ['glasses', 'sunglasses', 'helmet']],
   [['가방·캐리어', 'Bags & luggage'], ['wallet', 'fam:pouch', 'ecobag', 'hobo', 'backpack', 'fam:luggage']],
   [['컵', 'Cups'], ['tumbler', 'mug', 'glass', 'latte']],
