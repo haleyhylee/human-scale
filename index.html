@@ -64,6 +64,11 @@ button { cursor: pointer; }
 .overlay { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .tag { position: absolute; left: 0; top: 0; white-space: nowrap; font: 500 11px/1 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink); background: var(--raise); border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.08); }
 .tag.target { border-color: var(--accent); color: var(--accent-ink); }
+.leaders { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; } /* a label set off its point, joined to it by a thin line, as on a drawing */
+.leaders line { stroke: var(--ink-2); stroke-width: 1; }
+.leaders circle { fill: var(--ink-2); }
+.leaders .tg line { stroke: var(--accent); }
+.leaders .tg circle { fill: var(--accent); }
 .guide { position: absolute; left: 0; right: 0; top: 0; height: 0; border-top: 1px dashed color-mix(in srgb, var(--ink-2) 75%, transparent); }
 .guide span { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); top: -17px; font: 500 11px/1 var(--font-mono); color: var(--ink-2); background: color-mix(in srgb, var(--viewport) 85%, transparent); padding: 2px 4px; }
 .guide.target { border-top-color: var(--accent); }
@@ -259,6 +264,7 @@ input:disabled { opacity: 0.55; }
     <svg class="measure" id="measureSvg" aria-hidden="true"></svg>
     <div class="mtag" id="measureTag" hidden><span id="measureTxt"></span><button type="button" class="btn accent" id="measureApply" data-en="Use as size">이 크기로</button></div>
     <div class="overlay" aria-hidden="true">
+      <svg class="leaders" id="leaderSvg"></svg>
       <div class="guide" id="g-eye" hidden><span></span></div>
       <div class="guide" id="g-sh" hidden><span></span></div>
       <div class="guide" id="g-el" hidden><span></span></div>
@@ -602,17 +608,18 @@ const PRESETS = {
   mug: { name: '머그컵', en: 'Mug', shape: 'cup', style: 'mug', w: 82, d: 82, h: 95, place: 'hand', face: 'front', ctrl: 60, action: 'press' },
   glass: { name: '유리잔', en: 'Glass', shape: 'cup', style: 'glass', w: 72, d: 72, h: 110, place: 'hand', face: 'front', ctrl: 60, action: 'press' },
   latte: { name: '라떼잔', en: 'Latte cup', shape: 'cup', style: 'latte', w: 110, d: 110, h: 70, place: 'hand', face: 'front', ctrl: 40, action: 'press' },
-  a4: { name: '종이 A4', en: 'Paper A4', shape: 'box', look: 'paper', w: 210, d: 1, h: 297, place: 'plinth', face: 'front', ctrl: 150, action: 'press' },
+  a4: { name: '종이 A4', en: 'Paper A4', shape: 'box', look: 'paper', w: 210, d: 1, h: 297, place: 'hand', face: 'front', ctrl: 150, action: 'press' }, // held up in one hand to read
   a3: { name: '포스터 A3', en: 'Poster A3', shape: 'box', look: 'paper', w: 297, d: 1, h: 420, place: 'plinth', face: 'front', ctrl: 210, action: 'press' },
   a2: { name: '포스터 A2', en: 'Poster A2', shape: 'box', look: 'paper', w: 420, d: 1, h: 594, place: 'plinth', face: 'front', ctrl: 300, action: 'press' },
   a1: { name: '포스터 A1', en: 'Poster A1', shape: 'box', look: 'paper', w: 594, d: 1, h: 841, place: 'plinth', face: 'front', ctrl: 420, action: 'press' },
   backpack: { name: '백팩', en: 'Backpack', shape: 'box', look: 'backpack', w: 280, d: 130, h: 430, place: 'back', face: 'front', ctrl: 400, action: 'press' }, // a 20 L daypack, worn
   wallet: { name: '지갑', en: 'Wallet', shape: 'box', look: 'pouch', w: 190, d: 24, h: 98, place: 'hand', face: 'front', ctrl: 60, action: 'press' },
-  ecobag: { name: '에코백', en: 'Tote bag', shape: 'box', look: 'tote', w: 360, d: 100, h: 360, place: 'back', face: 'front', ctrl: 200, action: 'press' },
+  ecobag: { name: '에코백', en: 'Tote bag', shape: 'box', look: 'tote', w: 360, d: 40, h: 380, place: 'back', face: 'front', ctrl: 200, action: 'press' }, // a flat canvas tote: d is how full it is
   hobo: { name: '호보백', en: 'Hobo bag', shape: 'box', look: 'hobo', w: 380, d: 130, h: 300, place: 'back', face: 'front', ctrl: 150, action: 'press' },
   glasses: { name: '안경', en: 'Glasses', shape: 'glasses', w: 125, d: 145, h: 39, place: 'head', face: 'front', ctrl: 0, action: 'press' }, // the front's size follows the lenses and rims (세부 치수); D is the temple
   sunglasses: { name: '선글라스', en: 'Sunglasses', shape: 'sunglasses', w: 146, d: 145, h: 54, place: 'head', face: 'front', ctrl: 0, action: 'press' }, // the front's size follows the lenses and rims (세부 치수)
   helmet: { name: '헬멧', en: 'Helmet', shape: 'helmet', w: 215, d: 275, h: 165, place: 'head', face: 'front', ctrl: 0, action: 'press' },
+  cap: { name: '캡모자', en: 'Baseball cap', shape: 'cap', w: 185, d: 275, h: 125, place: 'head', face: 'front', ctrl: 0, action: 'press' }, // six panels and a curved brim, fitted to the head; no logo
   robot: { name: '로봇청소기', en: 'Robot vacuum', shape: 'box', look: 'robot', w: 350, d: 350, h: 96, place: 'floor', face: 'top', ctrl: 96, action: 'press', noCtrl: true }, // on the floor, out of reach standing: looked at, not bent over
   speaker: { name: '블루투스 스피커', en: 'Bluetooth speaker', shape: 'cyl', look: 'speaker', w: 75, d: 75, h: 185, place: 'plinth', face: 'top', ctrl: 185, action: 'press' },
   speakerbox: { name: '블루투스 스피커 큐브', en: 'Bluetooth speaker, cube', shape: 'box', look: 'speaker', w: 100, d: 100, h: 100, place: 'plinth', face: 'top', ctrl: 100, action: 'press' },
@@ -708,12 +715,13 @@ const roundSeat = () => S.source === 'box' && S.shape === 'chair' && (S.style ==
 const roundBase = (sh = S.shape) => sh === 'cup' || sh === 'cone' || (sh === S.shape && (S.look === 'tumbler' || roundSeat())); // W = D (a cylinder can be deeper: its middle stretches)
 const PRESET_GROUPS = [
   [['목업', 'Mockups'], ['cube', 'cyl', 'sphere', 'cone', 'trap', 'plate', 'disc', 'plinthp']], // the plain forms
-  [['소품', 'Objects'], ['fam:paper', 'card', 'brochure', 'book', 'frame', 'pencase', 'lightstick', 'banner', 'aboard', 'ring', 'lipstick', 'tube', 'pump', 'cream', 'cushion']],
-  [['생활 제품', 'Appliances'], ['humidifier', 'purifier', 'coffee', 'air', 'robot', 'washer', 'fridge', 'microwave', 'ricecooker', 'standac', 'wallac', 'floorlamp', 'tablelamp', 'mushroom']],
-  [['전자제품', 'Electronics'], ['fam:phone', 'fam:fold', 'flip', 'fam:tablet', 'fam:laptop', 'airbuds', 'airpods', 'airmax', 'fam:speaker']],
-  [['안경·헬멧', 'Eyewear & helmets'], ['glasses', 'sunglasses', 'helmet']],
+  [['소품', 'Objects'], ['fam:paper', 'card', 'brochure', 'book', 'frame', 'pencase', 'lightstick', 'banner', 'aboard', 'lipstick', 'tube', 'pump', 'cream', 'cushion']],
+  [['생활 제품', 'Appliances'], ['air', 'humidifier', 'purifier', 'coffee', 'robot', 'washer', 'fridge', 'standac', 'wallac']],
+  [['조명', 'Lighting'], ['floorlamp', 'tablelamp', 'mushroom']],
+  [['전자제품', 'Electronics'], ['fam:phone', 'fam:fold', 'flip', 'fam:tablet', 'fam:laptop', 'airpods', 'fam:speaker']],
+  [['웨어러블', 'Wearables'], ['glasses', 'sunglasses', 'helmet', 'cap', 'airbuds', 'airmax', 'ring']], // worn on the body: eyewear, a helmet, earbuds, headphones, a ring
   [['가방·캐리어', 'Bags & luggage'], ['wallet', 'fam:pouch', 'ecobag', 'hobo', 'backpack', 'fam:luggage', 'fam:parcel']],
-  [['키친웨어', 'Kitchenware'], ['tumbler', 'mug', 'glass', 'latte', 'dish', 'bowl', 'jar', 'pan', 'pot']],
+  [['주방·식기', 'Kitchen & tableware'], ['tumbler', 'mug', 'glass', 'latte', 'dish', 'bowl', 'jar', 'pan', 'pot', 'microwave', 'ricecooker']],
   [['가구', 'Furniture'], ['desk', 'standing', 'dining', 'living', 'bar', 'sink', 'drawer', 'wardrobe', 'door', 'trolley', 'chair', 'pstool', 'office', 'stool', 'fam:sofa', 'beanbag']],
 ];
 /* ring sizes (Korean 호 = Japanese 号): inner diameter 13.0 mm at size 1, +1/3 mm per size */
@@ -1695,7 +1703,7 @@ const lampCtrl = () => { // a lamp's switch spot (product frame, scaled): on the
    on the desk, a mug never fills a cup, an air purifier stands on the floor); your own box, cylinder or sphere, or a loaded model, can be anything */
 function kind() {
   if (S.source !== 'box') return 'free';
-  if (['headphone', 'earbud', 'glasses', 'sunglasses', 'helmet'].includes(S.shape)) return 'worn';
+  if (['headphone', 'earbud', 'glasses', 'sunglasses', 'helmet', 'cap'].includes(S.shape)) return 'worn';
   if (S.look === 'tote' || S.look === 'hobo') return 'bag';
   if (S.screen || S.look === 'paper' || S.shape === 'ring') return 'flat';
   if (S.look === 'backpack') return 'pack';
@@ -1793,6 +1801,8 @@ const DETAIL = {
   pump: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], cream: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl', apply: true }, { k: 'ml', ko: '용량', en: 'Volume', opts: [[15, '15ml', '15 ml'], [30, '30ml', '30 ml'], [50, '50ml', '50 ml'], [100, '100ml', '100 ml']], def: 50, apply: true }, DR('rad', '모서리 R', 'Corner radius', 0, 20, 0), { k: 'mat', ko: '뚜껑 재질', en: 'Lid', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['metal', '메탈', 'Metal']], def: 'solid' }], lipstick: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], tube: [MAT_ROW], // cosmetics: the body round or square
   trap: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cube', '네모', 'Square'], ['cyl', '원통', 'Round']], def: 'cube' }, { k: 'narrow', ko: '좁아지는 쪽', en: 'Narrower at', opts: [['top', '위', 'Top'], ['bottom', '아래', 'Bottom']], def: 'top' }, DR('draft', '구배 각도', 'Draft angle', 1, 40, 10, 1, '°'), MAT_ROW],
   dish: [{ k: 'btype', ko: '종류', en: 'Type', opts: [['plate', '접시', 'Plate'], ['shallow', '접시형 볼', 'Shallow bowl']], def: 'plate', apply: true }],
+  cap: [{ k: 'crown', ko: '크라운 깊이', en: 'Crown', opts: [['deep', '딥', 'Deep'], ['mid', '미디엄', 'Medium'], ['low', '로우', 'Low']], def: 'mid' }, { k: 'brim', ko: '챙 휘어짐', en: 'Brim', opts: [['curve', '많이', 'Curved'], ['slight', '약간', 'Slight'], ['flat', '평평', 'Flat']], def: 'slight' }, DR('brimL', '챙 길이', 'Brim length', 50, 90, 70), { k: 'back', ko: '뒤 조절', en: 'Back', opts: [['strap', '스트랩 버클', 'Strap buckle'], ['snap', '스냅백', 'Snapback'], ['closed', '막힘', 'Closed']], def: 'strap' }],
+  mug: [{ k: 'mat', ko: '재질', en: 'Material', opts: [['ceramic', '세라믹', 'Ceramic'], ['solid', '솔리드', 'Solid'], ['glass', '유리', 'Glass'], ['metal', '메탈', 'Metal'], ['wood', '나무', 'Wood']], def: 'ceramic' }], // ceramic: glazed in the product colour
   bowl: [{ k: 'btype', ko: '종류', en: 'Type', opts: [['rice', '밥그릇', 'Rice bowl'], ['soup', '국그릇', 'Soup bowl']], def: 'rice', apply: true },
     { k: 'bsize', ko: '크기', en: 'Size', opts: [['S', '소', 'S'], ['M', '중', 'M'], ['L', '대', 'L']], def: 'M', apply: true },
     { k: 'mat', ko: '재질', en: 'Material', opts: [['ceramic', '도자기', 'Ceramic'], ['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['glass', '유리', 'Glass'], ['metal', '메탈', 'Metal']], def: 'ceramic' }],
@@ -1835,6 +1845,8 @@ function detKind() {
   if (S.source !== 'box') return null;
   if (S.shape === 'headphone') return 'headphone';
   if (S.shape === 'frame') return 'frame';
+  if (S.shape === 'cup' && S.style === 'mug') return 'mug';
+  if (S.shape === 'cap') return 'cap';
   if (S.look === 'bowl' && S.source === 'box') return S.pkey === 'dish' ? 'dish' : 'bowl';
   if (['washer', 'humidifier', 'standac', 'frame', 'cushion'].includes(S.look) && S.source === 'box') return S.look; // plates and bowls share the lathe, not the choices
   if (['tube', 'pump', 'lipstick', 'cream', 'trap', 'bowl', 'jar', 'trolley'].includes(S.look) && S.source === 'box') return S.look; // book and disc: the plain mockups' material row
@@ -2357,7 +2369,8 @@ function caseGeo(group, W, D, H) {
 }
 /* cups: mug with a handle, plain tapered glass, wide latte bowl; turned on a lathe (outside up, then the inside back down) */
 function cupGeo(group, style, W, H) {
-  const R = W / 2, wall = style === 'glass' ? 0.0025 : 0.0045, V2 = THREE.Vector2, mat = style === 'glass' ? mats.glass : style === 'mug' ? mats.glaze : mats.cup; // a mug in the product colour, glazed
+  const mm = style === 'mug' ? dv('mat') || 'ceramic' : null, mugMat = { ceramic: mats.glaze, solid: mats.foam, glass: mats.glass, metal: TOP_MAT.metal, wood: TOP_MAT.wood }; // a mug: glazed ceramic in the product colour, or another material
+  const R = W / 2, wall = style === 'glass' ? 0.0025 : 0.0045, V2 = THREE.Vector2, mat = style === 'glass' ? mats.glass : style === 'mug' ? mugMat[mm] || mats.glaze : mats.cup;
   const out = style === 'latte' ? [[0, 0], [0.5 * R, 0], [0.52 * R, 0.006], [0.68 * R, 0.3 * H], [0.88 * R, 0.65 * H], [R, H]]
     : style === 'glass' ? [[0, 0], [0.84 * R, 0], [0.85 * R, 0.004], [R, H]]
     : [[0, 0], [0.93 * R, 0], [R, 0.012], [R, H]];
@@ -2403,9 +2416,9 @@ function roundRect(w, h, r) {
   return s;
 }
 /* your own image on an A4 sheet or a screen, filling the face edge to edge (cropped to fit); one material per face shape, kept until the image changes */
-const USER_IMG = { paper: null, screen: null, book: null, frame: null, card: null, brochure: null, banner: null, aboard: null, mug: null }, IMG_MATS = new Map();
+const USER_IMG = { paper: null, screen: null, book: null, frame: null, card: null, brochure: null, banner: null, aboard: null, mug: null, cap: null }, IMG_MATS = new Map();
 const paperSlot = () => (S.pkey === 'card' ? 'card' : S.pkey === 'brochure' ? 'brochure' : 'paper');
-const imgSlot = () => (S.source !== 'box' ? null : S.shape === 'cup' && S.style === 'mug' ? 'mug' : S.look === 'paper' ? paperSlot() : S.look === 'banner' || S.look === 'aboard' ? S.look : S.look === 'book' ? 'book' : S.look === 'frame' ? 'frame' : S.look === 'tote' ? 'bag' : S.screen || S.shape === 'laptop' ? 'screen' : null);
+const imgSlot = () => (S.source !== 'box' ? null : S.shape === 'cap' ? 'cap' : S.shape === 'cup' && S.style === 'mug' ? 'mug' : S.look === 'paper' ? paperSlot() : S.look === 'banner' || S.look === 'aboard' ? S.look : S.look === 'book' ? 'book' : S.look === 'frame' ? 'frame' : S.look === 'tote' ? 'bag' : S.screen || S.shape === 'laptop' ? 'screen' : null);
 function userImgMat(slot, fw, fh) {
   const u = USER_IMG[slot]; if (!u) return null;
   const fa = fw / fh, key = `${slot}|${fa.toFixed(3)}`;
@@ -2416,7 +2429,7 @@ function userImgMat(slot, fw, fh) {
   IMG_MATS.set(key, m); return m;
 }
 function setUserImg(slot, img) {
-  for (const m of IMG_MATS.values()) { if (m.map) m.map.dispose(); m.dispose(); }
+  for (const v of IMG_MATS.values()) { const m = v.mat || v; if (m.map) m.map.dispose(); if (m.normalMap) m.normalMap.dispose(); m.dispose(); }
   IMG_MATS.clear();
   if (USER_IMG[slot]) USER_IMG[slot].tex.dispose();
   USER_IMG[slot] = img;
@@ -2743,14 +2756,54 @@ const bagMat = () => (dv('mat') === 'leather' ? mats.leather : mats.foam);
 const BAG_DROP = { tote: 0.15, hobo: 0.22 }; // how far the handle rises over the bag (m, at 100%)
 const bagDrop = () => (S.place === 'back' ? { tote: 0.27, hobo: 0.25 } : BAG_DROP)[S.look] || 0; // the strap rises higher to go over a shoulder
 const bagTop = () => (S.h / 1000 + bagDrop()) * S.scale; // from its bottom up to where the hand (or the shoulder) holds the handles
-/* tote bag: a soft flat body, two rolled cotton handles meeting at the top; your image printed on the front */
+/* a soft sewn body: a grid over its face, front and back pushed apart by half(u, v) (u -1..1 across, v 0..1 up), stitched round the rim */
+function pillowGeo(W, H, zc, half, nx = 28, ny = 28) {
+  const pos = [], idx = [], N = (nx + 1) * (ny + 1);
+  for (const sgn of [1, -1]) for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) { const u = (2 * i) / nx - 1, v = j / ny; pos.push((u * W) / 2, v * H, zc + sgn * half(u, v)); }
+  const f = (i, j) => j * (nx + 1) + i, b = (i, j) => N + f(i, j), P = (k) => new V3(pos[3 * k], pos[3 * k + 1], pos[3 * k + 2]);
+  const tri = (a, c, d, out) => { const n = new V3().crossVectors(P(c).sub(P(a)), P(d).sub(P(a))); if (n.dot(out) < 0) idx.push(a, d, c); else idx.push(a, c, d); };
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    idx.push(f(i, j), f(i + 1, j), f(i + 1, j + 1), f(i, j), f(i + 1, j + 1), f(i, j + 1));
+    idx.push(b(i, j), b(i + 1, j + 1), b(i + 1, j), b(i, j), b(i, j + 1), b(i + 1, j + 1));
+  }
+  const rim = (k0, k1, out) => { tri(f(...k0), f(...k1), b(...k1), out); tri(f(...k0), b(...k1), b(...k0), out); };
+  for (let i = 0; i < nx; i++) { rim([i, 0], [i + 1, 0], new V3(0, -1, 0)); rim([i, ny], [i + 1, ny], new V3(0, 1, 0)); }
+  for (let j = 0; j < ny; j++) { rim([0, j], [0, j + 1], new V3(-1, 0, 0)); rim([nx, j], [nx, j + 1], new V3(1, 0, 0)); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
+}
+/* a flat band (a cotton strap) along a smooth path: wide by thick, its flat face turning from n0 at its two ends to n1 along its middle */
+function ribbonAlong(pts, wide, thick, n0, n1, seg = 56) {
+  const cv = new THREE.CatmullRomCurve3(pts), pos = [], idx = [];
+  for (let i = 0; i <= seg; i++) {
+    const u = i / seg, p = cv.getPointAt(u), T = cv.getTangentAt(u), k = smooth01(clamp((Math.min(u, 1 - u) - 0.1) / 0.22, 0, 1));
+    const n = n0.clone().lerp(n1, k); n.addScaledVector(T, -n.dot(T)).normalize(); const wd = new V3().crossVectors(T, n).normalize();
+    for (const [a, c] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) pos.push(...p.clone().addScaledVector(wd, (a * wide) / 2).addScaledVector(n, (c * thick) / 2).toArray());
+  }
+  for (let i = 0; i < seg; i++) for (let q = 0; q < 4; q++) { const a = i * 4 + q, b = i * 4 + ((q + 1) % 4), c = a + 4, d = b + 4; idx.push(a, b, d, a, d, c); }
+  const e = seg * 4; idx.push(0, 2, 1, 0, 3, 2, e, e + 1, e + 2, e, e + 2, e + 3);
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
+}
+/* tote bag: a flat canvas bag, thin at its seams and its open top and a little full lower down (D: as full as it gets); two flat cotton
+   straps sewn inside the top hem, lying flat on the bag and turning to lie flat over the shoulder (or across the fingers); your image
+   printed on the front, following the cloth */
 function toteGeo(group, W, D, H) {
-  const own = meshIn(group), hd = bagDrop(), m = bagMat();
-  own(new RoundedBoxGeometry(W, H, D, 3, Math.min(0.012, D * 0.2)), m).position.set(0, H / 2, -D / 2);
-  const pw = W * 0.78, ph = H * 0.62, im = userImgMat('bag', pw, ph);
-  if (im) own(new THREE.PlaneGeometry(pw, ph).translate(0, H * 0.5, 0.0008), im).userData.decal = true; // a print: left out of the model files
-  for (const [zf, zs] of [[0.0035, 1], [-D - 0.0035, -1]]) // the front handle and the back one, both up to the middle
-    own(tubeAlong([new V3(-0.22 * W, H - 0.03, zf), new V3(-0.2 * W, H + 0.45 * hd, zf - zs * D * 0.2), new V3(-0.06 * W, H + 0.95 * hd, -D / 2 + zs * 0.004), new V3(0, H + hd, -D / 2 + zs * 0.004), new V3(0.06 * W, H + 0.95 * hd, -D / 2 + zs * 0.004), new V3(0.2 * W, H + 0.45 * hd, zf - zs * D * 0.2), new V3(0.22 * W, H - 0.03, zf)], 0.006), m);
+  const own = meshIn(group), hd = bagDrop(), m = bagMat(), t0 = 0.0009;
+  const half = (u, v) => t0 + (D / 2 - t0) * Math.pow(Math.max(0, 1 - Math.abs(u) ** 3), 0.6) * Math.pow(Math.max(0, Math.sin(Math.PI * Math.pow(v, 0.8))), 0.75) * (1 - 0.85 * smooth01(clamp((v - 0.9) / 0.1, 0, 1)));
+  own(pillowGeo(W, H, -D / 2, half), m);
+  const pw = W * 0.78, ph = H * 0.62, y0 = H * 0.5 - ph / 2, im = userImgMat('bag', pw, ph);
+  if (im) { // the print: a patch of the front face, lifted off it a hair
+    const n = 20, pos = [], uv = [], idx = [];
+    for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) { const x = -pw / 2 + (pw * i) / n, y = y0 + (ph * j) / n; pos.push(x, y, -D / 2 + half((2 * x) / W, y / H) + 0.0006); uv.push(i / n, j / n); }
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const a = j * (n + 1) + i; idx.push(a, a + 1, a + n + 2, a, a + n + 2, a + n + 1); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+    own(g, im).userData.decal = true; // left out of the model files
+  }
+  const sw = Math.min(0.032, W * 0.085), st = 0.0022, ax = 0.22 * W, side = sw / 2 + 0.001;
+  for (const zs of [1, -1]) { // the front strap and the back one: up from inside the hem, side by side where they cross the top
+    const zf = (y) => -D / 2 + zs * (half((2 * ax) / W, y / H) + st / 2 + 0.0004), zt = -D / 2 + zs * side;
+    const pts = [new V3(-ax, H - 0.04, zf(H - 0.04)), new V3(-ax, H - 0.005, zf(H - 0.005)), new V3(-ax * 0.82, H + 0.42 * hd, (zf(H) + zt) / 2), new V3(-ax * 0.3, H + 0.94 * hd, zt), new V3(0, H + hd, zt)];
+    own(ribbonAlong([...pts, ...pts.slice(0, -1).reverse().map((p) => new V3(-p.x, p.y, p.z))], sw, st, new V3(0, 0, zs), new V3(0, 1, 0)), m);
+  }
 }
 /* hobo bag: a slouchy crescent, deep in the middle and narrow at its two top corners, on one strap */
 function hoboGeo(group, W, D, H) {
@@ -2965,6 +3018,106 @@ function helmetGeo(group, W, D, H) { // a shell that follows the skull a set gap
   const ear = EAR_CANAL.clone().multiplyScalar(hh);
   for (const s of [-1, 1]) own(tubeAlong([new V3(s * a * 0.93, yBrow - 0.01, ear.z + 0.03), new V3(s * (eggRay(1, 0, 0) * hh + 0.004), ear.y - 0.02, ear.z + 0.035), new V3(s * 0.035, -0.55 * hh, 0.32 * hh), new V3(0, -0.6 * hh, 0.3 * hh)], 0.0035, 24), mats.tire); // chin strap
 }
+/* a baseball cap, fitted to this head: six panels following the skull a few mm out, the front panels standing a little proud (crown depth),
+   a button on top, an eyelet in each panel, seams down from the button, a taped rim; at the back an arched opening with the strap across it
+   (a strap and a metal buckle, a snapback's plastic studs, or closed); the brim off the front of the rim, stitched in rows, bent down at
+   its sides as chosen. Your PNG on the front panels as embroidery. Head frame: y up, z toward the face. */
+function capGeo(group) {
+  const A = S.A, hh = A.headH, own = meshIn(group), c0 = new V3(0, HEAD_EGG.cy * hh, HEAD_EGG.cz * hh), gap = 0.002, th = 0.0016;
+  const E = { deep: 0.018, mid: 0.01, low: 0.004 }[dv('crown') || 'mid'], back = dv('back') || 'strap', bend = dv('brim') || 'slight', Lb = (+dv('brimL') || 70) / 1000;
+  const yF = (HEAD_MESH.eye[0] + 0.165) * hh, yS = 0.06 * hh, yB = -0.07 * hh; // the rim: mid-forehead, over the ears, low at the back
+  const ra = ((yF + yB) / 2 + yS) / 2, rc = ((yF + yB) / 2 - yS) / 2, rb = (yF - yB) / 2, yRim = (ph) => ra + rb * Math.cos(ph) + rc * Math.cos(2 * ph);
+  const dir = (ph, t) => new V3(Math.sin(t) * Math.sin(ph), Math.cos(t), Math.sin(t) * Math.cos(ph)).normalize();
+  const skin = (ph, t) => { const d = dir(ph, t); return c0.clone().addScaledVector(d, eggRay(d.x, d.y, d.z) * hh + gap); };
+  const tAt = (ph, y) => { let lo = 0.02, hi = 2.7; for (let i = 0; i < 34; i++) { const m = (lo + hi) / 2; if (skin(ph, m).y > y) lo = m; else hi = m; } return (lo + hi) / 2; };
+  const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a)), rH = Math.hypot(skin(Math.PI, tAt(Math.PI, yB)).z - c0.z, 0) || 0.09;
+  const archW = 0.038, archH = 0.03, arch = (ph) => { if (back === 'closed') return 0; const sA = Math.abs(wrap(ph - Math.PI)) * rH; return sA >= archW ? 0 : archH * Math.sqrt(1 - (sA / archW) ** 2); }; // the opening over the strap
+  const puff = (ph, s) => E * ((1 - s) * 0.55 + s * Math.max(0, Math.cos(ph)) ** 2) * (1 - s * s); // the front panels stand up off the forehead; round the sides and back it hugs the head
+  const pt = (ph, s, tEnd, off = 0) => { const t = s * tEnd, d = dir(ph, t); return c0.clone().addScaledVector(d, eggRay(d.x, d.y, d.z) * hh + gap + puff(ph, s) + off); };
+  const nU = 144, nV = 40, pos = [], idx = [], ends = [];
+  for (let j = 0; j <= nU; j++) ends.push(tAt((j / nU) * Math.PI * 2, yRim((j / nU) * Math.PI * 2) + arch((j / nU) * Math.PI * 2)));
+  for (const layer of [0, 1]) for (let j = 0; j <= nU; j++) { const ph = (j / nU) * Math.PI * 2; for (let i = 0; i <= nV; i++) { const p = pt(ph, i / nV, ends[j], layer ? -th : 0); pos.push(p.x, p.y, p.z); } }
+  const L = (nU + 1) * (nV + 1);
+  for (let j = 0; j < nU; j++) for (let i = 0; i < nV; i++) { const a = j * (nV + 1) + i, b2 = (j + 1) * (nV + 1) + i; idx.push(a, a + 1, b2, a + 1, b2 + 1, b2); idx.push(L + a, L + b2, L + a + 1, L + a + 1, L + b2, L + b2 + 1); }
+  for (let j = 0; j < nU; j++) { const a0 = j * (nV + 1) + nV, a1 = (j + 1) * (nV + 1) + nV; idx.push(a0, a1, L + a0, L + a0, a1, L + a1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+  own(g, Object.assign(mats.foam.clone(), { side: THREE.DoubleSide }));
+  const rimPts = []; for (let j = 0; j < nU; j++) rimPts.push(pt((j / nU) * Math.PI * 2, 1, ends[j], 0.0002));
+  own(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(rimPts, true), 180, 0.0014, 8, true), mats.pad); // the taped rim, round the opening too
+  for (let k = 0; k < 6; k++) { // seams from the button down each side of the panels
+    const ph = (k * Math.PI) / 3, j = Math.round((ph / (Math.PI * 2)) * nU) % nU, sp = [];
+    for (let i = 1; i <= 24; i++) sp.push(pt(ph, 0.03 + (0.97 * i) / 24, ends[j], 0.0004));
+    own(tubeAlong(sp, 0.0006, 48), mats.pad);
+  }
+  const top = pt(0, 0, ends[0]);
+  own(new THREE.SphereGeometry(0.0075, 24, 12).scale(1, 0.42, 1).translate(top.x, top.y + 0.0012, top.z), mats.foam); // the button
+  for (let k = 0; k < 6; k++) { // an eyelet in each panel
+    const ph = Math.PI / 6 + (k * Math.PI) / 3, j = Math.round((ph / (Math.PI * 2)) * nU) % nU, p = pt(ph, 0.42, ends[j], 0.0003), n = p.clone().sub(c0).normalize();
+    const q = new THREE.Quaternion().setFromUnitVectors(new V3(0, 0, 1), n);
+    own(new THREE.TorusGeometry(0.0024, 0.0006, 8, 20).applyQuaternion(q).translate(p.x, p.y, p.z), mats.pad);
+    own(new THREE.CircleGeometry(0.0019, 16).applyQuaternion(q).translate(p.x, p.y, p.z), new THREE.MeshStandardMaterial({ color: 0x1b1b1c, roughness: 0.9 }));
+  }
+  if (back !== 'closed') { // the strap across the opening, tucked in behind the crown at both ends
+    const sp = [], half = (archW + 0.014) / rH;
+    for (let i = 0; i <= 16; i++) { const ph = Math.PI - half + (2 * half * i) / 16, y = yRim(ph) + 0.011, t = tAt(ph, y), d = dir(ph, t); sp.push(c0.clone().addScaledVector(d, eggRay(d.x, d.y, d.z) * hh + gap - 0.0012)); }
+    own(barAlong(sp, 0.0016, 0.016, 0.016, 32), back === 'snap' ? mats.tire : mats.foam);
+    const at = (ph) => { const y = yRim(ph) + 0.011, t = tAt(ph, y), d = dir(ph, t); return { p: c0.clone().addScaledVector(d, eggRay(d.x, d.y, d.z) * hh + gap - 0.0003), n: new V3(d.x, 0, d.z).normalize() }; };
+    if (back === 'strap') { // a metal buckle on it
+      const b = at(Math.PI + 0.12), T = new V3().crossVectors(UP, b.n).normalize(), sh = roundRect(0.021, 0.014, 0.003), hole = new THREE.Path(); hole.moveTo(-0.0072, 0.0032); hole.lineTo(0.0072, 0.0032); hole.lineTo(0.0072, 0.0108); hole.lineTo(-0.0072, 0.0108); hole.lineTo(-0.0072, 0.0032); sh.holes.push(hole);
+      own(new THREE.ExtrudeGeometry(sh, { depth: 0.0014, bevelEnabled: false }).translate(0, -0.007, 0).applyMatrix4(new THREE.Matrix4().makeBasis(T, UP, b.n)).translate(b.p.x, b.p.y, b.p.z), steel);
+    } else if (back === 'snap') for (let i = -2; i <= 3; i++) { const b = at(Math.PI + i * 0.055 - 0.03), q = new THREE.Quaternion().setFromUnitVectors(UP, b.n); own(new THREE.CylinderGeometry(0.0022, 0.0022, 0.0016, 16).applyQuaternion(q).translate(b.p.x + b.n.x * 0.0008, b.p.y, b.p.z + b.n.z * 0.0008), mats.tire); }
+  }
+  { // the brim: off the front of the rim, a little down, bent down at its sides as chosen, stitched in rows
+    const phB = deg(50), nu = 48, nv = 12, tilt = deg(bend === 'flat' ? 4 : bend === 'curve' ? 12 : 9), droop = bend === 'flat' ? 0.002 : bend === 'curve' ? 0.036 : 0.024, bt = 0.003;
+    const edge = [], halfW = Math.abs(pt(phB, 1, tAt(phB, yRim(phB))).x) || 0.09;
+    for (let i = 0; i <= nu; i++) { const ph = -phB + (2 * phB * i) / nu, p = pt(ph, 1, tAt(ph, yRim(ph)), -0.003); p.y -= 0.0006; edge.push(p); } // its inner edge tucked just inside the crown
+    const P = (i, v) => { const u = (2 * i) / nu - 1, f = Math.pow(Math.max(0, 1 - Math.abs(u) ** 2.2), 0.6), p = edge[i], r = new V3(0.35 * (p.x - c0.x) / halfW, 0, 1).normalize(), l = Lb * f * v, xs = (p.x + r.x * l) / (halfW + 0.004); return p.clone().addScaledVector(r, l).add(new V3(0, -l * Math.sin(tilt) - droop * Math.min(1, v * 1.6) * xs * xs, 0)); }; // forward off the rim, no wider than the crown, arching down to its sides
+    const bp = [], bi = [], M = (nu + 1) * (nv + 1);
+    for (const lay of [0, 1]) for (let j = 0; j <= nv; j++) for (let i = 0; i <= nu; i++) { const p = P(i, j / nv); bp.push(p.x, p.y - lay * bt, p.z); }
+    const id = (lay, i, j) => lay * M + j * (nu + 1) + i;
+    for (let j = 0; j < nv; j++) for (let i = 0; i < nu; i++) { bi.push(id(0, i, j), id(0, i + 1, j + 1), id(0, i + 1, j), id(0, i, j), id(0, i, j + 1), id(0, i + 1, j + 1)); bi.push(id(1, i, j), id(1, i + 1, j), id(1, i + 1, j + 1), id(1, i, j), id(1, i + 1, j + 1), id(1, i, j + 1)); }
+    for (let i = 0; i < nu; i++) bi.push(id(0, i, nv), id(0, i + 1, nv), id(1, i + 1, nv), id(0, i, nv), id(1, i + 1, nv), id(1, i, nv)); // its edge
+    const bg = new THREE.BufferGeometry(); bg.setAttribute('position', new THREE.Float32BufferAttribute(bp, 3)); bg.setIndex(bi); bg.computeVertexNormals();
+    own(bg, Object.assign(mats.foam.clone(), { side: THREE.DoubleSide }));
+    for (const v of [0.2, 0.34, 0.48, 0.62, 0.76, 0.9]) { const sp = []; for (let i = 0; i <= nu; i++) { const u = (2 * i) / nu - 1; if (Math.abs(u) < 0.93) sp.push(P(i, v).add(new V3(0, 0.0005, 0))); } own(tubeAlong(sp, 0.00045, 64), mats.pad); } // stitch rows
+    const tip = P(nu / 2, 1), backPt = pt(Math.PI, 1, ends[nU / 2]), crownTop = top.y + 0.004;
+    group.userData.capSize = { w: Math.round(2 * Math.max(halfW, Math.abs(pt(Math.PI / 2, 0.9, ends[nU / 4]).x)) * 1000 + 3), d: Math.round((tip.z - backPt.z) * 1000), h: Math.round((crownTop - Math.min(...rimPts.map((q) => q.y))) * 1000), brim: Math.round(Lb * 1000) };
+  }
+  const im = capEmbroidery(); // your PNG, stitched onto the front panels
+  if (im) {
+    const pw = im.w, ph2 = im.h, yc = yF + 0.012 + ph2 / 2 + 0.006, n = 24, ps = [], uv = [], ix = [];
+    for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) { const y = yc - ph2 / 2 + (ph2 * j) / n, x = -pw / 2 + (pw * i) / n, ph = x / Math.max(0.05, Math.abs(skin(0, tAt(0, y)).z - c0.z)), tE = tAt(ph, yRim(ph)), p = pt(ph, tAt(ph, y) / tE, tE, 0.0009); ps.push(p.x, p.y, p.z); uv.push(i / n, j / n); }
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const a = j * (n + 1) + i; ix.push(a, a + 1, a + n + 2, a, a + n + 2, a + n + 1); }
+    const eg = new THREE.BufferGeometry(); eg.setAttribute('position', new THREE.Float32BufferAttribute(ps, 3)); eg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); eg.setIndex(ix); eg.computeVertexNormals();
+    own(eg, im.mat);
+  }
+}
+/* your PNG as embroidery: the picture's own colours laid in fine diagonal satin threads, a darker edge round each shape, the threads
+   catching the light (a normal map); its see-through parts left as cap (an opaque picture: its background colour keyed out). Size: up to
+   64 x 50 mm on the front panels, its proportions kept. */
+function capEmbroidery() {
+  const u = USER_IMG.cap; if (!u) return null;
+  if (IMG_MATS.has('cap')) return IMG_MATS.get('cap');
+  const src = u.tex.image, k = Math.min(1, 384 / Math.max(u.w, u.h)), w = Math.max(8, Math.round(u.w * k)), h = Math.max(8, Math.round(u.h * k));
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.drawImage(src, 0, 0, w, h);
+  const im = g.getImageData(0, 0, w, h), d = im.data;
+  let opaque = true; for (let i = 3; i < d.length; i += 4) if (d[i] < 128) { opaque = false; break; }
+  if (opaque) { const r0 = d[0], g0 = d[1], b0 = d[2]; for (let i = 0; i < d.length; i += 4) if (Math.abs(d[i] - r0) + Math.abs(d[i + 1] - g0) + Math.abs(d[i + 2] - b0) < 60) d[i + 3] = 0; } // a picture with a plain background
+  const A = (x, y) => (x < 0 || y < 0 || x >= w || y >= h ? 0 : d[(y * w + x) * 4 + 3] / 255), hgt = new Float32Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * 4, a = A(x, y), edge = a > 0.5 && (A(x - 1, y) < 0.5 || A(x + 1, y) < 0.5 || A(x, y - 1) < 0.5 || A(x, y + 1) < 0.5 || A(x - 2, y) < 0.5 || A(x + 2, y) < 0.5 || A(x, y - 2) < 0.5 || A(x, y + 2) < 0.5);
+    const thread = 0.5 + 0.5 * Math.sin(((x + y) * Math.PI * 2) / 3.2), k2 = (edge ? 0.72 : 1) * (0.84 + 0.2 * thread);
+    d[i] = Math.min(255, d[i] * k2); d[i + 1] = Math.min(255, d[i + 1] * k2); d[i + 2] = Math.min(255, d[i + 2] * k2); d[i + 3] = a > 0.5 ? 255 : 0;
+    hgt[y * w + x] = a > 0.5 ? (edge ? 0.35 : 1) * (0.6 + 0.4 * thread) : 0;
+  }
+  g.putImageData(im, 0, 0);
+  const nc = document.createElement('canvas'); nc.width = w; nc.height = h; const ng = nc.getContext('2d'), nd = ng.createImageData(w, h), H2 = (x, y) => hgt[Math.min(h - 1, Math.max(0, y)) * w + Math.min(w - 1, Math.max(0, x))];
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const dx = (H2(x - 1, y) - H2(x + 1, y)) * 2.2, dy = (H2(x, y + 1) - H2(x, y - 1)) * 2.2, l = Math.hypot(dx, dy, 1), i = (y * w + x) * 4; nd.data[i] = ((dx / l) * 0.5 + 0.5) * 255; nd.data[i + 1] = ((dy / l) * 0.5 + 0.5) * 255; nd.data[i + 2] = ((1 / l) * 0.5 + 0.5) * 255; nd.data[i + 3] = 255; }
+  ng.putImageData(nd, 0, 0);
+  const map = new THREE.CanvasTexture(c), nmap = new THREE.CanvasTexture(nc); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 4;
+  const sc = Math.min(0.064 / w, 0.05 / h), out = { w: w * sc, h: h * sc, mat: new THREE.MeshStandardMaterial({ map, normalMap: nmap, normalScale: new THREE.Vector2(1.4, 1.4), alphaTest: 0.5, roughness: 0.55, side: THREE.DoubleSide }) };
+  IMG_MATS.set('cap', out); return out;
+}
 /* robot vacuum: a low round body (a stadium when W and D differ), a lighter top, a laser turret at the back, a dark bumper round the front, a button */
 function robotGeo(group, W, D, H) {
   const own = meshIn(group), tur = Math.min(0.012, H * 0.14), bodyH = H - tur, bev = Math.min(0.008, bodyH * 0.12);
@@ -2994,7 +3147,7 @@ function mushroomGeo(group, W, D, H) {
 }
 function pouchGeo(group, W, D, H) {
   const own = meshIn(group), bev = Math.min(D * 0.45, 0.02);
-  own(plateGeo(W, D, H, Math.min(0.03, H * 0.25), bev, 6).applyMatrix4(ON_DECK), mats.foam);
+  own(plateGeo(W, H, D, Math.min(0.03, H * 0.25), bev, 6).translate(0, 0, -D), mats.foam); // stood up: its face W x H, the depth through it, every edge puffed round
   own(new THREE.BoxGeometry(W - 2 * bev, 0.004, 0.004).translate(0, H - 0.0005, -D / 2), mats.tire); // the zip
   own(new RoundedBoxGeometry(0.012, 0.022, 0.004, 2, 0.0015), mats.trim).position.set(W / 2 - bev - 0.012, H - 0.012, 0.0005); // its pull
 }
@@ -3087,6 +3240,7 @@ function buildProduct() {
   else if (S.look === 'mushroom') mushroomGeo(holder, W, D, Hh);
   else if (S.shape === 'glasses' || S.shape === 'sunglasses') { DET_ON = true; try { eyewearGeo(holder); } finally { DET_ON = false; } }
   else if (S.shape === 'helmet') helmetGeo(holder, W, D, Hh);
+  else if (S.shape === 'cap') capGeo(holder);
   else if (S.look === 'floorlamp' && S.shape === 'box') lampGeo(holder, W, D, Hh, true);
   else if (S.look === 'tablelamp' && S.shape === 'box') lampGeo(holder, W, D, Hh, false);
   else if (S.look === 'coffee' && S.shape === 'box') coffeeGeo(holder, W, D, Hh);
@@ -3747,8 +3901,9 @@ function edgeGrip(kind) {
   const HD = S.A.hd, D3 = dims(), half = D3.W / 2, pl = HD.palmLen, pw = HD.palmW, reach = pl + HD.fingers[1].L.reduce((x, y) => x + y, 0), clear = 0.008 + D3.D;
   const at = (t) => 0.5 * pw * Math.cos(t) - 0.38 * pl * Math.sin(t) - clear;
   if (kind === 'face') { // one hand: a phone's fingers reach straight across its back and wrap the far edge; a tablet's spread up and in
-    const phone = isPhone(D3), a = deg(phone ? 90 : 85);
-    return { a, inset: at(a), up: phone ? 0.2 * D3.H : 0.38 * D3.H - 0.45 * pl * Math.cos(a), phone }; // a tablet: the hand wraps the middle of its side, fingers straight across its back
+    const phone = isPhone(D3), a = deg(phone ? 90 : 85), g = { a, inset: at(a), up: phone ? 0.2 * D3.H : 0.38 * D3.H - 0.45 * pl * Math.cos(a), phone }; // a tablet: the hand wraps the middle of its side, fingers straight across its back
+    g.inset -= thumbClear(g); // the hand set out from the edge just enough that the thumb comes round it without cutting into it
+    return g;
   }
   let a = 0, inset = 0;
   for (const d of [25, 20, 15, 10, 5, 0]) { // two hands on a sheet: tip the fingers in only as far as the hands stay clear of each other
@@ -3756,7 +3911,22 @@ function edgeGrip(kind) {
     if (inset + reach * Math.sin(a) <= half - 0.009 && inset + 0.5 * pl * Math.sin(a) + 0.5 * pw * Math.cos(a) <= half - 0.002) break;
   }
   inset = Math.min(inset, half - 0.002 - 0.5 * pl * Math.sin(a) - 0.5 * pw * Math.cos(a));
-  return { a, inset, up: Math.max(0.1 * D3.H, 0.5 * pw * Math.sin(a) + 0.01) };
+  const g = { a, inset, up: Math.max(0.1 * D3.H, 0.5 * pw * Math.sin(a) + 0.01) };
+  g.inset -= thumbClear(g); // both hands set out a little, so neither thumb cuts into the sheet's edge
+  return g;
+}
+/* how much farther out the hand must sit so its thumb clears the edge it comes round: every part of the thumb that lies level with the
+   sheet (within its thickness) must stay outside its edge; the parts on its face or behind it may lie over it (hand frame: the edge is
+   g.inset in from the wrist, inward = (0, sin a, cos a); the sheet's back just off the palm, the paper lifted 2 mm more) */
+function thumbClear(g) {
+  const HD = S.A.hd, T = HD.thumb, D3 = dims(), tp = fingerPts(HD, edgePose(g))[4], inw = new V3(0, Math.sin(g.a), Math.cos(g.a));
+  const back = HD.palmT / 2 + 0.002 + (S.look === 'paper' && S.source === 'box' && S.pkey !== 'card' ? 0.002 : 0), front = back + D3.D, shift = S.source === 'box' && S.pkey === 'brochure' ? 0.016 : 0;
+  let need = -1;
+  for (let k = 0; k + 1 < tp.length; k++) for (let t = 0; t <= 8; t++) {
+    const p = tp[k].clone().lerp(tp[k + 1], t / 8), r = T.r[k] * (k === tp.length - 2 && t === 8 ? 0.9 : 1);
+    if (p.x + r > back && p.x - r < front) need = Math.max(need, g.inset - shift + p.dot(inw) + r);
+  }
+  return need > 0 ? need + 0.001 : 0;
 }
 /* fingers along the back (a phone: wrapped round its far edge), the thumb round the near edge and lying on the front face */
 function edgePose(g) {
@@ -3860,6 +4030,7 @@ function planHands() {
   if (grabbable()) {
     const P = dims();
     if (false) { const g = objectGrip(HD, { W: P.H, D: P.D, H: P.W }, true, 0.5); g.dims = { W: P.H / S.scale, D: P.D / S.scale, H: P.W / S.scale }; S.plan = { ...g, kind: 'grab', grab: grabGoal(g, new THREE.Matrix4().makeTranslation(0, P.H / 2, 0).multiply(new THREE.Matrix4().makeRotationZ(-Math.PI / 2))) }; } // lying down: the fist round its middle, across it
+    else if (S.look === 'cushion' && !laidFlat()) S.plan = cushionDab(HD, P); // open on the table: two fingertips touch the puff
     else if (S.look === 'pencase' && !laidFlat()) S.plan = pencaseGrab(HD, P); // lying on the table: the fist closes round it from above
     else if (S.look === 'book' && !laidFlat()) { const g = objectGrip(HD, P, false, 0); S.plan = { ...g, kind: 'grab', grab: grabGoal(g, null, [0, 4]) }; } // stood up: the right hand round its side, halfway up, thumb on the front cover, fingers round the back
     else if (!laidFlat() && P.H >= 0.025 && Math.min(P.W, P.D) <= GRAB_MAX && S.look !== 'pump' && S.look !== 'pencase') { const g = objectGrip(HD, P, ['cyl', 'sphere', 'cone', 'parts'].includes(S.shape), 0.5); S.plan = { ...g, kind: 'grab', grab: grabGoal(g) }; } // a fist round its middle
@@ -3978,6 +4149,13 @@ function handGoal(plan, s, P, sh) {
       const F = handFrame(new V3(0, -1, 0), new V3().subVectors(S.pressLocal, sh));
       return { F, W: S.pressLocal.clone().sub(inHand(F, plan.tip)), pole: S.pressLocal.y < S.A.hipY ? new V3(-0.15, 0.1, -1) : new V3(-0.55, -1, -0.35), hp: plan.hp }; // reaching down low: the elbow back, like the other arm hanging
     }
+    case 'dab': { // over the compact while its lid lifts, then down onto the puff
+      if (!right) return null;
+      const to = S.pressLocal.clone().sub(sh); to.y = 0; to.normalize();
+      const F = handFrame(new V3(0, -1, 0), to.clone().multiplyScalar(Math.cos(deg(16))).add(new V3(0, -Math.sin(deg(16)), 0))), k = smooth01(clamp((anim.open - 0.55) / 0.45, 0, 1));
+      const at = S.pressLocal.clone().addScaledVector(to, -0.06 * (1 - k)).add(new V3(0, 0.07 * (1 - k), 0));
+      return { F, W: at.sub(inHand(F, plan.tip)), pole: new V3(-0.55, -1, -0.35), hp: plan.hp };
+    }
     case 'ring': return right ? { F: handFrame(new V3(0.1, 0, -1), new V3(0.3, 1, 0.12)), W: new V3(P.shR.x + 0.05, P.shR.y - 0.12, P.shR.z + 0.3), pole: new V3(-0.6, -1, 0.1), hp: plan.hp } : null;
     case 'grab': if (right && sh.distanceTo(plan.grab.W) > A.reach * 0.97) return null; // out of reach (on the floor): the hand hangs open like the other, not a fist in the air
       return right ? { F: { q: plan.grab.q }, W: plan.grab.W, pole: new V3(-0.3, -1, -0.6), hp: plan.hp } : null; // the elbow back and down by the side
@@ -4009,16 +4187,12 @@ function handGoal(plan, s, P, sh) {
     case 'hang': { if (!right) return null; const W = restWrist(A, P, s), rc = armIK(sh, W, A, new V3(s * 0.25, -0.3, -1)); return { F: handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)), W, pole: new V3(s * 0.25, -0.3, -1), hp: plan.hp }; } // the right arm hangs, the bag in its hand
     case 'clutch': { if (right) return null; /* the left hand */ const W = restWrist(A, P, s), rc = armIK(sh, W, A, new V3(s * 0.25, -0.3, -1)); return { F: handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)), W, pole: new V3(s * 0.25, -0.3, -1), hp: plan.hp }; }
     case 'palm': if (S.source === 'box' && S.look === 'cushion') { // a cushion compact: held up open on one palm at chin height, the mirror toward the face; the other hand dabs the puff on the cheek
-        if (right) { // held up open on the palm just below the eyes, the palm (and the compact) tipped toward the face, the hand carrying straight on from the forearm
-          const tilt = deg(40), b = UP.clone().multiplyScalar(Math.cos(tilt)).add(new V3(0, 0, -Math.sin(tilt))), y = new V3(0.2, Math.sin(tilt), Math.cos(tilt)).normalize();
-          const D3 = dims(), x0 = A.hd.palmT / 2 + 0.001, yc = Math.max(0.55 * A.hd.palmLen, Math.min(D3.D / 2 + 0.1 * A.hd.palmLen, A.hd.palmLen)), pole = new V3(-0.5, -1, -0.15);
-          const c = new V3(P.shR.x + 0.11, P.eye.y - 0.08, P.eye.z + 0.27); // the compact's middle: before the face, a little right of centre
-          let F = handFrame(b, y), W = null;
-          for (let i = 0; i < 3; i++) { // the fingers turned most of the way onto the forearm's line, so the wrist stays nearly straight (the lid opens to suit)
-            W = c.clone().addScaledVector(F.x, -(x0 + D3.H / 2)).addScaledVector(F.y, -yc);
-            const el = armIK(sh, W, A, pole).el; F = handFrame(b, y.clone().lerp(W.clone().sub(el).normalize(), 0.75).normalize());
-          }
-          return { F, W: c.addScaledVector(F.x, -(x0 + D3.H / 2)).addScaledVector(F.y, -yc), pole, hp: plan.hp };
+        if (right) { // held up open on the palm just below the eyes and turned square to the face: its base tipped toward the face, its mirror side facing it
+          const D3 = dims(), x0 = A.hd.palmT / 2 + 0.001, yc = Math.max(0.55 * A.hd.palmLen, Math.min(D3.D / 2 + 0.1 * A.hd.palmLen, A.hd.palmLen));
+          const c = new V3(P.shR.x + 0.16, P.eye.y - 0.07, P.eye.z + 0.32), e = P.eye.clone().sub(c).normalize(), eh = new V3(e.x, 0, e.z).normalize(), al = deg(48); // before the middle of the face, just under the eyes
+          const b = UP.clone().multiplyScalar(Math.cos(al)).addScaledVector(eh, Math.sin(al)), f = e.clone().addScaledVector(b, -e.dot(b)).normalize(); // b: the base (on the palm); f: where the lid opens, toward the eyes
+          const F = handFrame(b, f.clone().negate()); // the palm under it, the fingers along its back away from the face
+          return { F, W: c.addScaledVector(F.x, -(x0 + D3.H / 2)).addScaledVector(F.y, -yc), pole: new V3(-0.2, -1, 0.3), hp: plan.hp }; // the elbow down in front: the hand carries straight up from the forearm
         }
         const ck = new V3(0.075, P.eye.y - 0.075, P.eye.z + 0.01), F = handFrame(new V3(-0.75, 0, -0.65).normalize(), new V3(-0.15, 1, 0.1).normalize());
         return { F, W: ck.addScaledVector(F.y, -A.hd.palmLen * 1.2).addScaledVector(F.x, -0.025), pole: new V3(0.7, -1, -0.1), hp: S.handRest };
@@ -4059,6 +4233,15 @@ function drinkGoal(plan, P) {
   const Mh = new THREE.Matrix4().makeBasis(Xp, Yp, Zp).setPosition(O).multiply(handToProduct(plan).invert()), W = new V3(), q = new THREE.Quaternion();
   Mh.decompose(W, q, new V3());
   return { q, W };
+}
+/* a cushion compact open on a table: the hand waits over it, a little in front, while the lid lifts, then two fingertips (index and middle)
+   come down onto the puff as if taking up the powder; the other fingers curled, the palm down, the fingers out from the shoulder */
+function cushionDab(HD, P) {
+  const hp = { f: [[deg(8), deg(14), deg(8)], [deg(6), deg(12), deg(8)], [deg(62), deg(88), deg(55)], [deg(66), deg(92), deg(58)]], tm: new V3(0.45, 0.65, -0.6).normalize(), tq: new V3(0.5, 0.2, 0.85).normalize(), t: [deg(12), deg(18)] };
+  const pts = fingerPts(HD, hp), tip = pts[0][3].clone().add(pts[1][3]).multiplyScalar(0.5).add(new V3(HD.fingers[1].r[2] * 0.85, 0, 0)); // on the pads, between the two
+  product.updateMatrixWorld(true); human.updateMatrixWorld(true);
+  S.pressLocal = human.worldToLocal(product.localToWorld(new V3(0, 0.56 * P.H + 0.0045 * S.scale, -P.D / 2)));
+  return { kind: 'dab', hp, tip };
 }
 /* a pencil case lying on the table, its length across in front of the person: the right hand comes over it from above, palm down, the
    fingers closing round its far side and the thumb round the near one, a little right of its middle, the hand turned to follow the forearm */
@@ -4331,6 +4514,11 @@ function evaluate() {
       add(L('테 폭', 'Frame width'), L(`${sun ? '선글라스' : '안경'} 폭 ${mmi(g.W)}mm · 얼굴 폭 약 ${mmi(faceW)}mm${okW ? ' · 알맞아요' : dw > 0 ? ' · 얼굴보다 넓어요' : ' · 관자놀이를 눌러요'}`, `${mmi(g.W)} mm wide · face about ${mmi(faceW)} mm${okW ? ', a good fit' : dw > 0 ? ', wider than the face' : ', presses the temples'}`), okW ? 'good' : 'warn');
       add(L('코에 얹힘', 'On the nose'), g.F.metal ? L('코 받침 두 개가 콧등 양옆에 얹혀요', 'Two nose pads sit on the sides of the nose') : L('브리지가 콧등에 바로 얹혀요', 'The bridge rests right on the nose'), 'info');
       add(L('렌즈', 'Lenses'), L(`${mmi(g.lw)} × ${mmi(g.lh)}mm · 두께 2mm${sun ? (dv('lens') === 'black' ? ' · 블랙' : ' · 미러') : ''}`, `${mmi(g.lw)} × ${mmi(g.lh)} mm · 2 mm thick${sun ? (dv('lens') === 'black' ? ' · black' : ' · mirror') : ''}`), 'info');
+    } else if (S.shape === 'cap') {
+      const cs = holder.userData.capSize || {}, circ = 2.5 * A.headH, crown = { deep: L('딥', 'deep'), mid: L('미디엄', 'medium'), low: L('로우', 'low') }[dv('crown') || 'mid'], bend = { curve: L('많이 휜', 'well curved'), slight: L('약간 휜', 'slightly curved'), flat: L('평평한', 'flat') }[dv('brim') || 'slight'], back = dv('back') || 'strap';
+      add(L('머리에 맞춤', 'Fit'), L(`머리둘레 약 ${cm1(circ)}cm에 맞춰 써요${back === 'closed' ? '' : ' · 뒤에서 둘레를 조절해요'}`, `Made to a head about ${cm1(circ)} cm round${back === 'closed' ? '' : ' · adjusted at the back'}`), 'good');
+      add(L('챙', 'Brim'), L(`${bend} 챙 ${cs.brim || 70}mm · 눈 위로 그늘이 져요`, `${bend} brim, ${cs.brim || 70} mm · shades the eyes`), 'info');
+      add(L('크라운', 'Crown'), L(`${crown} · 높이 ${cs.h || mmi(P.H)}mm`, `${crown} · ${cs.h || mmi(P.H)} mm tall`), 'info');
     } else if (S.shape === 'helmet') {
       const hb = 0.8 * A.headH, hl = 0.991 * A.headH, gx = (P.W - hb) / 2, gz = (P.D - hl) / 2, g = Math.min(gx, gz), lv = g >= 0.008 && g <= 0.04 ? 'good' : 'warn';
       add(L('머리와 간격', 'Room round the head'), L(`옆 ${mmi(gx)}mm · 앞뒤 ${mmi(gz)}mm${g < 0.008 ? ' · 꽉 껴요' : g > 0.04 ? ' · 헐거워요' : ' · 패드가 들어갈 만큼'}`, `sides ${mmi(gx)} mm · front/back ${mmi(gz)} mm${g < 0.008 ? ', tight' : g > 0.04 ? ', loose' : ', room for the pads'}`), lv);
@@ -4423,7 +4611,8 @@ function evaluate() {
   if (S.mode === 'use' && lookAtIt()) { // standing at the plinth, looking down at what lies on it
     human.updateMatrixWorld(true);
     const b = mainBox(), c = b.getCenter(new V3()); if (S.place !== 'wall') c.y = b.max.y; // on a wall: its middle
-    if (grabbable()) { const w = S.look === 'pencase' ? Math.min(P.D, P.H) : Math.min(P.W, P.D), fist = !laidFlat() && P.H >= 0.025 && w <= GRAB_MAX; add(L('쥐기', 'Grasp'), fist ? L(`동작 보기를 누르면 한 손으로 쥐어요 · 쥐는 폭 ${mmi(w)}mm`, `Play takes it in one hand · ${mmi(w)} mm across`) : laidFlat() || P.H < 0.025 ? L('얇아서 쥐기보다 손바닥을 얹어요 · 동작 보기에서 보여요', 'Too thin to grip · Play rests a palm on it') : L(`한 손에 쥐기엔 커요(${mmi(w)}mm) · 동작 보기를 누르면 손바닥을 위에 얹어요`, `Too big for one hand (${mmi(w)} mm) · Play rests a palm on top`), fist ? 'good' : 'info'); }
+    if (grabbable() && S.look === 'cushion') add(L('사용', 'Use'), L('동작 보기를 누르면 뚜껑을 열고 손끝으로 퍼프를 톡톡 찍어요', 'Play opens the lid and dabs the puff with two fingertips'), 'info');
+    else if (grabbable()) { const w = S.look === 'pencase' ? Math.min(P.D, P.H) : Math.min(P.W, P.D), fist = !laidFlat() && P.H >= 0.025 && w <= GRAB_MAX; add(L('쥐기', 'Grasp'), fist ? L(`동작 보기를 누르면 한 손으로 쥐어요 · 쥐는 폭 ${mmi(w)}mm`, `Play takes it in one hand · ${mmi(w)} mm across`) : laidFlat() || P.H < 0.025 ? L('얇아서 쥐기보다 손바닥을 얹어요 · 동작 보기에서 보여요', 'Too thin to grip · Play rests a palm on it') : L(`한 손에 쥐기엔 커요(${mmi(w)}mm) · 동작 보기를 누르면 손바닥을 위에 얹어요`, `Too big for one hand (${mmi(w)} mm) · Play rests a palm on top`), fist ? 'good' : 'info'); }
     if (stacked() && S.row.length > 1) add(L('쌓기', 'Stacked'), L(`${S.row.length}개 · 쌓은 높이 ${mmi((stackY().total / 1000) * S.scale)}mm`, `${S.row.length} stacked · ${mmi((stackY().total / 1000) * S.scale)} mm tall`), 'info');
     else if (rowProp() && rowUnits() && S.row.length > 1) add(L('여러 개', 'Side by side'), L(`${S.row.length}개 · 전체 폭 ${mmi((rowSpan().total / 1000) * S.scale)}mm · 사람은 메인 A를 봐요`, `${S.row.length} of them · ${mmi((rowSpan().total / 1000) * S.scale)} mm overall · the person looks at A, the main one`), 'info');
     const tl = human.worldToLocal(c.clone()), dz = Math.max(0.05, tl.z - b0.eye.z), dy = eyeY - tl.y, dist = Math.hypot(dz, dy), ang = Math.atan2(dy, dz) * 180 / Math.PI;
@@ -4838,7 +5027,7 @@ const tgLabel = () => {
 function updateTags() {
   const p = PERSONAS[S.persona], P = dims();
   $('t-human').textContent = `${pLabel(p)} ${fmtH(S.height)}cm`;
-  $('t-prod').textContent = rowUnits() && S.row.length > 1 && stacked() ? L(`${prodName()} ${S.row.length}개 · 쌓은 높이 ${stackY().total}mm`, `${prodName()} ×${S.row.length} · ${stackY().total} mm stacked`) : rowUnits() && S.row.length > 1 ? L(`${prodName()} ${S.row.length}개 · 전체 폭 ${rowSpan().total}mm`, `${prodName()} ×${S.row.length} · overall ${rowSpan().total} mm`) : S.shape === 'ring' && S.source === 'box' ? L(`${prodName()} ${S.ringSize}호 · 폭 ${S.w}mm`, `${prodName()} · size ${S.ringSize} · ${S.w} mm band`) : (() => { const Q = unfolded() ? openDims() : P; return `${prodName()} ${mmi(Q.W)}×${mmi(Q.D)}×${mmi(Q.H)}`; })();
+  $('t-prod').textContent = rowUnits() && S.row.length > 1 && stacked() ? L(`${prodName()} ${S.row.length}개 · 쌓은 높이 ${stackY().total}mm`, `${prodName()} ×${S.row.length} · ${stackY().total} mm stacked`) : rowUnits() && S.row.length > 1 ? L(`${prodName()} ${S.row.length}개 · 전체 폭 ${rowSpan().total}mm`, `${prodName()} ×${S.row.length} · overall ${rowSpan().total} mm`) : S.shape === 'ring' && S.source === 'box' ? L(`${prodName()} ${S.ringSize}호 · 폭 ${S.w}mm`, `${prodName()} · size ${S.ringSize} · ${S.w} mm band`) : (() => { const cs = S.source === 'box' && S.shape === 'cap' && holder.userData.capSize; if (cs) return `${prodName()} ${cs.w}×${cs.d}×${cs.h}`; const Q = unfolded() ? openDims() : P; return `${prodName()} ${mmi(Q.W)}×${mmi(Q.D)}×${mmi(Q.H)}`; })();
   $('t-tg').textContent = S.place === 'hand' ? L(`손 ${cm1(S.A.hand)}cm · 한 뼘 ${cm1(S.A.span)}cm`, `Hand ${cm1(S.A.hand)} cm · span ${cm1(S.A.span)} cm`)
     : S.place === 'head' ? (S.shape === 'earbud' ? L(`귀 길이 약 ${cm1(0.26 * S.A.headH)}cm`, `Ear about ${cm1(0.26 * S.A.headH)} cm long`) : L(`머리 폭 ${cm1(0.68 * S.A.headH)}cm`, `Head ${cm1(0.68 * S.A.headH)} cm wide`)) : `${tgLabel()} ${cmi(controlWorld().y)}cm`;
 }
@@ -4892,14 +5081,14 @@ function syncUI() {
   for (const b of $('presetChips').querySelectorAll('[data-family]')) b.setAttribute('aria-pressed', String(b.dataset.family === fam));
   $('variantField').hidden = !fam;
   syncExamples(); syncParts(); syncMine();
-  { const slot = imgSlot(); $('imgField').hidden = !slot; if (slot) { $('imgLbl').textContent = slot === 'paper' ? L('종이에 이미지', 'Image on the sheet') : slot === 'book' ? L('표지에 이미지', 'Image on the cover') : slot === 'frame' ? L('액자에 이미지', 'Image in the frame') : slot === 'card' ? L('명함에 이미지', 'Image on the card') : slot === 'brochure' ? L('브로셔에 이미지', 'Image on the brochure') : slot === 'banner' ? L('배너에 이미지', 'Image on the banner') : slot === 'aboard' ? L('입간판에 이미지', 'Image on the sign') : slot === 'bag' ? L('가방에 이미지', 'Image on the bag') : slot === 'mug' ? L('머그에 이미지', 'Image on the mug') : L('화면에 이미지', 'Image on the screen'); $('imgDel').hidden = !USER_IMG[slot]; } }
+  { const slot = imgSlot(); $('imgField').hidden = !slot; if (slot) { $('imgLbl').textContent = slot === 'paper' ? L('종이에 이미지', 'Image on the sheet') : slot === 'book' ? L('표지에 이미지', 'Image on the cover') : slot === 'frame' ? L('액자에 이미지', 'Image in the frame') : slot === 'card' ? L('명함에 이미지', 'Image on the card') : slot === 'brochure' ? L('브로셔에 이미지', 'Image on the brochure') : slot === 'banner' ? L('배너에 이미지', 'Image on the banner') : slot === 'aboard' ? L('입간판에 이미지', 'Image on the sign') : slot === 'bag' ? L('가방에 이미지', 'Image on the bag') : slot === 'mug' ? L('머그에 이미지', 'Image on the mug') : slot === 'cap' ? L('자수 이미지 (PNG)', 'Embroidery (PNG)') : L('화면에 이미지', 'Image on the screen'); $('imgDel').hidden = !USER_IMG[slot]; } }
   $('setName').textContent = prodName();
   if (fam) { FAMILIES[fam].last = S.pkey; $('variantSeg').replaceChildren(...FAMILIES[fam].sizes.map(([k, ko, en]) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.size = k; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(S.pkey === k)); return b; })); }
   segSet('shapeSeg', 'shape', S.shape); segSet('placeSeg', 'place', S.place); segSet('faceSeg', 'face', S.face); segSet('actSeg', 'act', S.action); segSet('modeSeg', 'mode', S.mode); segSet('langSeg', 'lang', LANG);
   const isModel = S.source === 'model', fixedForm = isFurniture() || ring || ['cup', 'laptop', 'headphone', 'earbud'].includes(S.shape) || S.look === 'paper' || kind() !== 'free'; // these come only from the examples
   // the forms an example comes in (the cube: solid or frame; the object: sphere or cone); the plain box mockup, all of them
   const forms = !isModel && !fixedForm ? (PRESETS[S.pkey] && PRESETS[S.pkey].forms) || (S.pkey === 'box' ? Object.keys(FORMS) : null) : null;
-  $('shapeField').hidden = !forms; $('sizeField').hidden = isModel;
+  $('shapeField').hidden = !forms; $('sizeField').hidden = isModel || (S.source === 'box' && S.shape === 'cap'); // a cap is made to the head
   if (forms) {
     for (const b of $('shapeSeg').children) {
       b.hidden = !forms.includes(b.dataset.shape);
@@ -5289,21 +5478,54 @@ function updateOverlay(pose) {
     if (s.ok) el.style.transform = `translate(${s.x.toFixed(1)}px, ${s.y.toFixed(1)}px) ${anchor}`;
   };
   const P = dims(), A = S.A;
-  put($('t-human'), human.localToWorld(pose.P.headCenter.clone().add(new V3(0, A.headH * 0.62, 0))), S.guides && S.view !== 'first' && personVis() !== 'off', 'translate(-50%, calc(-100% - 4px))');
+  // labels stand off what they name, outside the product (and the hand holding it), each joined to its point by a thin line
+  const ins = overlayInsets(), safe = { x0: 6, y0: ins.top - (S.guides ? 22 : 0), x1: w - 62, y1: h - ins.bot - 4 }, placed = [], leaders = [];
+  const scrBox = (b) => { if (!b || b.isEmpty()) return null; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, n = 0; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const q = new V3(x, y, z).project(cam); if (q.z > 1 || q.z < -1) continue; n++; const sx = ((q.x + 1) / 2) * w, sy = ((1 - q.y) / 2) * h; x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy); } return n ? { x0, y0, x1, y1 } : null; };
+  const uni = (a, b) => (!a ? b : !b ? a : { x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0), x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1) });
+  const held = S.place === 'hand' && S.view !== 'first';
+  const prodR = uni(scrBox(visBox(product)), held ? scrBox(new THREE.Box3().setFromObject(hands[0].g)) : null);
+  const hit = (a, b, m = 4) => a.x0 < b.x1 + m && a.x1 > b.x0 - m && a.y0 < b.y1 + m && a.y1 > b.y0 - m;
+  const segHit = (r, s) => { // a label against a limb drawn on screen (a thick segment)
+    const cx = clamp(s.ax, r.x0, r.x1), cy = clamp(s.ay, r.y0, r.y1), dx = s.bx - s.ax, dy = s.by - s.ay, L2 = dx * dx + dy * dy || 1;
+    for (const [px, py] of [[cx, cy], [(r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2], [r.x0, r.y0], [r.x1, r.y0], [r.x0, r.y1], [r.x1, r.y1]]) { const t = clamp(((px - s.ax) * dx + (py - s.ay) * dy) / L2, 0, 1); if (Math.hypot(s.ax + t * dx - px, s.ay + t * dy - py) < s.r) return true; }
+    return false;
+  };
+  const callout = (el, v, show, prefs, avoid, segs = [], cls = '', lift = 0) => { // prefs: which sides to try, in order; avoid: the screen box to keep clear of
+    if (!show) { el.hidden = true; return; }
+    const a = proj(v); if (!a.ok) { el.hidden = true; return; }
+    el.hidden = false;
+    const tw = el.offsetWidth, th = el.offsetHeight, gap = 12, reach = 22, ob = avoid || { x0: a.x, y0: a.y, x1: a.x, y1: a.y };
+    const at = { up: [a.x - tw / 2, Math.min(a.y - reach, ob.y0 - gap) - th - lift], down: [a.x - tw / 2, Math.max(a.y + reach, ob.y1 + gap) + lift], right: [Math.max(a.x + reach, ob.x1 + gap), a.y - th / 2 - lift], left: [Math.min(a.x - reach, ob.x0 - gap) - tw, a.y - th / 2 - lift] };
+    let best = null;
+    for (const side of prefs) {
+      const x = clamp(at[side][0], safe.x0, Math.max(safe.x0, safe.x1 - tw)), y = clamp(at[side][1], safe.y0, Math.max(safe.y0, safe.y1 - th)), r = { x0: x, y0: y, x1: x + tw, y1: y + th };
+      const bad = (avoid && hit(r, avoid, 2) ? 4 : 0) + placed.filter((q) => hit(r, q)).length * 3 + segs.filter((sg) => segHit(r, sg)).length * 2;
+      if (!best || bad < best.bad) best = { r, bad };
+      if (!bad) break;
+    }
+    const r = best.r; placed.push(r);
+    el.style.transform = `translate(${r.x0.toFixed(1)}px, ${r.y0.toFixed(1)}px)`;
+    const nx = clamp(a.x, r.x0, r.x1), ny = clamp(a.y, r.y0, r.y1);
+    if (Math.hypot(nx - a.x, ny - a.y) > 7) leaders.push(`<g class="${cls}"><line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}"/><circle cx="${a.x.toFixed(1)}" cy="${a.y.toFixed(1)}" r="2.4"/></g>`);
+  };
+  const headTop = human.localToWorld(pose.P.headCenter.clone().add(new V3(0, A.headH * 0.62, 0)));
   const ru = rowUnits() && S.row.length > 1 ? S.row : null, ro = ru ? rowOffsets() : null;
   const prRow = !!ru && rowProp(), stk = prRow && stacked(); // mockups: each one's tag over the row, left to right a level higher each so neighbours never overlap; the overall tag over them all
   let boxes = null, allTop = 0;
   if (prRow) { boxes = {}; for (const c of holder.children) if (c.userData.unit) boxes[c.userData.unit] = new THREE.Box3().setFromObject(c); boxes.A = mainBox(); allTop = Math.max(...Object.values(boxes).map((b) => b.max.y)) + 0.012; } // world boxes, so a row hung on a wall is tagged above it too
   const topOf = (b) => new V3((b.min.x + b.max.x) / 2, allTop, (b.min.z + b.max.z) / 2);
-  put($('t-prod'), prRow ? topOf(Object.values(boxes).reduce((a, b) => a.union(b), new THREE.Box3())) : product.localToWorld(new V3(ru ? (((rowSpan().right - rowSpan().left) / 2) / 1000) * S.scale : 0, ru ? (Math.max(...ru.map((u) => u.h)) / 1000) * S.scale : P.H, -P.D / 2)), S.guides, prRow ? `translate(-50%, calc(-100% - ${ru.length * 24 + 4}px))` : 'translate(-50%, calc(-100% - 8px))');
+  const prodAt = prRow ? topOf(Object.values(boxes).reduce((a, b) => a.union(b), new THREE.Box3())) : product.localToWorld(new V3(ru ? (((rowSpan().right - rowSpan().left) / 2) / 1000) * S.scale : 0, ru ? (Math.max(...ru.map((u) => u.h)) / 1000) * S.scale : P.H, -P.D / 2));
+  callout($('t-prod'), prodAt, S.guides, ['up', 'right', 'left', 'down'], prodR, [], '', prRow ? ru.length * 24 : 0);
   for (let i = 0; i < 3; i++) { // each unit's name and size: on a chest's front just under its top; over a mockup
     const el = $(`t-u${i}`), u = ru && ru[i], ud = u ? (roundBase() ? u.w : u.d) : 0, bx = prRow && u && boxes[u.n];
     if (u) el.textContent = `${u.n} ${mmi((u.w / 1000) * S.scale)}×${mmi((ud / 1000) * S.scale)}×${mmi((u.h / 1000) * S.scale)}`;
     if (stk) { put(el, bx ? new V3(bx.max.x + 0.01, (bx.min.y + bx.max.y) / 2, bx.max.z) : new V3(), !!bx && S.guides && S.view !== 'top', 'translate(6px, -50%)'); continue; } // stacked boxes: each one's tag beside it
     put(el, bx ? topOf(bx) : u ? product.localToWorld(new V3((ro[i] / 1000) * S.scale, (u.h / 1000 - 0.07) * S.scale, 0.01)) : new V3(), !!u && (!prRow || !!bx) && S.guides && S.view !== 'top', prRow ? `translate(-50%, calc(-100% - ${i * 24}px))` : 'translate(-50%, -50%)');
   }
-  const handTag = S.place === 'hand';
-  put($('t-tg'), handTag ? hands[0].g.localToWorld(new V3(0, 0, 0)) : controlWorld(), S.guides && S.view !== 'top' && S.view !== 'first' && S.place !== 'back' && !lookOnly() && (handTag || S.mode === 'use'), handTag ? 'translate(-50%, 18px)' : 'translate(12px, -50%)');
+  const handTag = S.place === 'hand', wr = pose.arms[0].wr, el0 = pose.arms[0].el, armS = (() => { const a = proj(human.localToWorld(wr.clone())), b = proj(human.localToWorld(el0.clone())); return { ax: a.x, ay: a.y, bx: b.x, by: b.y, r: 22 }; })();
+  callout($('t-tg'), handTag ? hands[0].g.localToWorld(new V3(0, 0, 0)) : controlWorld(), S.guides && S.view !== 'top' && S.view !== 'first' && S.place !== 'back' && !lookOnly() && (handTag || S.mode === 'use'), handTag ? ['down', 'left', 'right', 'up'] : ['right', 'left', 'up', 'down'], handTag ? prodR : uni(prodR, scrBox(new THREE.Box3().setFromObject(hands[0].g))), handTag ? [armS] : [], 'tg');
+  callout($('t-human'), headTop, S.guides && S.view !== 'first' && personVis() !== 'off', ['up', 'left', 'right'], uni(scrBox(new THREE.Box3().setFromObject(R.head)), S.place === 'head' ? prodR : null));
+  $('leaderSvg').innerHTML = leaders.join('');
   const lines = S.guides && (S.view === 'front' || S.view === 'side');
   const Lm = S.E.land, base = human.position, pre = S.A.seated ? L('앉은 ', 'seated ') : '';
   const rows = [['g-eye', Lm.eyeY, `${pre}${L('눈', 'eye')} ${cmi(Lm.eyeY)}`], ['g-sh', Lm.shY, `${L('어깨', 'shoulder')} ${cmi(Lm.shY)}`], ['g-el', Lm.elY, `${L('팔꿈치', 'elbow')} ${cmi(Lm.elY)}`]];
@@ -5366,7 +5588,7 @@ function stepAnim(dt) {
   if (anim.phase === 'reach') {
     const k = clamp(anim.t / 0.9, 0, 1);
     anim.reach = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
-    if (k >= 1) { anim.phase = flows() ? 'pour' : S.plan && S.plan.kind === 'type' ? 'type' : (S.plan && (S.plan.kind === 'pull' || (S.plan.kind === 'bar' && holder.userData.door))) || (holder.userData.door && holder.userData.door.auto) ? 'pull' : drinking() ? 'drink' : 'idle'; anim.t = 0; } // after reaching: water runs, the fingers type, the drawer comes out, or the cup goes to the lips
+    if (k >= 1) { queueGhostCheck(2); anim.phase = flows() ? 'pour' : S.plan && S.plan.kind === 'type' ? 'type' : (S.plan && (S.plan.kind === 'pull' || (S.plan.kind === 'bar' && holder.userData.door))) || (holder.userData.door && holder.userData.door.auto) ? 'pull' : drinking() ? 'drink' : 'idle'; anim.t = 0; } // after reaching: water runs, the fingers type, the drawer comes out, or the cup goes to the lips
   } else if (anim.phase === 'pour') {
     anim.pour = clamp(anim.t / 0.25, 0, 1);
     if (isDispense()) anim.fill = clamp(anim.t / 1.9, 0, 1) * 0.85;
@@ -5411,7 +5633,7 @@ function tick() {
   else (isOrtho() ? controlsO : controlsP).update();
   renderer.render(scene, cam);
   updateOverlay(pose);
-  if (ghostWait && !--ghostWait) S.autoGhost = hiddenByPerson();
+  if (ghostWait && anim.phase !== 'reach' && !--ghostWait) S.autoGhost = hiddenByPerson(); // not while the hands are on their way: judged where they end up
 }
 
 /* the detail-size rows for the current chair, table or headphones: built when the kind changes, values kept in step on every refresh */
