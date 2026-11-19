@@ -577,8 +577,9 @@ let LANG = (() => { try { const v = localStorage.getItem('hs-lang'); if (v === '
 const L = (ko, en) => (LANG === 'en' ? en : ko);
 
 /* ---------- people and products ---------- */
-/* heads: height over head height (crown to chin). An adult woman's head is about 22 cm, a man's 23.5; a 14-15 year old's about 21.5 (7.5 heads at 162 cm);
-   a 7-8 year old's about 19.5 (6.3 heads at 122 cm): a child's head is near adult size, so it is the body that is short */
+/* heads: height over head height (crown to chin) for an adult: a woman's head is about 22 cm, a man's 23.5. A child's or teen's head follows
+   their stature instead (kidHead): about 19.4 cm at 122 cm (6.3 heads, a 7 year old), 21.5 at 162 (7.5 heads, a 15 year old) — near
+   adult size, so it is the body that is short */
 const PERSONAS = {
   adultF: { label: '성인 여성', en: 'Adult woman', h: 159.6, bmi: 22.6, hr: [135, 190], br: [16, 40], sex: 'F', heads: 7.25, leg: 0.458, ticks: [150, 155, 160, 165, 170] },
   adultM: { label: '성인 남성', en: 'Adult man', h: 172.5, bmi: 24.5, hr: [145, 200], br: [16, 40], sex: 'M', heads: 7.25, leg: 0.453, ticks: [165, 170, 175, 180, 185] },
@@ -608,6 +609,8 @@ const PRESETS = {
   macbook: { name: '노트북 13인치', en: 'Laptop 13"', shape: 'laptop', w: 304, d: 215, h: 11, place: 'table', face: 'top', ctrl: 11, action: 'press', posture: 'sit', noHand: true }, // opens on the table
   macbook15: { name: '노트북 15인치', en: 'Laptop 15"', shape: 'laptop', w: 340, d: 237, h: 13, place: 'table', face: 'top', ctrl: 11, action: 'press', posture: 'sit', noHand: true }, // opens on the table
   macbook17: { name: '노트북 17인치', en: 'Laptop 17"', shape: 'laptop', w: 383, d: 260, h: 19, place: 'table', face: 'top', ctrl: 11, action: 'press', posture: 'sit', noHand: true }, // opens on the table
+  keyboard: { name: '키보드 풀배열', en: 'Keyboard, full size', shape: 'box', look: 'keyboard', style: 'full', w: 440, d: 135, h: 35, place: 'desk', face: 'top', ctrl: 25, action: 'press', posture: 'sit', noHand: true }, // with the number pad; typed on at the desk
+  keyboardTkl: { name: '키보드 텐키리스', en: 'Keyboard, tenkeyless', shape: 'box', look: 'keyboard', style: 'tkl', w: 360, d: 135, h: 35, place: 'desk', face: 'top', ctrl: 25, action: 'press', posture: 'sit', noHand: true }, // no number pad
   airbuds: { name: '무선 이어버드 (착용)', en: 'Wireless earbuds (worn)', shape: 'earbud', w: 19, d: 27, h: 31, place: 'head', face: 'front', ctrl: 15, action: 'press' }, // a typical stem earbud, about 19 x 27 x 31 mm, in the ears
   airpods: { name: '이어버드 케이스', en: 'Earbuds case', shape: 'box', look: 'case', w: 62, d: 22, h: 47, place: 'hand', face: 'front', ctrl: 20, action: 'press' }, // a typical charging case
   airmax: { name: '오버이어 헤드폰', en: 'Over-ear headphones', shape: 'headphone', w: 170, d: 85, h: 190, place: 'head', face: 'front', ctrl: 90, action: 'press' }, // typical over-ear headphones, worn
@@ -707,6 +710,7 @@ const PRESETS = {
 const FAMILIES = {
   parcel: { ko: '택배박스', en: 'Parcel box', last: 'parcel4', sizes: [['parcel1', '1호', 'No.1'], ['parcel2', '2호', 'No.2'], ['parcel3', '3호', 'No.3'], ['parcel4', '4호', 'No.4'], ['parcel5', '5호', 'No.5'], ['parcel6', '6호', 'No.6'], ['parcel7', '7호', 'No.7']] },
   laptop: { ko: '노트북', en: 'Laptop', sizes: [['macbook', '13인치', '13"'], ['macbook15', '15인치', '15"'], ['macbook17', '17인치', '17"']] },
+  keyboard: { ko: '키보드', en: 'Keyboard', sizes: [['keyboard', '풀배열', 'Full size'], ['keyboardTkl', '텐키리스', 'Tenkeyless']] },
   speaker: { ko: '블루투스 스피커', en: 'Bluetooth speaker', sizes: [['speaker', '원통', 'Round'], ['speakerbox', '큐브', 'Cube']] },
   fold: { ko: '폴더블폰', en: 'Foldable phone', sizes: [['fold', '7.6인치', '7.6"'], ['foldxl', '8인치 대형', '8" large']] },
   phone: { ko: '스마트폰', en: 'Smartphone', last: 'galaxy', sizes: [['phonemini', '5.4인치 미니', '5.4" mini'], ['phone', '6.3인치', '6.3"'], ['galaxy', '6.9인치', '6.9"']] },
@@ -724,7 +728,7 @@ const roundBase = (sh = S.shape) => sh === 'cup' || sh === 'cone' || (sh === S.s
 const PRESET_GROUPS = [
   [['목업', 'Mockups'], ['cube', 'cyl', 'sphere', 'cone', 'trap', 'plate', 'disc', 'plinthp']], // the plain forms
   [['소품', 'Objects'], ['fam:paper', 'card', 'brochure', 'book', 'frame', 'aboard', 'banner', 'lipstick', 'tube', 'pump', 'cream', 'cushion', 'snowman', 'pencase', 'teddy', 'lightstick']],
-  [['전자제품', 'Electronics'], ['fam:phone', 'fam:fold', 'flip', 'fam:tablet', 'fam:laptop', 'airpods', 'fam:speaker']],
+  [['전자제품', 'Electronics'], ['fam:phone', 'fam:fold', 'flip', 'fam:tablet', 'fam:laptop', 'fam:keyboard', 'airpods', 'fam:speaker']],
   [['생활 제품', 'Appliances'], ['air', 'humidifier', 'purifier', 'coffee', 'robot', 'washer', 'fridge', 'standac', 'wallac']],
   [['주방·식기', 'Kitchen & tableware'], ['tumbler', 'mug', 'glass', 'latte', 'dish', 'bowl', 'jar', 'pan', 'pot', 'microwave', 'ricecooker']],
   [['조명', 'Lighting'], ['floorlamp', 'tablelamp', 'mushroom']],
@@ -788,11 +792,16 @@ function PP() {
   return S.A && S.A.seated && !p.seated ? { ...p, seated: true, maxFlex: p.maxFlex ?? 25 } : p;
 }
 
+/* a child's or teen's head height (crown to chin, m) by stature (cm): the head grows far more slowly than the body, so a taller child gets
+   more heads, not a bigger head. Fitted to Domljan, Iliev & Jurčević Lulić 2024 (Applied Sciences 14:7185; 1307 children): 5.6-5.7 heads
+   at 2, 18.6 cm at 5, 19.4 cm at 6 (122.7 cm tall), about 4 cm of growth from 2 to 8, 7.5-7.6 heads at 15 */
+const KID_HEAD = [[85, 0.154], [100, 0.17], [115, 0.186], [122.7, 0.1935], [128, 0.1965], [140, 0.202], [152, 0.208], [165, 0.217], [180, 0.229], [195, 0.243]];
+const kidHead = (hcm) => { const T = KID_HEAD; if (hcm <= T[0][0]) return (T[0][1] * hcm) / T[0][0]; for (let i = 1; i < T.length; i++) if (hcm <= T[i][0]) { const [a, ha] = T[i - 1], [b, hb] = T[i]; return ha + ((hcm - a) / (b - a)) * (hb - ha); } const [a, ha] = T[T.length - 1]; return (ha * hcm) / a; };
 /* ---------- body proportions (fractions of stature) ---------- */
 function anthro(p, hcm, bmi) {
   const H = hcm / 100;
   const g = Math.sqrt(bmi / 22); // girth scales with the square root of BMI
-  const headH = H / p.heads;
+  const headH = p.kind === 'child' || p.kind === 'teen' ? kidHead(hcm) : H / p.heads; // adults: the 7.25-head canon
   const shoulderY = H - headH - 0.042 * H;
   const shJY = shoulderY - 0.02 * H;
   const hipY = p.leg * H + 0.05 * H;
@@ -901,8 +910,8 @@ function thighProfile(f) {
 function seatedLeg(A, hip, s) {
   const x = s * A.hipX * 1.1;
   if (A.footrest) {
-    const r = ik2(hip, new V3(x, A.footrest.y + A.ankleY * 0.7, A.footrest.z), A.thigh, A.shank, new V3(0, 1, 1));
-    return { hip, knee: r.E, ankle: r.W, toe: 0.3 };
+    const r = ik2(hip, new V3(x, A.footrest.y + A.ankleY + 0.002, A.footrest.z + 0.03), A.thigh, A.shank, new V3(0, 1, 1)); // the heel flat on the front of the ring, on it (not through it) and clear of the legs behind
+    return { hip, knee: r.E, ankle: r.W, toe: 0 };
   }
   const zf = clamp(A.seatEdge ?? A.thigh * 0.75, 0.04, A.thigh * 0.96);
   const under = A.thighR * thighProfile(zf / A.thigh) - 0.02; // the thigh's underside at the edge, soft tissue pressed in
@@ -920,10 +929,40 @@ function seatedLeg(A, hip, s) {
 const armIK = (sh, T, A, pole) => { const r = ik2(sh, T, A.upperArm, A.forearm, pole); return { sh, el: r.E, wr: r.W }; };
 function restWrist(A, P, s) {
   if (A.lounge) { const x = s * (A.hipX + 0.19), z = -0.04, tys = typeof loungeTop === 'function' ? [0.04, 0.09, 0.14, 0.18].flatMap((dz) => [-0.035, 0, 0.035].map((dx) => loungeTop(x + dx, z + dz))).filter((v) => v != null) : [], ty = tys.length ? Math.max(...tys) : null; return new V3(x, ty != null ? Math.max(ty, P.pelvis.y - 0.05) + A.hd.palmT / 2 + 0.006 : P.pelvis.y + 0.03, z); } // sunk in a beanbag: arms lie on it beside the hips, the hands on its surface
-  if (A.seated) return new V3(s * A.hipX, P.pelvis.y + 0.96 * A.thighR + A.hd.palmT / 2 + 0.004, A.thigh * 0.5); // on top of the thigh, the palm resting on it
-  const sh = s < 0 ? P.shR : P.shL;
-  const out = S.place === 'back' && S.look === 'backpack' ? 0.085 : 0.052; // clear of the thigh; a backpack's straps under the arms hold them a little further out
-  return sh.clone().add(new V3(s * out, -(A.upperArm + A.forearm) * 0.985, 0.03));
+  if (A.seated) return seatedRest(A, P, s).W; // on top of the thigh, the palm resting on it
+  const sh = s < 0 ? P.shR : P.shL, y = sh.y - (A.upperArm + A.forearm) * 0.985;
+  const pr = limbProfiles(A, PERSONAS[S.persona]), bp = S.place === 'back' && S.look === 'backpack', pole = new V3(s * 0.25, -0.3, -1);
+  let out = bp ? 0.085 : 0.052; // a backpack's straps under the arms hold them a little further out
+  for (let it = 0; it < 3; it++) { // clear of the hip and thigh beside it (wider on a heavier body), the hand as the arm actually holds it
+    const W = sh.clone().add(new V3(s * out, y - sh.y, 0.03)), rc = armIK(sh, W, A, pole), F = handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el));
+    let need = 0; for (const [p, r] of hangingHand(A, W, F, s)) need = Math.max(need, bodySideAt(A, P, s, p.y, pr, p.z) + r + 0.003 - s * p.x);
+    if (need <= 0.0005) break; out += need;
+  }
+  if (bp && typeof WORN_STRAPS !== 'undefined' && WORN_STRAPS) { // and the arm clear of the straps where they run round the side under it
+    const st = WORN_STRAPS.find((w) => w.s === s), Ly = sh.y - y;
+    if (st) for (const p of st.P) { const dy = sh.y - p.y; if (dy < 0.12 || dy > Ly * 0.8) continue; const r = dy < A.upperArm ? profAt(pr.arm[0], dy / A.upperArm) : profAt(pr.arm[1], (dy - A.upperArm) / A.forearm); out = Math.max(out, ((s * p.x + st.t / 2 + 0.006 + r - Math.abs(sh.x)) * Ly) / dy); }
+  }
+  return sh.clone().add(new V3(s * out, y - sh.y, 0.03));
+}
+/* a hand hanging relaxed at wrist W in frame F (body frame), side s: points on its palm face and its finger joints, each with its thickness */
+function hangingHand(A, W, F, s) {
+  const HD = A.hd, mz = s < 0 ? 1 : -1, pts = [0, 0.33, 0.67, 1].flatMap((k) => [-0.4, 0, 0.4].map((w) => [new V3(HD.palmT / 2, k * HD.palmLen, w * HD.palmW), 0])); // the left hand is the mirror image
+  if (S.handRest) fingerPts(HD, S.handRest).forEach((d, i) => { const r = i < 4 ? HD.fingers[i].r : HD.thumb.r; d.forEach((q, j) => pts.push([q, r[Math.min(j, r.length - 1)]])); }); // the relaxed fingers curl in, toward the palm's side
+  return pts.map(([q, r]) => [W.clone().addScaledVector(F.x, q.x).addScaledVector(F.y, q.y).addScaledVector(F.z, q.z * mz), r]);
+}
+/* how far out from the middle the body reaches on side s at height y and depth z, standing: the hips (the torso's lowest sections as
+   buildBody makes them, taken as ovals) and the thigh (its round limb piece, hip to knee). pr: limbProfiles */
+function bodySideAt(A, P, s, y, pr, z) {
+  const l = P.legs[s < 0 ? 0 : 1], f = (y - P.pelvis.y) / A.torso;
+  let m = f <= 0.14 ? torsoHalfAt(A, P, y, z) : 0; // the hips (above them the arm hangs beside the waist, clear of it)
+  if (l) { const t = (l.hip.y - y) / Math.max(1e-6, l.hip.y - l.knee.y); if (t >= 0 && t <= 1) { const r = profAt(pr.leg[0], t), dz = z - (l.hip.z + (l.knee.z - l.hip.z) * t); if (Math.abs(dz) < r) m = Math.max(m, s * (l.hip.x + (l.knee.x - l.hip.x) * t) + Math.sqrt(r * r - dz * dz)); } }
+  return m;
+}
+/* seated, the hand at rest: on top of the thigh halfway to the knee, the palm down on it and the fingers along it (so they follow it down
+   toward the knee, under a table's edge), turned in a little. Returns the wrist and the hand's frame */
+function seatedRest(A, P, s) {
+  const l = P.legs[s < 0 ? 0 : 1], d = l.knee.clone().sub(l.hip).normalize(), up = new V3(0, 1, 0).addScaledVector(d, -d.y).normalize(), t = 0.5, r = profAt(limbProfiles(A, PERSONAS[S.persona]).leg[0], t);
+  return { W: l.hip.clone().lerp(l.knee, t).addScaledVector(up, r + A.hd.palmT / 2 + 0.004), F: handFrame(up.clone().negate(), d.clone().add(new V3(-s * 0.15, 0, 0))) };
 }
 const holdWrist = (A, P) => new V3(P.shR.x + 0.044 * A.H, P.shR.y - 0.5 * A.upperArm, P.shR.z + 0.9 * A.forearm);
 
@@ -1561,22 +1600,40 @@ hands[1].g.scale.set(1, 1, -1); // the left hand is the mirror image of the righ
 const chair = new THREE.Group();
 human.add(chair);
 
-let bodyKey = '';
-function buildBody(A, p) {
-  const key = [p.sex, A.H.toFixed(4), A.g.toFixed(4), A.headH.toFixed(4)].join('|');
-  if (key === bodyKey) return;
-  bodyKey = key;
-  const F = p.sex === 'F', M = p.sex === 'M', tl = A.torso;
+/* the body's width and depth at key heights (this person): [height in torso lengths from the pelvis, half-width, half-depth, forward shift];
+   the shape of each cross-section comes from the base mesh */
+function torsoKeys(A, p) {
+  const F = p.sex === 'F', M = p.sex === 'M';
   const hw = A.hipW / 2, hd = A.hipD / 2, ww = A.waistW / 2, wd = A.waistD / 2, cw = A.chestW / 2, cd = A.chestD / 2, sw = A.shoulderHalf;
   const nx = 0.985 * HEAD_MESH.nr[0] * A.headH, nz = 0.985 * HEAD_MESH.nr[1] * A.headH; // neck half-width and half-depth
-  // the body's width and depth at key heights (this person), the shape of each cross-section from the base mesh
-  const kr = [
+  return [
     // below the hip line the pelvis turns in sharply, so the thighs come out of it along a clean line
     [-0.2, 0.22 * hw, 0.3 * hd, -0.04 * hd], [-0.12, 0.6 * hw, 0.76 * hd, -0.08 * hd], [-0.06, 0.9 * hw, 0.96 * hd, -0.09 * hd], [-0.02, hw, hd, -0.08 * hd], [0.14, 0.9 * hw, 0.93 * hd, -0.03 * hd],
     [0.38, ww, wd, 0], [0.56, 0.4 * ww + 0.6 * cw, (wd + cd) / 2, 0.03 * cd], [0.72, cw, cd * (F ? 1.08 : 1), (F ? 0.12 : 0.05) * cd],
     [0.87, cw * (M ? 1.06 : 1.02), 0.92 * cd, 0.03 * cd], [0.99, 0.97 * sw, 0.74 * cd, -0.02 * cd], [1.06, 0.9 * sw, 0.6 * cd, -0.04 * cd],
     [1.1, 0.55 * sw, Math.max(0.5 * cd, 1.02 * nz), -0.02 * cd], [1.135, 0.9 * nx, 0.9 * nz, 0], // ends just inside the neck
   ];
+}
+/* how far out from the middle the torso reaches at height y and depth z (body frame, standing upright), its sections taken as rounded boxes; 0 off it */
+function torsoHalfAt(A, P, y, z) {
+  const kr = torsoKeys(A, PERSONAS[S.persona]), f = (y - P.pelvis.y) / A.torso, zz = z - P.pelvis.z;
+  if (f < kr[0][0] || f > kr[kr.length - 1][0]) return 0;
+  for (let j = 1; j < kr.length; j++) if (f <= kr[j][0]) { const t = (f - kr[j - 1][0]) / (kr[j][0] - kr[j - 1][0]), [w, d, z0] = [1, 2, 3].map((i) => kr[j - 1][i] + t * (kr[j][i] - kr[j - 1][i])), e = (zz - z0) / d; return Math.abs(e) < 1 ? w * Math.cbrt(1 - Math.abs(e) ** 3) : 0; } // the sections are boxier than ovals
+  return 0;
+}
+/* how far forward the torso reaches at height y and across at x (body frame, standing upright): the front of its rounded-box section; 0 off it */
+function torsoFrontAt(A, P, y, x) {
+  const kr = torsoKeys(A, PERSONAS[S.persona]), f = (y - P.pelvis.y) / A.torso, xx = Math.abs(x - P.pelvis.x);
+  if (f < kr[0][0] || f > kr[kr.length - 1][0]) return 0;
+  for (let j = 1; j < kr.length; j++) if (f <= kr[j][0]) { const t = (f - kr[j - 1][0]) / (kr[j][0] - kr[j - 1][0]), [w, d, z0] = [1, 2, 3].map((i) => kr[j - 1][i] + t * (kr[j][i] - kr[j - 1][i])), e = xx / w; return e < 1 ? P.pelvis.z + z0 + d * Math.cbrt(1 - e ** 3) : 0; }
+  return 0;
+}
+let bodyKey = '';
+function buildBody(A, p) {
+  const key = [p.sex, A.H.toFixed(4), A.g.toFixed(4), A.headH.toFixed(4)].join('|');
+  if (key === bodyKey) return;
+  bodyKey = key;
+  const tl = A.torso, kr = torsoKeys(A, p);
   R.torso.geometry.dispose();
   R.torso.geometry = torsoGeo(kr, tl, p);
   R.band.geometry.dispose();
@@ -1617,9 +1674,11 @@ function applyPose({ P, arms }) {
     h.g.quaternion.copy(a.q);
     setFingers(h, a.hp, A.hd);
   });
+  seatSquash(A, P, -1);
   P.legs.forEach((l, i) => {
     const r = R.legs[i];
     segLimb(r.up, l.hip, l.knee, pr.leg[0], XAX, J.hip, J.kn);
+    seatSquash(A, P, i);
     segLimb(r.lo, l.knee, l.ankle, pr.leg[1], XAX, J.kn, J.an);
     ball(r.hip, l.hip, J.hip); ball(r.kn, l.knee, J.kn); ball(r.an, l.ankle, J.an);
     const th = (l.toe || 0) * deg(38); // toes point down when the feet hang or rest on a footrest
@@ -1629,6 +1688,26 @@ function applyPose({ P, arms }) {
   });
 }
 
+/* seated (not lounging): the buttocks (part -1, the torso) and the backs of the thighs (part 0 or 1) flatten on the seat's top instead of
+   sinking into it; a thigh only over the seat, its front edge rounded off. Standing, the torso gets its own shape back */
+function seatSquash(A, P, part) {
+  const on = A.seated && !A.lounge && A.seatTop != null, y0 = (A.seatTop || 0) + 0.003, v = new V3();
+  if (part < 0) {
+    const g = R.torso.geometry, pa = g.attributes.position; if (!pa) return;
+    if (!g.userData.base) g.userData.base = pa.array.slice();
+    if (!on && !g.userData.squashed) return;
+    pa.array.set(g.userData.base); g.userData.squashed = false;
+    if (on) { const q = torso.quaternion, qi = q.clone().invert(); for (let i = 0; i < pa.count; i++) { v.fromBufferAttribute(pa, i).applyQuaternion(q).add(torso.position); if (v.y < y0) { v.y = y0; v.sub(torso.position).applyQuaternion(qi); pa.setXYZ(i, v.x, v.y, v.z); g.userData.squashed = true; } } }
+    pa.needsUpdate = true; g.computeVertexNormals(); return;
+  }
+  if (!on) return;
+  const g = R.legs[part].up.geometry, pa = g.attributes.position, hz = P.legs[part].hip.z, edge = hz + (A.seatEdge ?? A.thigh), rr = 0.06, rs = A.seatRound; let hit = false; // rr: a soft roll-off, wide enough that the thigh's rings either side of the edge stay over it
+  for (let i = 0; i < pa.count; i++) { // over the seat: on its top; just past its edge (straight, or round on a stool): rolling off it
+    v.fromBufferAttribute(pa, i); const out = rs ? Math.hypot(v.x - P.pelvis.x, v.z - hz - rs.zc) - rs.R : v.z - edge; if (out > rr) continue;
+    const top = out > 0 ? y0 - (rr - Math.sqrt(Math.max(0, rr * rr - out * out))) : y0; if (v.y < top) { pa.setY(i, top); hit = true; }
+  }
+  if (hit) { pa.needsUpdate = true; g.computeVertexNormals(); }
+}
 const XAX = new V3(1, 0, 0), FWD = new V3(0, 0, 1);
 /* hand orientation: x = palm normal, y = toward the fingertips (body space) */
 function handFrame(X, Y) {
@@ -1650,7 +1729,7 @@ function poseNow() {
     const sh = s < 0 ? P.shR : P.shL;
     const restW = restWrist(A, P, s);
     const rc = armIK(sh, restW, A, new V3(s * 0.25, -0.3, -1));
-    const Fr = A.seated ? handFrame(new V3(0, -1, 0), new V3(-s * 0.15, 0, 1)) : handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el));
+    const Fr = A.seated ? (A.lounge ? handFrame(new V3(0, -1, 0), new V3(-s * 0.15, 0, 1)) : seatedRest(A, P, s).F) : handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)); // seated: along the thigh
     let out = { ...rc, q: Fr.q, hp: S.handRest };
     const g = plan && k > 0 && (S.mode === 'use' || carried()) ? handGoal(plan, s, P, sh) : null; // side by side: the arms hang at rest // where this hand goes, if anywhere
     if (g) {
@@ -1780,7 +1859,7 @@ function kind() {
   if (S.look === 'backpack') return 'pack';
   if (S.look === 'luggage' || S.look === 'trolley') return 'luggage';
   if (S.look === 'tablelamp' || S.look === 'mushroom') return 'lamp';
-  if (S.shape === 'laptop') return 'laptop';
+  if (S.shape === 'laptop' || S.look === 'keyboard') return 'laptop'; // a laptop or a keyboard: typed on, on a table or the desk
   if (S.shape === 'cup' || S.look === 'tumbler' || S.look === 'case' || S.look === 'pouch') return 'small';
   if (S.look === 'purifier' || S.look === 'coffee') return 'dispenser';
   if (S.look === 'airpurifier' || S.look === 'floorlamp' || S.look === 'robot') return 'floor';
@@ -1799,6 +1878,7 @@ const lookAtIt = () => lookOnly() && !carried() && !atDesk();
 const grabbable = () => lookAtIt() && S.source === 'box' && !['banner', 'aboard', 'pot', 'pan', 'snowman', 'teddy'].includes(S.look) && (kind() === 'free' || S.look === 'paper' || S.shape === 'ring') && S.place !== 'wall'; // a mockup with no controls on: Play takes hold of it where it lies
 const GRAB_MAX = 0.11; // narrower than this (in its narrow direction) goes in one fist // set down only to be looked at (a sheet, a mug, controls off): in use, the person stands at it and looks at it
 const hasControls = () => ctrlKind() && !ctrlOff(); // the others are simply held, worn, typed on or looked at
+const typedOn = () => S.source === 'box' && (S.shape === 'laptop' || S.look === 'keyboard'); // typed on: a laptop or a computer keyboard
 const lidClosed = () => S.source === 'box' && S.shape === 'laptop' && dv('lid') === 'closed';
 const lookOnly = () => laidFlat() || ctrlOff() || lidClosed() || S.place === 'wall' || (kind() === 'small' && S.place !== 'hand') || (kind() === 'pack' && S.place !== 'back'); // set down just to be looked at: no reaching or pressing
 const isDispense = () => S.action === 'dispense' && !isFurniture() && S.place !== 'hand' && canDispense();
@@ -1822,9 +1902,10 @@ const tableTop = () => dims().H + (furn() === 'coffee' ? S.lift * LIFT_RISE * S.
    stands to the right of the monitor, past the mouse (a laptop goes in front of them instead, below the monitor). Desk frame: centred
    on the person, front edge at z = 0. xc and zf locate the product's front-centre in it, so the desk group sits at (-xc, 0, -zf) */
 function deskLayout() {
-  const P = dims(), lap = S.shape === 'laptop' && S.source === 'box';
-  const D = Math.max(0.6, P.D + (lap ? 0.4 : 0.2)), zm = -Math.max(0.26, D - 0.15);
+  const P = dims(), lap = S.shape === 'laptop' && S.source === 'box', kbd = S.look === 'keyboard' && S.source === 'box';
+  const D = Math.max(0.6, P.D + (lap || kbd ? 0.4 : 0.2)), zm = -Math.max(0.26, D - 0.15);
   if (lap) return { W: 1.2, D, xc: 0, zf: -0.06, zm, lap };
+  if (kbd) { const xc = -keyboardLayout(P.W, P.D).home.x, mouseX = Math.max(0.3, xc + P.W / 2 + 0.075); return { W: Math.max(1.2, 2 * (mouseX + 0.12)), D, xc, zf: -0.07, zm, kbd, mouseX }; } // a keyboard takes the desk keyboard's place, the person in front of its letters (not the number pad), the mouse moved out past it
   const xc = Math.max(0.42, 0.36 + P.W / 2), W = Math.max(1.2, 2 * (xc + P.W / 2 + 0.06)); // clear of the monitor (to 0.27) and the mouse (to 0.33)
   const zc = clamp(deskItem() ? -(0.1 + P.D / 2) : P.H > 0.3 || P.D > 0.25 ? zm : -0.3, -(D - 0.03) + P.D / 2, -0.06 - P.D / 2); // tall or deep things line up with the monitor; a ring or a sheet lies near the front
   return { W, D, xc, zf: zc + P.D / 2, zm, lap };
@@ -1852,7 +1933,8 @@ function stoolRing(H, W, y) {
 /* ---------- detail sizes: each part of a chair, a table or headphones set on its own (mm, tilt in degrees) ----------
    The H field stays the overall height (for an office chair: its seat, set by the gas lift between lowest and highest to suit the person).
    Only the product being checked takes them; a desk under someone's laptop keeps the defaults. */
-const TOP_MAT = { ceramic: new THREE.MeshPhysicalMaterial({ color: 0xf3f1ec, roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.12 }), wood: new THREE.MeshStandardMaterial({ color: 0x9c6b43, roughness: 0.72 }), glass: new THREE.MeshStandardMaterial({ color: 0xcfe2e4, roughness: 0.06, transparent: true, opacity: 0.4, depthWrite: false }), metal: mats.metal };
+// ceramic: a white glaze with no clear coat (a clear coat with no surroundings to reflect goes black round every rim and edge)
+const TOP_MAT = { ceramic: new THREE.MeshStandardMaterial({ color: 0xf3f1ec, roughness: 0.3, metalness: 0 }), wood: new THREE.MeshStandardMaterial({ color: 0x9c6b43, roughness: 0.72 }), glass: new THREE.MeshStandardMaterial({ color: 0xcfe2e4, roughness: 0.06, transparent: true, opacity: 0.4, depthWrite: false }), metal: mats.metal };
 const MAT_ROW = { k: 'mat', ko: '재질', en: 'Material', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['glass', '유리', 'Glass'], ['metal', '메탈', 'Metal']], def: 'solid' };
 const SFORM = () => (S.det && S.det.sform) || 'square'; // the sunglasses' shape sets their default lens and rim sizes
 const DR = (k, ko, en, min, max, def, step = 1, unit = 'mm') => ({ k, ko, en, min, max, def, step, unit });
@@ -1881,6 +1963,8 @@ const DETAIL = {
   frame: [DR('frameT', '프레임 두께', 'Frame thickness', 2, 100, 10), MAT_ROW],
   prop: [MAT_ROW], // the plain mockup solids
   propR: [DR('rad', '모서리 R', 'Corner radius', 0, 50, 0), MAT_ROW], // the cube and the cylinder: sharp edges unless rounded
+  mushroom: [{ ...DR('headD', '갓 지름', 'Shade diameter', 60, 400, 150), apply: true }, { ...DR('headH', '갓 높이', 'Shade height', 20, 250, 97), apply: true },
+    { ...DR('stemD', '기둥 지름', 'Stem diameter', 15, 300, 72), apply: true }, { ...DR('stemH', '기둥 높이(갓 아래)', 'Stem height (below the shade)', 20, 800, 133), apply: true }],
   snowman2: SNOW_ROWS(2), snowman3: SNOW_ROWS(3), snowman4: SNOW_ROWS(4),
   teddy: [{ k: 'tsize', ko: '크기', en: 'Size', opts: [[50, '5cm', '5 cm'], [100, '10cm', '10 cm'], [150, '15cm', '15 cm'], [200, '20cm', '20 cm'], [300, '30cm', '30 cm']], def: 100, apply: true }],
   pump: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], cream: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl', apply: true }, { k: 'ml', ko: '용량', en: 'Volume', opts: [[15, '15ml', '15 ml'], [30, '30ml', '30 ml'], [50, '50ml', '50 ml'], [100, '100ml', '100 ml']], def: 50, apply: true }, DR('rad', '모서리 R', 'Corner radius', 0, 20, 0), { k: 'mat', ko: '뚜껑 재질', en: 'Lid', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['metal', '메탈', 'Metal']], def: 'solid' }], lipstick: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], tube: [MAT_ROW], // cosmetics: the body round or square
@@ -1929,6 +2013,7 @@ function detApply() { // a bowl's type and size, or a jar's form and volume, set
   else if (S.look === 'cushion') { const sq = dv('form') === 'cube'; S.w = S.d = sq ? 80 : 84; S.h = 26; }
   else if (S.shape === 'ring' && S.source === 'box') S.h = +dv('stone'); // the stone's width (0: a plain band)
   else if (S.look === 'snowman') { const b = snowBalls(); S.w = S.d = Math.max(...b.d); S.h = Math.round(b.h); }
+  else if (S.look === 'mushroom') { S.w = S.d = Math.max(+dv('headD'), +dv('stemD')); S.h = +dv('stemH') + +dv('headH'); } // the lamp's overall size from its shade and stem
   else if (S.look === 'teddy') { const t = +dv('tsize'); S.h = t; S.w = Math.round(0.62 * t); S.d = Math.round(0.55 * t); S.place = t <= 200 ? 'hand' : 'plinth'; } // a keyring size goes in the hand, a big one on the plinth
   else if (S.look === 'cream') { const [w, h] = { 15: [45, 35], 30: [55, 42], 50: [62, 48], 100: [75, 58] }[dv('ml')]; const k = dv('form') === 'cube' ? 0.92 : 1; S.w = S.d = Math.round(w * k); S.h = h; }
 }
@@ -1943,6 +2028,7 @@ function detKind() {
   if (S.shape === 'cap') return 'cap';
   if (S.look === 'bowl' && S.source === 'box') return S.pkey === 'dish' ? 'dish' : 'bowl';
   if (S.look === 'snowman') return `snowman${snowTiers()}`;
+  if (S.look === 'mushroom' && S.source === 'box') return 'mushroom';
   if (S.look === 'teddy') return 'teddy';
   if (['washer', 'humidifier', 'standac', 'frame', 'cushion'].includes(S.look) && S.source === 'box') return S.look; // plates and bowls share the lathe, not the choices
   if (['tube', 'pump', 'lipstick', 'cream', 'trap', 'bowl', 'jar', 'trolley'].includes(S.look) && S.source === 'box') return S.look; // book and disc: the plain mockups' material row
@@ -2060,7 +2146,7 @@ function seatGeo(group, kind, W, D, H, mat, ringY, frame = mats.frame) {
 }
 /* tables: H is the top (the counter for a sink, the lowered top for a lift-up table) */
 const SINK = (W, D) => { const bw = Math.min(0.76, W - 0.2), bd = Math.min(0.44, D - 0.15); return { bw, bd, fr: 0.07, depth: 0.2, bz: -(0.07 + bd / 2) }; };
-function tableGeo(group, style, W, D, H, mat, keys = true) {
+function tableGeo(group, style, W, D, H, mat, keys = true, mouseX = 0.3) { // keys: the desk's keyboard and mouse; 'mouse': the mouse alone (a keyboard being checked is on the desk)
   const K = kit(group, topMat(mat)), X = kit(group, mats.frame), T = kit(group, mats.tire); // the chosen material is the whole table
   const TP = kit(group, topMat(mat));
   if (style === 'desk' || style === 'standing') {
@@ -2086,8 +2172,8 @@ function tableGeo(group, style, W, D, H, mat, keys = true) {
     scr.position.set(0, H + 0.262, zm + 0.0145); scr.userData.own = true; group.add(scr);
     group.userData.monitor = new V3(0, H + 0.262, zm);
     if (!keys) return; // a laptop takes the keyboard's place
-    X.box(0.44, 0.022, 0.135, -0.02, H + 0.011, -0.14, 0, 0.006);
-    X.mesh(new THREE.SphereGeometry(1, 16, 10), 0.3, H + 0.012, -0.15).scale.set(0.032, 0.018, 0.056);
+    if (keys !== 'mouse') X.box(0.44, 0.022, 0.135, -0.02, H + 0.011, -0.14, 0, 0.006);
+    X.mesh(new THREE.SphereGeometry(1, 16, 10), mouseX, H + 0.012, -0.15).scale.set(0.032, 0.018, 0.056);
     return;
   }
   if (style === 'dining') {
@@ -2163,7 +2249,7 @@ function tableGeo(group, style, W, D, H, mat, keys = true) {
       Xd.rod(new V3(sx * 0.04 + ox, hy - 0.2, PULL_Z), new V3(sx * 0.04 + ox, hy + 0.2, PULL_Z), 0.006);
       for (const py of [hy - 0.19, hy + 0.19]) Xd.rod(new V3(sx * 0.04 + ox, py, -0.001), new V3(sx * 0.04 + ox, py, PULL_Z), 0.004);
     }
-    group.userData.door = { g: door, max: deg(80), hinge: new V3(hx, 0, 0) };
+    group.userData.door = { g: door, max: deg(80), hinge: new V3(hx, 0, 0), hold: true }; // the hand keeps hold of it as it opens
     T.box(0.004, H - base - 0.01, 0.002, 0, base + (H - base) / 2, 0.0005); // the gap between the doors
     group.userData.wardrobe = { rail: H - 0.12, shelf: H - 0.06, handle: hy };
     return;
@@ -2336,6 +2422,35 @@ function laptopGeo(group, W, D, H) {
   scr.position.set(0, -0.00011, bb + sh / 2); scr.castShadow = false;
   own(new THREE.CircleGeometry(0.0011, 20).applyMatrix4(IN), lensMat, lid).position.set(0, -0.00016, D - bt / 2); // the webcam
   group.userData.laptop = { screenTop: base + D * Math.sin(open), keyY: base + 0.0009, scr };
+}
+/* a computer keyboard's layout for a board W x D (m): ANSI keys in units of the key pitch u (19.05 mm on a standard board, less on a
+   smaller one), the main block with its function row, the editing keys and arrows a quarter unit to its right and, on a full-size board,
+   the number pad past them. keys: [x, row, w, h] in units from the block's left edge and its function row; home: where the hands type
+   (between F and J), relative to the board's middle */
+function keyboardLayout(W, D) {
+  const pad = S.style !== 'tkl', cols = pad ? 22.5 : 18.25, u = Math.min(0.01905, (W - 0.012) / cols, (D - 0.016) / 6.25), kw = cols * u, kd = 6.25 * u, keys = [];
+  const row = (r, x0, ws) => { let x = x0; for (const w of ws) { if (w > 0) keys.push([x, r, w, 1]); x += Math.abs(w); } }; // a negative width is a gap
+  row(0, 0, [1, -1, 1, 1, 1, 1, -0.5, 1, 1, 1, 1, -0.5, 1, 1, 1, 1]); // Esc, F1-F12
+  row(1.25, 0, [...Array(13).fill(1), 2]); row(2.25, 0, [1.5, ...Array(12).fill(1), 1.5]); row(3.25, 0, [1.75, ...Array(11).fill(1), 2.25]); row(4.25, 0, [2.25, ...Array(10).fill(1), 2.75]); row(5.25, 0, [1.25, 1.25, 1.25, 6.25, 1.25, 1.25, 1.25, 1.25]);
+  row(0, 15.25, [1, 1, 1]); row(1.25, 15.25, [1, 1, 1]); row(2.25, 15.25, [1, 1, 1]); row(4.25, 16.25, [1]); row(5.25, 15.25, [1, 1, 1]); // print screen..., insert..., delete..., the arrows
+  if (pad) { row(1.25, 18.5, [1, 1, 1, 1]); row(2.25, 18.5, [1, 1, 1]); row(3.25, 18.5, [1, 1, 1]); row(4.25, 18.5, [1, 1, 1]); row(5.25, 18.5, [2, 1]); keys.push([21.5, 2.25, 1, 2], [21.5, 4.25, 1, 2]); } // the number pad, its + and Enter two rows tall
+  const mx = (W - kw) / 2, back = Math.min(0.011, (D - kd) * 0.56); // the frame round the keys, a little deeper at the back
+  return { u, kw, kd, keys, x0: -W / 2 + mx, z0: -D + back, home: new V3(-kw / 2 + 6.75 * u, 0, -D + back + 3.75 * u) };
+}
+/* computer keyboard: a low case rising toward the back at a typing angle, its blank keycaps on a darker plate inside a narrow frame */
+function keyboardGeo(group, W, D, H) {
+  const own = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; m.userData.own = true; group.add(m); return m; };
+  const L = keyboardLayout(W, D), u = L.u, capH = clamp(H * 0.27, 0.004, 0.0095), hb = Math.max(0.008, H - capH * 0.92), bev = 0.0025, rr = 0.004, span = D - 2 * (bev + rr); // the case: its top from hf at the front up to hb at the back
+  const tilt = Math.max(0, Math.min(Math.atan((hb - 0.006) / span), deg(7))), hf = hb - span * Math.tan(tilt), topY = (z) => hf + (-z - bev - rr) * Math.tan(tilt), sh = new THREE.Shape(); // its side profile: z back (0 front, D back), y up
+  sh.moveTo(bev, bev); sh.lineTo(D - bev, bev); sh.lineTo(D - bev, hb - bev - rr); sh.quadraticCurveTo(D - bev, hb - bev, D - bev - rr, hb - bev); sh.lineTo(bev + rr, hf - bev); sh.quadraticCurveTo(bev, hf - bev, bev, hf - bev - rr); sh.lineTo(bev, bev);
+  own(new THREE.ExtrudeGeometry(sh, { depth: W - 2 * bev, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 3, curveSegments: 10 }).applyMatrix4(new THREE.Matrix4().makeBasis(new V3(0, 0, -1), new V3(0, 1, 0), new V3(1, 0, 0))).translate(-W / 2 + bev, 0, 0), mats.foam);
+  const onTop = (geo, x, z, lift) => geo.applyMatrix4(new THREE.Matrix4().makeRotationX(tilt)).translate(x, topY(z) + lift, z); // laid on the sloping top at (x, z)
+  const plate = new THREE.ShapeGeometry(roundRect(L.kw + 0.4 * u, L.kd + 0.4 * u, 0.003), 8).applyMatrix4(ON_DECK).translate(0, 0, (L.kd + 0.4 * u) / 2); // the plate under the keys
+  own(onTop(plate, L.x0 + L.kw / 2, L.z0 + L.kd / 2, 0.0002), mats.pad);
+  const caps = [], gap = 0.065 * u;
+  for (const [x, r, w, h] of L.keys) { const cw = w * u - gap, cd = h * u - gap, cz = L.z0 + (r + h / 2) * u; caps.push([plateGeo(cw, cd, capH + 0.002, Math.min(0.0018, cw / 4), Math.min(0.0013, capH * 0.2), 2).applyMatrix4(ON_DECK).translate(0, -0.002, cd / 2), new THREE.Matrix4().makeRotationX(tilt).setPosition(L.x0 + (x + w / 2) * u, topY(cz), cz)]); } // each cap stands a little sunk in the plate
+  own(mergeGeo(caps), mats.trim);
+  const hz = L.home.z; group.userData.keyboard = { home: new V3(L.home.x, topY(hz) + capH, hz), top: hb + capH };
 }
 /* a soft rounded-rectangle outline (superellipse) w across and h tall, centred; between y0 and y1 only when cut */
 function ovalPts(w, h, n = 2.8, seg = 72) {
@@ -2768,43 +2883,93 @@ function bandGeo(curve, w, t, nf, toBag) {
 /* a bag on the right shoulder (body frame): hung from just above the shoulder's top, swung out at the bottom clear of the hip.
    R turns the bag's frame into the body's (its width front to back, its face outward); origin is where its own origin goes */
 function shoulderBagFrame(Pp) {
-  const D3 = dims(), apex = Pp.shR.clone().add(new V3(0.06, 0.055, 0)), top = bagTop(), bx = -(Math.max(S.A.hipW, S.A.waistW) / 2 + D3.D / 2 + 0.008); // over the shoulder's top in toward the neck, so it hangs inside the arm
-  const phi = Math.atan2(apex.x - bx, Math.max(0.05, top - D3.H / 2));
-  const R = new THREE.Matrix4().makeRotationZ(-phi).multiply(new THREE.Matrix4().makeBasis(new V3(0, 0, 1), new V3(0, 1, 0), new V3(-1, 0, 0)));
-  return { R, origin: apex.clone().sub(new V3(0, top, -D3.D / 2).applyMatrix4(R)), apex };
+  const A = S.A, D3 = dims(), sh = Pp.shR, off = Math.min(0.06, 0.55 * (Math.abs(sh.x) - A.neckR)), top = bagTop(), bx = -(Math.max(A.hipW, A.waistW) / 2 + D3.D / 2 + 0.008); // the strap over the shoulder's top in toward the neck (a narrow child's shoulder: nearer the joint), so it hangs inside the arm
+  const base = new THREE.Matrix4().makeBasis(new V3(0, 0, 1), new V3(0, 1, 0), new V3(-1, 0, 0)), pr = limbProfiles(A, PERSONAS[S.persona]);
+  const at = (shift, phi) => { const apex = sh.clone().add(new V3(off - shift, 0.055, 0)), R = new THREE.Matrix4().makeRotationZ(-phi).multiply(base); return { R, origin: apex.clone().sub(new V3(0, top, -D3.D / 2).applyMatrix4(R)), apex }; };
+  let phi = Math.atan2(sh.x + off - bx, Math.max(0.05, top - D3.H / 2)), shift = 0;
+  for (let it = 0; it < 8; it++) { // a broad chest or waist: the strap slides out over the shoulder (up to just past the joint) so the bag's inner face stays off the body; past that the bag swings out
+    const f = at(shift, phi); let need = 0, dphi = 0;
+    for (let iv = 0; iv <= 10; iv++) for (const u of [-0.45, -0.22, 0, 0.22, 0.45]) { const v = iv / 10; const p = new V3(u * D3.W, v * D3.H, -D3.D).applyMatrix4(f.R).add(f.origin), n = Math.max(torsoHalfAt(A, Pp, p.y, p.z), bodySideAt(A, Pp, -1, p.y, pr, p.z)) + 0.005 + p.x; if (n > 0) { need = Math.max(need, n); dphi = Math.max(dphi, n / Math.max(0.05, f.apex.y - p.y)); } }
+    if (need < 1e-4) break;
+    const room = off + 0.02 - shift;
+    if (room > 1e-4) shift += Math.min(need * 1.05, room); else phi += dphi * 1.1;
+  }
+  return at(shift, phi);
+}
+/* the right arm with a bag on its shoulder: hanging down outside it, elbow and wrist kept out past its outer face by their own thickness */
+function shoulderBagArm(A, P) {
+  const s = -1, sh = P.shR, bf = shoulderBagFrame(P), k = S.scale, Ri = bf.R.clone().invert(), sd = (p) => { const b = p.clone().sub(bf.origin).applyMatrix4(Ri).multiplyScalar(1 / k); return bagSectionSd(b.x, b.y, b.z) * k; }; // how far a point (body frame) is outside the bag
+  const pr = limbProfiles(A, PERSONAS[S.persona]), J = jointSizes(pr), pole = new V3(s * 0.5, -0.25, -1), W = restWrist(A, P, s).add(new V3(0, 0.02, 0.02));
+  const room = 0.02; // a little air between the arm and the bag, its straps coming up beside it
+  for (let it = 0; it < 14; it++) { // s < 0: outward is -x
+    const rc = armIK(sh, W, A, pole), F = handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el));
+    let need = Math.min(sd(rc.el) - J.el - 0.006 - room, sd(W) - A.forearmR - 0.008);
+    for (const t of [0.3, 0.45, 0.6, 0.75, 0.9]) need = Math.min(need, (sd(sh.clone().lerp(rc.el, t)) - profAt(pr.arm[0], t) - 0.006) / (0.35 + 0.65 * t)); // the upper arm too, over the bag's top (a point up the arm moves less than the wrist)
+    for (const t of [0.33, 0.67]) need = Math.min(need, sd(rc.el.clone().lerp(rc.wr, t)) - profAt(pr.arm[1], t) - 0.006);
+    for (const [p, r] of hangingHand(A, W, F, s)) need = Math.min(need, sd(p) - r - 0.004); // and the hand beside it, its curled fingers too
+    if (need >= 0) break; W.x += need * 1.15;
+  }
+  return { W, pole, rc: armIK(sh, W, A, pole) };
+}
+/* a shoulder bag's body as a signed distance (its own frame, unscaled: x along its width, y up from its bottom, z from its outer face at 0 in
+   to -D): a hobo's crescent with its rounded edges, a tote's pillow, thin at its open top */
+function bagSectionSd(x, y, z) {
+  const k = S.scale, D3 = dims(), W = D3.W / k, D = D3.D / k, H = D3.H / k, dx = Math.abs(x) - W / 2;
+  let d;
+  if (S.look === 'hobo') {
+    const bev = Math.min(0.035, D * 0.32), w = W - 2 * bev, h = H - 2 * bev, t = clamp((x / (0.4 * w) + 1) / 2, 0, 1), yt = 2 * bev + h * ((1 - t) ** 2 + 2 * 0.74 * t * (1 - t) + t * t); // the top: up to its corners, down in the middle
+    const qy = Math.abs(y - yt / 2) - yt / 2 + bev, qz = Math.abs(z + D / 2) - D / 2 + bev;
+    d = Math.hypot(Math.max(qy, 0), Math.max(qz, 0)) + Math.min(Math.max(qy, qz), 0) - bev;
+  } else {
+    const hf = toteHalf(0, clamp(y / H, 0, 1), D), e = Math.abs(z + D / 2) - hf;
+    d = y > H ? Math.hypot(y - H, Math.max(0, e)) : y < 0 ? Math.hypot(y, Math.max(0, e)) : e;
+  }
+  return Math.max(d, dx);
 }
 /* shoulder straps for a bag worn on the shoulder: each from its two ends on the bag (bag frame, unscaled) up and over the top of the shoulder,
    lying on it across their width. Returns the paths in the bag's frame */
 function shoulderStraps(ends, width, xs, gap = 0.0025) {
-  const P0 = basePose(S.A, PP(), 0), k = S.scale, bf = shoulderBagFrame(P0), origin = bf.origin, toBody = (v) => v.clone().multiplyScalar(k).applyMatrix4(bf.R).add(origin), Ri = bf.R.clone().invert(), toBag = (v) => v.clone().sub(origin).applyMatrix4(Ri).multiplyScalar(1 / k);
-  torso.position.copy(P0.pelvis); torso.quaternion.setFromUnitVectors(UP, P0.spine); human.updateMatrixWorld(true);
-  const skin = [R.torso, R.neck, R.arms[0].sh], sh = P0.shR;
+  const A = S.A, P0 = basePose(A, PP(), 0), k = S.scale, bf = shoulderBagFrame(P0), origin = bf.origin, toBody = (v) => v.clone().multiplyScalar(k).applyMatrix4(bf.R).add(origin), Ri = bf.R.clone().invert(), toBag = (v) => v.clone().sub(origin).applyMatrix4(Ri).multiplyScalar(1 / k);
+  const pr = limbProfiles(A, PERSONAS[S.persona]), J = jointSizes(pr), arm = shoulderBagArm(A, P0).rc;
+  torso.position.copy(P0.pelvis); torso.quaternion.setFromUnitVectors(UP, P0.spine); updateNeck(P0, A); ball(R.arms[0].sh, P0.shR.clone().addScaledVector(P0.spine, -0.25 * J.sh), J.sh); human.updateMatrixWorld(true); // the body as it will stand (this build may come before the pose)
+  const skin = [R.torso, R.neck, R.arms[0].sh], sh = P0.shR, cap = { a: arm.sh.clone(), b: arm.el.clone(), prof: pr.arm[0] }; // the upper arm, as it will hang outside the bag
   return ends.map(([a, b], si) => {
-    const A = toBody(a), B = toBody(b), x = sh.x + 0.06 + xs[si], up = sh.y + 0.03; // over the shoulder's top, in toward the neck, the two straps side by side
-    const guide = [A, A.clone().lerp(new V3(x, up, sh.z + 0.06), 0.5), new V3(x, up + 0.02, sh.z + 0.05), new V3(x, up + 0.045, sh.z), new V3(x, up + 0.02, sh.z - 0.05), B.clone().lerp(new V3(x, up, sh.z - 0.06), 0.5), B];
+    const A0 = toBody(a), B0 = toBody(b), x = bf.apex.x + xs[si], up = sh.y + 0.03, sa = Math.sign(A0.z - B0.z) || 1; // over the shoulder's top, in toward the neck, the two straps side by side; sa: the side (front +1, back -1) the first end is on
+    const guide = [A0, A0.clone().lerp(new V3(x, up, sh.z + 0.06 * sa), 0.5), new V3(x, up + 0.02, sh.z + 0.05 * sa), new V3(x, up + 0.045, sh.z), new V3(x, up + 0.02, sh.z - 0.05 * sa), B0.clone().lerp(new V3(x, up, sh.z - 0.06 * sa), 0.5), B0];
     const C = new V3(x, sh.y - 0.05, sh.z), gn = guide.map((p, i) => (i === 0 || i === guide.length - 1 ? new V3(-1, 0.2, 0).normalize() : p.clone().sub(C).normalize()));
-    const dr = drapeOnSkin(guide, gn, width, gap, skin, 64);
+    const dr = drapeOnSkin(guide, gn, width, gap, skin, 64, { fixEnds: true, snap: (u) => 1 - smooth01((Math.abs(u - 0.5) - 0.12) / 0.08), caps: [cap] }); // over the top it rests on the shoulder; the legs hang straight from it, only kept off the body and the arm
     return { P: dr.P.map(toBag), N: dr.N.map((v) => v.clone().applyMatrix4(new THREE.Matrix4().extractRotation(Ri)).normalize()) };
   });
 }
 /* lays a strap on the body: points along a guide (body frame), each pushed out until the band, across its whole width, sits just off the skin
    (never into it, the shoulder's curve included), then smoothed so it runs without kinks or twists. Returns points and skin normals */
-function drapeOnSkin(guide, guideN, width, gap, skin, n = 72) {
-  const curve = new THREE.CatmullRomCurve3(guide, false, 'centripetal'), rc = new THREE.Raycaster(), nm = new THREE.Matrix3();
+function drapeOnSkin(guide, guideN, width, gap, skin, n = 72, opt = {}) { // opt.fixEnds: the ends stay put; opt.snap(u): 1 where it rests on the skin, 0 where it is only kept off it; opt.caps: limbs (axis a-b, radius profile) to keep it off
+  const curve = new THREE.CatmullRomCurve3(guide, false, 'centripetal'), rc = new THREE.Raycaster(), nm = new THREE.Matrix3(), snap = opt.snap || (() => 1), caps = opt.caps || [];
   const nAt = (p) => { const ds = guide.map((q) => q.distanceTo(p)), o = ds.map((_, i) => i).sort((i, j) => ds[i] - ds[j]), [i, j] = o, w = ds[j] / (ds[i] + ds[j] + 1e-9); return guideN[i].clone().multiplyScalar(w).addScaledVector(guideN[j], 1 - w).normalize(); };
   const hit = (o, d) => { const from = human.localToWorld(o.clone().addScaledVector(d, 0.2)), to = human.localToWorld(o.clone().addScaledVector(d, -0.08)); rc.set(from, to.clone().sub(from).normalize()); rc.far = 0.28; const h = rc.intersectObjects(skin, false)[0]; if (!h) return null; nm.getNormalMatrix(h.object.matrixWorld); const nw = h.face.normal.clone().applyMatrix3(nm).normalize(), pl = human.worldToLocal(h.point.clone()), nl = human.worldToLocal(h.point.clone().add(nw)).sub(pl).normalize(); return { p: pl, n: nl.dot(d) < 0 ? nl.negate() : nl }; };
   let P = Array.from({ length: n + 1 }, (_, i) => curve.getPointAt(i / n)), N = P.map((p) => nAt(p));
+  const i0 = opt.fixEnds ? 1 : 0, i1 = opt.fixEnds ? n - 1 : n;
   const lift = () => {
-    for (let i = 0; i <= n; i++) {
+    for (let i = i0; i <= i1; i++) {
       const T = (i < n ? P[i + 1].clone().sub(P[i]) : P[i].clone().sub(P[i - 1])).normalize(), d = N[i], b = new V3().crossVectors(T, d).normalize();
       let need = -Infinity, ns = new V3();
       for (const k of [-0.5, -0.25, 0, 0.25, 0.5]) { const o = P[i].clone().addScaledVector(b, k * width), h = hit(o, d); if (h) { need = Math.max(need, h.p.clone().sub(P[i]).dot(d) + gap); ns.add(h.n); } } // the skin's height under each part of the band
-      if (need > -Infinity) { P[i].addScaledVector(d, need); if (ns.lengthSq() > 1e-9) N[i] = N[i].clone().lerp(ns.normalize(), 0.6).normalize(); }
+      if (need > -Infinity) { const w = need > 0 ? 1 : snap(i / n); if (w > 0) { P[i].addScaledVector(d, need * w); if (ns.lengthSq() > 1e-9) N[i] = N[i].clone().lerp(ns.normalize(), 0.6 * w).normalize(); } } // under the skin: out; above it: down onto it only where it rests
+    }
+  };
+  const offCaps = () => { // out of each limb, straight away from its axis
+    for (const c of caps) {
+      const u = c.b.clone().sub(c.a), L = Math.max(u.length(), 1e-6); u.multiplyScalar(1 / L);
+      for (let i = i0; i <= i1; i++) {
+        const t = clamp(P[i].clone().sub(c.a).dot(u) / L, 0, 1); if (t <= 0) continue;
+        const q = c.a.clone().addScaledVector(u, t * L), v = P[i].clone().sub(q), dd = v.length(), r = profAt(c.prof, t) + gap + 0.002; if (dd >= r || dd < 1e-6) continue;
+        v.multiplyScalar(1 / dd); P[i].copy(q).addScaledVector(v, r); N[i] = N[i].clone().lerp(v, 0.8).normalize();
+      }
     }
   };
   const smooth = (A, k) => A.map((v, i) => (i === 0 || i === A.length - 1 ? v.clone() : v.clone().multiplyScalar(1 - k).addScaledVector(A[i - 1].clone().add(A[i + 1]), k / 2)));
-  for (let it = 0; it < 4; it++) { lift(); P = smooth(smooth(P, 0.5), 0.5); N = smooth(smooth(N, 0.6), 0.6).map((v) => v.normalize()); }
-  lift(); // last: nothing left under the skin after the smoothing
+  for (let it = 0; it < 6; it++) { lift(); offCaps(); P = smooth(smooth(P, 0.5), 0.5); N = smooth(smooth(N, 0.6), 0.6).map((v) => v.normalize()); }
+  lift(); offCaps(); lift(); // last: nothing left under the skin or in a limb after the smoothing
   return { P, N };
 }
 /* a flat band through given points with given up-normals (body frame), carried into the bag's frame by xf */
@@ -2818,6 +2983,7 @@ function bandAlong(P, N, w, t, xf, taperFrom = 0.75) {
   idx.push(0, 1, 2, 0, 2, 3); const e = n * 4; idx.push(e, e + 2, e + 1, e, e + 3, e + 2); // the ends closed
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
 }
+let WORN_STRAPS = null; // a worn backpack's straps as laid on the body (body frame), for the arms to hang clear of them
 /* backpack: a soft rounded body with a front pocket and its zip, a grab handle on top, padded shoulder straps; worn, the straps run from the
    top of the back panel over the shoulders and down the chest to the bottom corners */
 function backpackGeo(group, W, D, H) {
@@ -2856,8 +3022,10 @@ function backpackGeo(group, W, D, H) {
   if (!worn) { for (const sx of [-1, 1]) own(new RoundedBoxGeometry(0.055, H * 0.7, 0.014, 2, 0.006), mats.pad).position.set(sx * W * 0.25, H * 0.5, -D - 0.006); return; } // straps lying on the back panel
   const P0 = basePose(S.A, PP(), 0), f = backFrame(P0), toBag = (v) => new V3(-(v.x - f.origin.x), v.y - f.origin.y, -(v.z - f.origin.z)); // body frame to bag frame
   // the straps lie on the body: each guide point is found by casting in toward the torso and sitting the band just on its skin
-  torso.position.copy(P0.pelvis); torso.quaternion.setFromUnitVectors(UP, P0.spine); human.updateMatrixWorld(true);
-  const skin = [R.torso, R.neck, R.band, ...R.arms.map((a) => a.sh)]; // the arms hang clear outside the straps
+  const J0 = jointSizes(limbProfiles(S.A, PERSONAS[S.persona]));
+  torso.position.copy(P0.pelvis); torso.quaternion.setFromUnitVectors(UP, P0.spine); updateNeck(P0, S.A); [P0.shR, P0.shL].forEach((c, i) => ball(R.arms[i].sh, c.clone().addScaledVector(P0.spine, -0.25 * J0.sh), J0.sh)); human.updateMatrixWorld(true); // the body as it will stand (this build may come before the pose)
+  const skin = [R.torso, R.neck, R.band, ...R.arms.map((a) => a.sh)]; // the arms hang clear outside the straps (restWrist reads where they run: WORN_STRAPS)
+  WORN_STRAPS = [];
   const rc = new THREE.Raycaster(), nm = new THREE.Matrix3(), onSkin = (o, dir, gap) => { // o, dir in the body frame: the first skin met coming in from outside along dir, and the skin's own normal there
     const d = dir.clone().normalize(), from = human.localToWorld(o.clone().addScaledVector(d, 0.45)), to = human.localToWorld(o.clone());
     rc.set(from, to.sub(from).normalize()); rc.far = 0.6; const h = rc.intersectObjects(skin, false)[0];
@@ -2882,6 +3050,7 @@ function backpackGeo(group, W, D, H) {
     const pts = [new V3(sx * 0.05, f.top - 0.09, f.z + 0.005), new V3(sx * 0.052, f.top - 0.045, f.z + 0.005), ...G.map((q) => q.p), new V3(sx * (dims().W / 2 - 0.035), f.origin.y + 0.05, f.z + 0.004)];
     const ns = [new V3(0, 0, -1), new V3(0, 0.1, -1), ...G.map((q) => q.n), new V3(sx, 0, -0.4)].map((v) => v.normalize());
     const dr = drapeOnSkin(pts, ns, 0.048, 0.004, skin); // on the skin all the way, its whole width, down to the bag's bottom corner
+    WORN_STRAPS.push({ s, t: 0.005, P: dr.P.flatMap((v, i, A) => { const T = (i < A.length - 1 ? A[i + 1].clone().sub(v) : v.clone().sub(A[i - 1])).normalize(), bb = new V3().crossVectors(dr.N[i], T).normalize(); return [v.clone().addScaledVector(bb, 0.024), v.clone().addScaledVector(bb, -0.024)]; }) }); // both edges of the band
     own(bandAlong(dr.P, dr.N, 0.048, 0.005, toBag), mats.pad);
   }
 }
@@ -2935,12 +3104,13 @@ function ribbonAlong(pts, wide, thick, n0, n1, seg = 56) {
   const e = seg * 4; idx.push(0, 2, 1, 0, 3, 2, e, e + 1, e + 2, e, e + 2, e + 3);
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
 }
+/* a tote's half thickness at (u across, -1..1; v up, 0..1): thin at its seams and its open top, as full as D lower down */
+const toteHalf = (u, v, D, t0 = 0.0009) => t0 + (D / 2 - t0) * Math.pow(Math.max(0, 1 - Math.abs(u) ** 3), 0.6) * Math.pow(Math.max(0, Math.sin(Math.PI * Math.pow(v, 0.8))), 0.75) * (1 - 0.85 * smooth01(clamp((v - 0.9) / 0.1, 0, 1)));
 /* tote bag: a flat canvas bag, thin at its seams and its open top and a little full lower down (D: as full as it gets); two flat cotton
    straps sewn inside the top hem, lying flat on the bag and turning to lie flat over the shoulder (or across the fingers); your image
    printed on the front, following the cloth */
 function toteGeo(group, W, D, H) {
-  const own = meshIn(group), hd = bagDrop(), m = bagMat(), t0 = 0.0009;
-  const half = (u, v) => t0 + (D / 2 - t0) * Math.pow(Math.max(0, 1 - Math.abs(u) ** 3), 0.6) * Math.pow(Math.max(0, Math.sin(Math.PI * Math.pow(v, 0.8))), 0.75) * (1 - 0.85 * smooth01(clamp((v - 0.9) / 0.1, 0, 1)));
+  const own = meshIn(group), hd = bagDrop(), m = bagMat(), half = (u, v) => toteHalf(u, v, D);
   own(pillowGeo(W, H, -D / 2, half), m);
   const pw = W * 0.78, ph = H * 0.62, y0 = H * 0.5 - ph / 2, im = userImgMat('bag', pw, ph);
   if (im) { // the print: a patch of the front face, lifted off it a hair
@@ -2969,7 +3139,7 @@ function hoboGeo(group, W, D, H) {
   s.moveTo(-0.4 * w, h); s.quadraticCurveTo(-0.56 * w, 0.78 * h, -0.5 * w, 0.42 * h); s.quadraticCurveTo(-0.44 * w, 0, 0, 0); s.quadraticCurveTo(0.44 * w, 0, 0.5 * w, 0.42 * h); s.quadraticCurveTo(0.56 * w, 0.78 * h, 0.4 * w, h); s.quadraticCurveTo(0, 0.74 * h, -0.4 * w, h);
   own(new THREE.ExtrudeGeometry(s, { depth: Math.max(D - 2 * bev, 0.002), bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 8, curveSegments: 28 }).translate(0, bev, -(D - bev)), m);
   const hd = bagDrop(), cx = 0.4 * w, y0 = H - bev * 0.6;
-  if (S.place === 'back' && S.A) { const [{ P }] = shoulderStraps([[new V3(-cx, y0, -D / 2), new V3(cx, y0, -D / 2)]], 0.016, [0], 0.009); own(tubeAlong(P, 0.008, 72), m); return; } // on the shoulder: the strap lies over its top
+  if (S.place === 'back' && S.A) { const [{ P }] = shoulderStraps([[new V3(-cx, y0, -D / 2), new V3(cx, y0, -D / 2)]], 0.016, [0], 0.009); own(tubeAlong(P, 0.008, 72), m); return; } // on the shoulder: the strap lies over its top, its legs down past the front and back of the arm
   own(tubeAlong([new V3(-cx, y0, -D / 2), new V3(-cx * 0.8, y0 + 0.55 * hd, -D / 2), new V3(-cx * 0.25, y0 + 0.97 * hd, -D / 2), new V3(0, H + hd, -D / 2), new V3(cx * 0.25, y0 + 0.97 * hd, -D / 2), new V3(cx * 0.8, y0 + 0.55 * hd, -D / 2), new V3(cx, y0, -D / 2)], 0.008), m);
 }
 /* eyewear on the face. The finished head's front is read once as a height map, so a frame is set on the face instead of through it: an
@@ -3296,12 +3466,13 @@ function speakerGeo(group, W, D, H) {
   own(new THREE.TorusGeometry(0.014, 0.003, 8, 24, Math.PI).rotateY(Math.PI / 2).translate(0, H * 0.82, -D - 0.001), mats.tire);
 }
 /* mushroom lamp: a round stem and a dome cap over it, the cap's underside the light */
-function mushroomGeo(group, W, D, H) {
-  const own = meshIn(group), capH = H * 0.42, stemR = Math.min(W, D) * 0.24, cz = -D / 2, sh = H - capH * 0.75;
+function mushroomGeo(group, W, D, H) { // the shade (head) and the stem each sized on its own in the details; W, D, H follow from them
+  const own = meshIn(group), hd = +dv('headD') / 1000, hh = +dv('headH') / 1000, sd = +dv('stemD') / 1000, sl = +dv('stemH') / 1000, cz = -D / 2;
+  const kx = W / Math.max(hd, sd), kz = D / Math.max(hd, sd), ky = H / (sl + hh), capH = hh * ky, stemR = (sd / 2) * Math.min(kx, kz), sh = sl * ky + capH * 0.25; // the stem runs up a little inside the shade
   own(new THREE.CylinderGeometry(stemR * 0.88, stemR, sh, 40).translate(0, sh / 2, cz), mats.foam);
-  own(new THREE.SphereGeometry(0.5, 48, 18, 0, Math.PI * 2, 0, Math.PI / 2).scale(W, 2 * capH, D).translate(0, H - capH, cz), mats.foam);
-  own(new THREE.CircleGeometry(0.5, 48).rotateX(Math.PI / 2).scale(W * 0.98, 1, D * 0.98).translate(0, H - capH - 0.0005, cz), mats.cup);
-  own(new THREE.CylinderGeometry(0.006, 0.006, 0.004, 20).rotateX(Math.PI / 2).translate(0, sh * 0.35, cz + stemR + 0.0015), mats.trim);
+  own(new THREE.SphereGeometry(0.5, 48, 18, 0, Math.PI * 2, 0, Math.PI / 2).scale(hd * kx, 2 * capH, hd * kz).translate(0, H - capH, cz), mats.foam);
+  own(new THREE.CircleGeometry(0.5, 48).rotateX(Math.PI / 2).scale(hd * kx * 0.98, 1, hd * kz * 0.98).translate(0, H - capH - 0.0005, cz), mats.cup);
+  own(new THREE.CylinderGeometry(0.006, 0.006, 0.004, 20).rotateX(Math.PI / 2).translate(0, Math.min(sl * ky * 0.5, 0.06), cz + stemR * 0.94 + 0.0015), mats.trim); // the button, low on the stem's front
 }
 function pouchGeo(group, W, D, H) {
   const own = meshIn(group), bev = Math.min(D * 0.45, 0.02);
@@ -3364,6 +3535,7 @@ function buildProduct() {
   else if (S.shape === 'cup') cupGeo(holder, S.style, W, Hh);
   else if (S.shape === 'ring') ringGeo(holder, S.w, S.d, S.h, S.ringSize);
   else if (S.shape === 'laptop') laptopGeo(holder, W, D, Hh);
+  else if (S.look === 'keyboard' && S.shape === 'box') keyboardGeo(holder, W, D, Hh);
   else if (S.shape === 'headphone') { DET_ON = true; try { headphoneGeo(holder, W, D, Hh); } finally { DET_ON = false; } }
   else if (S.shape === 'earbud') earbudGeo(holder, S.w, S.d, S.h);
   else if (unfolded()) foldGeo(holder);
@@ -3481,10 +3653,10 @@ function washerGeo(group, W, D, H) {
       own(new RoundedBoxGeometry(W * 0.22, 0.04, 0.004, 2, 0.002).translate(-W * 0.31, y0 + 0.07, 0.002), mats.trim); // the filter hatch, low down
     }
   };
-  if (!on) { unit(0, H, true); own(new THREE.CylinderGeometry(0.022, 0.022, 0.016, 40).rotateX(Math.PI / 2).translate(0, S.ctrl / 1000, 0.008), darkGloss); return; } // the dial, at the set height
+  if (!on) { unit(0, H, true); own(new THREE.CylinderGeometry(0.022, 0.022, 0.016, 40).rotateX(Math.PI / 2).translate(0, S.ctrl / 1000, 0.008), darkGloss); group.userData.ctrlZ = 0.016; return; } // the dial, at the set height (its face 16 mm out)
   unit(0, uh, false); unit(H - uh, uh, false);
   own(new RoundedBoxGeometry(W, 0.08, D - 0.01, 2, 0.004).translate(0, uh + 0.04, -D / 2), darkGloss); // the control strip between them
-  own(new THREE.BoxGeometry(W * 0.3, 0.02, 0.004).translate(0, S.ctrl / 1000, 0.002), mats.trim);
+  own(new THREE.BoxGeometry(W * 0.3, 0.02, 0.004).translate(0, S.ctrl / 1000, 0.002), mats.trim); group.userData.ctrlZ = 0.004;
 }
 /* a room door: a frame (two jambs and a head), the leaf hung on the left jamb, a lever on the right; press it and the leaf swings toward you */
 function doorGeo(group, W, D, H) {
@@ -3566,7 +3738,7 @@ function humidifierGeo(group, W, D, H) {
   const body = (w, d, h, m) => own(sq ? new RoundedBoxGeometry(w, h, d, 4, Math.min(0.02, w * 0.12)).translate(0, h / 2, -D / 2) : new THREE.CylinderGeometry(w / 2, w / 2, h, 64).translate(0, h / 2, -D / 2), m);
   body(W, D, bh, mats.paper); const top = body(W * 0.99, D * 0.99, H - bh, glow); top.position.y = bh;
   own(new THREE.CylinderGeometry(W * 0.05, W * 0.05, 0.004, 24).translate(0, H + 0.001, -D / 2), mats.trim); // the mist outlet
-  own(new THREE.CylinderGeometry(0.006, 0.006, 0.003, 20).rotateX(Math.PI / 2).translate(0, S.ctrl / 1000, 0.0015), mats.trim); // the button
+  own(new THREE.CylinderGeometry(0.006, 0.006, 0.003, 20).rotateX(Math.PI / 2).translate(0, S.ctrl / 1000, 0.0015), mats.trim); group.userData.ctrlZ = 0.003; // the button (its face 3 mm out)
 }
 /* a frying pan: a shallow pan with a flared wall, the handle pointing toward you */
 function panGeo(group, W, D, H) {
@@ -3654,9 +3826,14 @@ function fridgeGeo(group, W, D, H) {
   meshIn(door)(new RoundedBoxGeometry(cw - g, H - split - 0.012, dD - 0.004, 2, 0.004).translate(-cw / 2, split + (H - split) / 2, -dD / 2), mats.foam);
   meshIn(door)(new THREE.BoxGeometry(cw - g - 0.02, H - split - 0.04, 0.004).translate(-cw / 2, split + (H - split) / 2, -dD - 0.004), mats.cup); // the inner liner, seen when open
   for (let i = 0; i < 4; i++) { const y = split + 0.08 + i * (H - split - 0.16) / 3.4; meshIn(door)(new THREE.BoxGeometry(cw - g - 0.07, 0.07, 0.07).translate(-cw / 2, y + 0.035, -dD - 0.04), shelfM); } // the door bins
-  own(new THREE.BoxGeometry(0.006, H - base - 0.01, dD - 0.01).translate(0, base + (H - base) / 2, -dD / 2), darkGloss); // the centre seam, where the hands go
-  group.userData.door = { g: door, max: deg(70), hinge: new V3(W / 2, 0, 0) };
-  group.userData.handle = new V3(0.012, Math.min(H - 0.1, S.ctrl / 1000), 0.004);
+  own(new THREE.BoxGeometry(0.006, H - base - 0.01, dD - 0.01).translate(0, base + (H - base) / 2, -dD / 2), darkGloss); // the centre seam
+  // bar handles by the seam, standing off the doors with room for the fingers: long on the upper doors, short at the top of the lower ones
+  const hy = Math.min(H - 0.1, S.ctrl / 1000), uh = Math.min(0.42, (H - split) * 0.4), lh = Math.min(0.22, (split - base) * 0.5), hx = 0.035;
+  const pull = (g, x, y0, y1) => { const X = kit(g, mats.frame); X.rod(new V3(x, y0, PULL_Z), new V3(x, y1, PULL_Z), 0.006); for (const py of [y0 + 0.012, y1 - 0.012]) X.rod(new V3(x, py, -0.001), new V3(x, py, PULL_Z), 0.004); };
+  pull(door, hx - W / 2, hy - uh / 2, hy + uh / 2); pull(group, -hx, hy - uh / 2, hy + uh / 2); // the upper doors (the right one swings with its door)
+  for (const sx of [-1, 1]) pull(group, sx * hx, split - 0.03 - lh, split - 0.03);
+  group.userData.door = { g: door, max: deg(70), hinge: new V3(W / 2, 0, 0), hold: true };
+  group.userData.handle = new V3(hx, hy, PULL_Z); group.userData.handleR = 0.006;
 }
 /* a tower air conditioner: a slim column (square or round), dark vents down its front edges, a round display up top */
 function standAcGeo(group, W, D, H) {
@@ -3840,7 +4017,7 @@ function buildSurface() {
   } else if (atDesk()) {
     const dl = deskLayout(), g = new THREE.Group();
     g.position.set(-dl.xc, 0, -dl.zf);
-    tableGeo(g, 'desk', dl.W, dl.D, SURF.desk, mats.surfaceTop, !dl.lap); // a shade darker than the floor-standing tables, so a white sheet on it shows
+    tableGeo(g, 'desk', dl.W, dl.D, SURF.desk, mats.surfaceTop, dl.kbd ? 'mouse' : !dl.lap, dl.mouseX); // a shade darker than the floor-standing tables, so a white sheet on it shows
     surface.add(g);
     surface.userData.desk = g;
   } else if (S.place === 'wall') { // a plain wall, 120 mm thick, the product hung on its face
@@ -3898,7 +4075,7 @@ function layoutProduct() {
     else if (laidFlat()) { product.rotation.x = -Math.PI / 2; product.position.y += dims().H; } // the sheet lies flat, its short edge toward the person
     else if (plateUp()) { product.rotation.x = Math.PI / 2; product.position.z -= dims().D; } // stood up flat against the wall
   }
-  const show = !carried() && !isFurniture() && S.shape !== 'laptop' && !laidFlat();
+  const show = !carried() && !isFurniture() && !typedOn() && !laidFlat();
   marker.visible = (show || (S.place === 'hand' && !isFurniture())) && hasControls() && !lookOnly() && !(S.source === 'box' && S.look === 'door'); // held in the hand, the button still shows where it is
   spout.visible = show && isDispense();
   tray.visible = show && cupOnTray();
@@ -3931,12 +4108,12 @@ function furnPoint(hand) {
 function controlWorld() {
   const P = dims(), sy = SURF[S.place];
   if (isFurniture()) return furnPoint(false);
-  if (S.shape === 'laptop' && S.source === 'box' && holder.userData.laptop) return keyboardPoint(); // you type on it
-  if (S.look === 'luggage' && S.source === 'box') return new V3(0, sy + luggageHandle(), -P.D * 0.82); // the pulled-out trolley handle
+  if (typedOn() && (holder.userData.laptop || holder.userData.keyboard)) return keyboardPoint(); // you type on it
+  if (S.look === 'luggage' && S.source === 'box') return new V3(0, sy + Math.max(luggageHandle(), (S.h / 1000 + 0.08) * S.scale), -P.D * 0.82); // the pulled-out trolley handle (never lower than it goes: 8 cm over the case)
   if (S.look === 'trolley' && S.source === 'box') return new V3(0, sy + luggageHandle(), 0.03); // the push bar
   if (S.face === 'top') return new V3(0, sy + P.H, -topCtrlZ(P.D));
   if (lampCtrl()) return lampCtrl().add(new V3(0, sy, 0));
-  return new V3(0, sy + ctrlM(), 0);
+  return new V3(0, sy + ctrlM(), (holder.userData.ctrlZ || 0) * S.scale); // on the control's own face (a dial stands off the front)
 }
 function targetWorld() {
   const c = controlWorld(), sy = SURF[S.place];
@@ -3953,7 +4130,7 @@ function objectGrip(HD, P, cyl, up) {
   const off = new V3(HD.palmT / 2 + sx / 2 + 0.001, yc, -up * P.H);
   // the section's corners as the thing is made: a squeeze tube near oval, a square cosmetic bottle 6 mm, a mockup solid its set radius
   const box = S.source === 'box', cosm = box && ['pump', 'cream', 'lipstick', 'jar'].includes(S.look);
-  const rc = box && S.look === 'tube' ? 0.85 * Math.min(sx / 2, by) : cosm ? Math.min(0.006, 0.1 * Math.min(sx, sy)) : isProp() ? Math.min((+dv('rad') || 0) / 1000 * S.scale, Math.min(sx / 2, by)) : (flat || (box && S.look === 'teddy') ? 0.08 : 0.22) * Math.min(sx / 2, by);
+  const rc = box && S.look === 'tube' ? 0.85 * Math.min(sx / 2, by) : box && S.look === 'pencase' ? 0.84 * Math.min(sx / 2, by) : cosm ? Math.min(0.006, 0.1 * Math.min(sx, sy)) : isProp() ? Math.min((+dv('rad') || 0) / 1000 * S.scale, Math.min(sx / 2, by)) : (flat || (box && S.look === 'teddy') ? 0.08 : 0.22) * Math.min(sx / 2, by);
   if (!cyl) { // a flat face toward the palm stands on the pad at the thumb's root, not sunk into it
     const tc = new V3(0.24 * HD.palmT, 0.3 * HD.palmLen, -0.3 * HD.palmW), ts = new V3(0.44 * HD.palmT, 0.28 * HD.palmLen, 0.18 * HD.palmW);
     let pad = 0;
@@ -4147,7 +4324,8 @@ function edgePose(g) {
    the fingertips; anything chunkier (a cube, a ball) stands up with its front toward the person. The thumb rests along its side. */
 function palmGrip(HD, P) {
   const flat = P.D < 0.6 * Math.min(P.W, P.H), up = flat ? P.D : P.H, along = flat ? P.H : P.D; // height off the palm, length along the fingers
-  const yc = Math.max(0.55 * HD.palmLen, Math.min(along / 2 + 0.1 * HD.palmLen, HD.palmLen));
+  const jw = jointSizes(limbProfiles(S.A, PERSONAS[S.persona])).wr, x00 = HD.palmT / 2 + 0.001, clearW = Math.sqrt(Math.max(0, jw * jw - x00 * x00)) + 0.003; // the wrist ball stands up past the palm's heel: the thing starts beyond it
+  const yc = Math.max(0.55 * HD.palmLen, Math.min(along / 2 + 0.1 * HD.palmLen, HD.palmLen), along / 2 + clearW);
   // it sits on the pad at the thumb's root where that rises under it, never sunk into it
   const tc = new V3(0.24 * HD.palmT, 0.3 * HD.palmLen, -0.3 * HD.palmW), ts = new V3(0.44 * HD.palmT, 0.28 * HD.palmLen, 0.18 * HD.palmW);
   let pad = 0;
@@ -4241,13 +4419,20 @@ function twoHandHold(P) { // a box too big for one hand: upright in front of the
   const A = S.A, D3 = dims(), HD = A.hd;
   const elY = P.shR.y - A.upperArm, yh = elY + 0.03, zc = A.chestD / 2 + 0.07 + D3.D / 2;
   if (S.look === 'parcel' && S.source === 'box') { // carried like a parcel: the bottom just under the elbows, the palms up under its sides, fingers forward
-    const yb = elY - 0.05, zb = A.chestD / 2 + 0.015 + D3.D / 2;
-    const topX = handDepth(HD, flatPose()); // the highest part of the open hand: the box rests on that, not into it
-    const hand = (s) => {
-      const F = handFrame(UP.clone(), new V3(-s * 0.35, 0, 1)), c = new V3(s * Math.max(0.05, D3.W / 2 - 0.05), yb - topX - 0.0015, zb + D3.D * 0.08);
-      return { F, W: c.addScaledVector(F.y, -0.5 * HD.palmLen) };
-    };
-    return { origin: new V3(0, yb, zb + D3.D / 2), basis: [new V3(1, 0, 0), UP.clone(), new V3(0, 0, 1)], hand };
+    const topX = handDepth(HD, flatPose()), pr = limbProfiles(A, PERSONAS[S.persona]); // the highest part of the open hand: the box rests on that, not into it
+    const back = (yb) => { let f = 0; for (let i = 0; i <= 8; i++) for (const u of [-0.45, -0.2, 0, 0.2, 0.45]) f = Math.max(f, torsoFrontAt(A, P, yb + (D3.H * i) / 8, u * D3.W)); return Math.max(A.chestD / 2 + 0.015, f + 0.01); }; // its back against the chest and belly, not into them
+    let yb = elY - 0.05, zb = back(yb) + D3.D / 2, hz = D3.D * 0.08; // hz: the palms' middle in front of the box's middle
+    const at = (s, yb) => { const F = handFrame(UP.clone(), new V3(-s * 0.35, 0, 1)), c = new V3(s * Math.max(0.05, D3.W / 2 - 0.05), yb - topX - 0.0015, zb + hz); return { F, W: c.addScaledVector(F.y, -0.5 * HD.palmLen) }; };
+    for (let it = 0; it < 14; it++) { // the forearms run in under it from the elbows: it rests on them, never sunk into them; the upper arms stay behind it
+      const rc = armIK(P.shR, at(-1, yb).W, A, new V3(-0.6, -1, -0.3)), zBack = zb - D3.D / 2; let need = 0, behind = 0;
+      for (let i = 0; i <= 10; i++) { const t = i / 10, q = rc.el.clone().lerp(rc.wr, t), r = profAt(pr.arm[1], t); if (q.z > zBack - r && q.z < zb + D3.D / 2 + r && Math.abs(q.x) < D3.W / 2 + r) need = Math.max(need, q.y + r + 0.003 - yb); }
+      for (let i = 3; i <= 10; i++) { const t = i / 10, q = P.shR.clone().lerp(rc.el, t), r = profAt(pr.arm[0], t); if (Math.abs(q.x) < D3.W / 2 + r && q.y > yb - r && q.y < yb + D3.H + r) behind = Math.max(behind, q.z + r + 0.004 - zBack); }
+      behind = Math.max(behind, rc.el.z + jointSizes(pr).el + 0.004 - zBack); // the elbow too, where it is under the box (it is, the box rests on the forearms)
+      const chin = P.headCenter.y - 0.45 * A.headH, zn = Math.max(back(yb), yb + D3.H > chin ? P.headCenter.z + 0.5 * A.headD + 0.012 : 0) + D3.D / 2; // a box as tall as the face (a big one, a small person) is held out in front of it
+      if (need < 0.0005 && behind < 0.0005 && zn <= zb + 0.0005) break;
+      yb += Math.max(0, need) * 1.15; zb = Math.max(zb, zn); if (behind > 0) hz = Math.max(-D3.D / 2 + 0.55 * HD.palmLen, hz - behind * 1.3); // the hands further back under it, so the elbows come back behind it
+    }
+    return { origin: new V3(0, yb, zb + D3.D / 2), basis: [new V3(1, 0, 0), UP.clone(), new V3(0, 0, 1)], hand: (s) => at(s, yb) };
   }
   const hand = (s) => {
     const F = handFrame(new V3(-s, 0, 0), new V3(0, 0.2, 1));
@@ -4258,6 +4443,7 @@ function twoHandHold(P) { // a box too big for one hand: upright in front of the
 /* the home row of the keyboard in use (a laptop's own, or the desk keyboard in front of the monitor), world space */
 function keyboardPoint() {
   if (S.shape === 'laptop' && S.source === 'box' && holder.userData.laptop) return holder.localToWorld(new V3(0, holder.userData.laptop.keyY + 0.0008, -0.6 * (S.d / 1000)));
+  if (S.look === 'keyboard' && S.source === 'box' && holder.userData.keyboard) return holder.localToWorld(holder.userData.keyboard.home.clone()); // its home row, between F and J
   const st = furn();
   if (st === 'desk' || st === 'standing') return holder.localToWorld(new V3(0, S.h / 1000 + 0.022, -0.15));
   if (atDesk() && surface.userData.desk) return surface.userData.desk.localToWorld(new V3(0, SURF.desk + 0.022, -0.15));
@@ -4275,7 +4461,7 @@ function flatTop() {
   return t;
 }
 /* how far the toes stay from big things on the floor (m): room to stand back, and for a door to swing past */
-const APPLIANCE_GAP = { banner: 1.1, aboard: 0.85, fridge: 0.32, washer: 0.16, standac: 0.38, airpurifier: 0.1, purifier: 0.25, door: 0.16, wardrobe: 0.3, trolley: 0.18, floorlamp: 0.12 };
+const APPLIANCE_GAP = { banner: 1.1, aboard: 0.85, fridge: 0.32, washer: 0.16, standac: 0.38, airpurifier: 0.1, purifier: 0.25, door: 0.16, luggage: 0.03, wardrobe: 0.3, trolley: 0.18, floorlamp: 0.12 };
 function planHands() {
   const A = S.A, HD = A.hd;
   S.handRest = A.seated ? flatPose() : restPose(); // seated, the hands lie flat on the thighs (or on the beanbag)
@@ -4308,7 +4494,7 @@ function planHands() {
     return;
   }
   if (A.chair === 'product' || (S.mode !== 'use' && !atDesk())) return;
-  const lap = S.shape === 'laptop' && S.source === 'box', c = controlWorld(), st = furn();
+  const lap = typedOn(), c = controlWorld(), st = furn();
   const kb = S.mode === 'use' && atDesk() && !lap ? null : keyboardPoint(); // at the desk: typing while the product stands by, reaching for it in use
   if (!kb && S.mode !== 'use') return;
   if (kb) { // typing: palms down over the keys, the middle fingertips on the home row
@@ -4317,12 +4503,12 @@ function planHands() {
     S.plan = twoGoal('type', hp, [side(-1), side(1)], (s) => handFrame(new V3(0, -1, 0.12), new V3(-s * 0.12, 0.12, 1)), tip, (s) => new V3(s * 0.35, -1, -0.7)); // the hand in line with the forearm (a straight wrist), the elbows back by the sides
     S.pressLocal = human.worldToLocal(kb.clone());
   } else if (st === 'sink') { // both hands in the bowl, under the running water
-    const sk = SINK(S.w / 1000, S.d / 1000), y = S.h / 1000 - sk.depth + 0.07, pt = (x) => holder.localToWorld(new V3(x, y, sk.bz + 0.03));
+    const sk = SINK(S.w / 1000, S.d / 1000), y = S.h / 1000 - sk.depth + 0.11, pt = (x) => holder.localToWorld(new V3(x, y, sk.bz + 0.03)); // high enough in the bowl that the fingertips stay off its bottom and the drain
     S.plan = twoGoal('wash', restPose(), [pt(0.065), pt(-0.065)], (s) => handFrame(new V3(-s * 0.65, -0.76, 0), new V3(-s * 0.1, -0.45, 1)), new V3(0, 0.55 * HD.palmLen, 0), (s) => new V3(s * 0.7, -1, -0.2));
     S.pressLocal = human.worldToLocal(furnPoint(true));
   } else if (st === 'dining' || st === 'coffee') { // both hands on the table, either side of the plate (or on the lifted top)
     const r = furnPoint(true), l = product.worldToLocal(r.clone()); l.x = -l.x;
-    if (st === 'dining') { r.copy(product.localToWorld(new V3(0.19 * S.scale, dims().H, -0.13 * S.scale))); l.set(-0.19 * S.scale, dims().H, -0.13 * S.scale); }
+    if (st === 'dining') { r.copy(product.localToWorld(new V3(0.235 * S.scale, dims().H, -0.13 * S.scale))); l.set(-0.235 * S.scale, dims().H, -0.13 * S.scale); } // either side of the plate, the thumbs clear of its rim
     S.plan = twoGoal('flat2', flatPose(), [r, product.localToWorld(l)], (s) => handFrame(new V3(0, -1, 0), new V3(-s * 0.15, 0, 1)), new V3(handDepth(HD, flatPose()) + 0.0015, 0.5 * HD.palmLen, 0), (s) => new V3(s * 0.6, -1, -0.3));
     S.pressLocal = human.worldToLocal(furnPoint(true));
   } else if (st === 'drawer' && drawerCols()) { // a door's upright bar in a sideways fist, as on the wardrobe
@@ -4347,11 +4533,13 @@ function planHands() {
     const f = HD.fingers.map((g) => solveClear(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85]));
     const hp = { f, ...thumbRest(HD, shape.sdf3, f, new V3(0.4, 0.1, -0.9), c.clone().add(new V3(rr, -0.004, -0.02))) }; // the thumb along the bar, above the fist
     S.plan = { kind: 'bar', hp, F, W: bar.clone().sub(inHand(F, c)) };
-    S.pressLocal = bar;
+    S.pressLocal = bar; doorHoldMax();
   } else if (S.source === 'box' && holder.userData.potHandles) { // a pot: one hand on each side handle, palms down, fingers hooked under the loops
     const k = S.scale, rr = 0.006 * k, hs = holder.userData.potHandles.map((p) => human.worldToLocal(product.localToWorld(p.clone().multiplyScalar(k))));
-    const c = new V3(HD.palmT / 2 + rr + 0.002, 0.58 * HD.palmLen, 0), shape = { kind: 'c', cx: c.x, cy: c.y, r: rr, z0: -0.08, z1: 0.08 };
-    const hp = { f: HD.fingers.map((g) => solve(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85])), tm: new V3(0.45, 0.35, -0.82).normalize(), tq: new V3(0, 1, 0), t: [deg(8), deg(12)] };
+    const c = new V3(HD.palmT / 2 + rr + 0.002, 0.58 * HD.palmLen, 0), lr = 0.025 * k, Ct = c.clone().add(new V3(lr, 0, 0)); // the loop: a half ring out from the pot's side, flat, its outer bar in the fingers
+    const sdf3 = (x, y, z) => { const qx = x - Ct.x, qz = z - Ct.z; let ph = Math.atan2(qz, qx); if (Math.cos(ph) > 0) ph = qz >= 0 ? Math.PI / 2 : -Math.PI / 2; return Math.min(Math.hypot(qx - lr * Math.cos(ph), y - Ct.y, qz - lr * Math.sin(ph)) - rr, Ct.x - 0.001 - x); }; // ring and the pot's wall behind it
+    const f = HD.fingers.map((g) => solveClear({ sdf3, curlPast: true }, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85]));
+    const hp = { f, ...thumbRest(HD, sdf3, f, new V3(0.3, 0.3, -0.9), c.clone().add(new V3(0.006, -(rr + 0.01), -0.012))) }; // the thumb along the top of the loop
     const side = (s) => { const b = hs.find((p) => Math.sign(p.x) === Math.sign(s)) || hs[0], F = handFrame(new V3(-Math.sign(b.x), 0, 0), new V3(Math.sign(b.x) * 0.15, -1, 0.2)); return { F, W: b.clone().sub(inHand(F, c)) }; };
     S.plan = { kind: 'pot2', hp, side };
     S.pressLocal = hs[0].clone().add(hs[1]).multiplyScalar(0.5);
@@ -4378,26 +4566,37 @@ function planHands() {
       const hp = { f, tm: th ? th.tm : away, tq: th ? th.tq : new V3(0, 1, 0), t: th ? th.t : [deg(8), deg(12)] };
       S.plan = { kind: 'bar', hp, F, W: bar.clone().sub(inHand(F, c)), pole: new V3(-0.9, -1, -0.2) };
     } else {
-      const F = ax === 'yr' ? handFrame(new V3(-1, 0, 0), new V3(0, 0, 1)) : ax === 'x' ? handFrame(new V3(0, -1, 0.25), new V3(-0.35, 0, -1)) : handFrame(new V3(1, 0, 0), new V3(0, 0, 1));
-      const shape = { kind: 'c', cx: c.x, cy: c.y, r: rr, z0: -0.08, z1: 0.08 };
-      const hp = { f: HD.fingers.map((g) => solve(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85])), tm: new V3(0.45, 0.35, -0.82).normalize(), tq: new V3(0, 1, 0), t: [deg(8), deg(12)] };
+      // a door lever (along x): an overhand grip, the palm on top and the back of the hand up, fingers forward over it and round under, the wrist in line with the forearm
+      const F = ax === 'yr' ? handFrame(new V3(-1, 0, 0), new V3(0, 0, 1)) : ax === 'x' ? handFrame(new V3(0, -1, -0.12), new V3(0.22, -0.12, 1)) : handFrame(new V3(1, 0, 0), new V3(0, 0, 1));
+      if (ax === 'y' && S.look === 'fridge') { // an upright bar off the door: held as the wardrobe's, the bar near the finger roots, the fingers round behind it, the door's face in their way
+        c.y = 0.84 * HD.palmLen; const face = c.y + (PULL_Z - 0.0005) * k, sh3 = { sdf3: (x, y) => Math.min(Math.hypot(x - c.x, y - c.y) - rr, face - y), curlPast: true };
+        const f = HD.fingers.map((g) => solveClear(sh3, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85]));
+        S.plan = { kind: 'bar', hp: { f, ...thumbRest(HD, sh3.sdf3, f, new V3(0.4, 0.1, -0.9), c.clone().add(new V3(rr, -0.004, -0.02))) }, F, W: bar.clone().sub(inHand(F, c)) };
+        S.pressLocal = bar; doorHoldMax(); return;
+      }
+      const shape = { kind: 'c', cx: c.x, cy: c.y, r: rr, z0: -0.08, z1: 0.08 }, f = HD.fingers.map((g) => solve(shape, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85]));
+      const sdfR = (x, y) => Math.hypot(x - c.x, y - c.y) - rr;
+      const rt = 0.9 * HD.thumb.r[1] + 0.001, hp = ax === 'x' ? { f, ...thumbRest(HD, (x, y) => sdfR(x, y), f, new V3(0.6, -0.2, -0.75), c.clone().add(new V3((rr + rt) * 0.8, -(rr + rt) * 0.6, -0.014)), new V3(0.15, -1, -0.35)) } : { f, tm: new V3(0.45, 0.35, -0.82).normalize(), tq: new V3(0, 1, 0), t: [deg(8), deg(12)] }; // the thumb tucked under the lever, against it
       S.plan = { kind: 'bar', hp, F, W: bar.clone().sub(inHand(F, c)) };
     }
     S.pressLocal = bar;
   } else if ((S.look === 'luggage' || S.look === 'trolley') && S.source === 'box') { // the trolley handle's bar in an overhand grip, fingers wrapped round it
-    const rb = 0.012 * S.scale, bar = human.worldToLocal(controlWorld()), F = handFrame(new V3(0, -1, 0), new V3(0.05, -0.25, 1)), c = new V3(HD.palmT / 2 + rb + 0.002, 0.55 * HD.palmLen, 0);
-    const shape = { kind: 'c', cx: c.x, cy: c.y, r: rb, z0: -0.08, z1: 0.08 }, wb = (S.look === 'luggage' ? 0.016 : 0.013) * S.scale; // the grip as made: a luggage handle's bar is a flat box, a trolley's a round rod
-    const sdfBar = (x, y, z) => (S.look === 'luggage' ? Math.hypot(Math.max(Math.abs(x - c.x) - wb, 0), Math.max(Math.abs(y - c.y) - wb, 0)) : Math.hypot(x - c.x, y - c.y) - wb);
+    const k = S.scale, bar = human.worldToLocal(controlWorld()), F = handFrame(new V3(0, -1, 0), new V3(0.05, -0.25, 1)), Zh = new V3().crossVectors(F.x, F.y).normalize();
+    // the grip as made, in hand space: a suitcase's handle a rounded box 24 mm tall, 32 mm deep (corners 10 mm), a trolley's a 28 mm rod; it runs across the body
+    const lug = S.look === 'luggage', hA = (lug ? 0.016 : 0.014) * k, hB = (lug ? 0.012 : 0.014) * k, hR = (lug ? 0.01 : 0.014) * k, toH = (v) => new V3(v.dot(F.x), v.dot(F.y), v.dot(Zh));
+    const ah = toH(new V3(1, 0, 0)).normalize(), vv = toH(UP.clone()), vh = vv.addScaledVector(ah, -vv.dot(ah)).normalize(), uh = new V3().crossVectors(ah, vh);
+    const c = new V3(HD.palmT / 2 + hA * Math.abs(uh.x) + hB * Math.abs(vh.x) + 0.0015, 0.55 * HD.palmLen, 0);
+    const sdfBar = (x, y, z) => { const q = new V3(x, y, z).sub(c); q.addScaledVector(ah, -q.dot(ah)); const dx = Math.abs(q.dot(uh)) - (hA - hR), dy = Math.abs(q.dot(vh)) - (hB - hR); return Math.hypot(Math.max(dx, 0), Math.max(dy, 0)) + Math.min(Math.max(dx, dy), 0) - hR; };
     const f = HD.fingers.map((g) => solveClear({ sdf3: sdfBar }, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85]));
     const hp = { f, ...thumbRest(HD, sdfBar, f, new V3(0.55, 0.45, -0.7), c.clone().add(new V3(0, -0.01, -0.03))) }; // the thumb round the bar's near side, off the end of the fist
-    S.plan = { kind: 'bar', hp, F, W: bar.clone().sub(inHand(F, c)) };
+    S.plan = { kind: 'bar', hp, F, W: bar.clone().sub(inHand(F, c)), sh: { sdf3: sdfBar } };
     S.pressLocal = bar;
   } else if (isFurniture()) {
     S.plan = { kind: 'flat', hp: flatPose() };
     S.pressLocal = human.worldToLocal(furnPoint(true));
   } else if (cupInHand()) { // a cup under the outlet in one hand, the other presses the button on top
     S.plan = objectGrip(HD, { W: 0.076, D: 0.076, H: 0.1 }, true, 0);
-    S.cupLocal = human.worldToLocal(new V3(0, Math.max(c.y - 0.084, SURF[S.place] + 0.052), 0.045));
+    S.cupLocal = human.worldToLocal(new V3(0, Math.max(c.y - 0.084, SURF[S.place] + 0.052), 0.058)); // under the outlet (35 mm out), far enough off the front that the fingers round the cup's back miss it
     const hp = pointPose(), pts = fingerPts(HD, hp)[0], dir = new V3().subVectors(pts[3], pts[2]).normalize();
     S.plan.press2 = { hp, tip: pts[3].clone().addScaledVector(dir, HD.fingers[0].r[2] * 0.8), at: human.worldToLocal(product.localToWorld(buttonPoint()).add(new V3(0, 0.004, 0))) };
   } else if (lookCtrl()) { // only looked at: both hands stay down, the head lifts to the display
@@ -4427,9 +4626,49 @@ function thumbRest(HD, sdf, f, away, spot, pole = new V3(0.3, -0.2, -1)) {
   const T = HD.thumb, caps = [];
   HD.fingers.forEach((g, i) => { const q = digitPts(new V3(0, g.y, g.z), UP, FAX, g.L, f[i]); for (let j = 0; j + 1 < q.length; j++) caps.push([q[j], q[j + 1], g.r[j]]); });
   const hit = (h) => { const p = digitPts(T.base, h.tm, new V3().crossVectors(h.tm, h.tq).normalize(), T.L, h.t); for (let j = 0; j < 2; j++) for (let k = j ? 1 : 3; k <= 8; k++) { const v = p[j].clone().lerp(p[j + 1], k / 8); if (sdf(v.x, v.y, v.z) < T.r[j] || caps.some(([a, b, r]) => segDist(v, a, b) < (T.r[j] + r) * 0.95)) return true; } return false; };
-  const into = spot.clone().sub(T.base).normalize(), aw = away.clone().normalize();
-  for (let q = 1; q >= -1.5; q -= 0.04) { const d = aw.clone().lerp(into, q); if (d.lengthSq() < 1e-6) continue; const c = thumbIK(HD, T.base.clone().addScaledVector(d.normalize(), 0.95 * (T.L[0] + T.L[1])), pole.clone().normalize()); if (!hit(c)) return { tm: c.tm, tq: c.tq, t: c.t }; }
-  return { tm: aw, tq: new V3(0, 1, 0), t: [deg(8), deg(12)] };
+  const into = spot.clone().sub(T.base).normalize(), aw = away.clone().normalize(), full = T.L[0] + T.L[1], reach = 0.95 * full, toSpot = clamp(spot.distanceTo(T.base), 0.62 * full, 0.97 * full);
+  for (let q = 1; q >= -1.5; q -= 0.04) { const d = aw.clone().lerp(into, q); if (d.lengthSq() < 1e-6) continue; const c = thumbIK(HD, T.base.clone().addScaledVector(d.normalize(), q > 0.5 ? toSpot : reach), pole.clone().normalize()); if (!hit(c)) return { tm: c.tm, tq: c.tq, t: c.t }; } // the tip right at the spot while aiming near it
+  // nothing on that swing is free (a long bar right across the thumb's way): look all round for the clear spot nearest the wanted one, resting on the thing
+  let best = null;
+  for (let el = -75; el <= 75; el += 15) for (let az = 0; az < 360; az += 15) {
+    const d = new V3(Math.cos(deg(el)) * Math.cos(deg(az)), Math.cos(deg(el)) * Math.sin(deg(az)), Math.sin(deg(el)));
+    if (d.x < -0.35) continue; // not back through the palm
+    for (const rr of [reach, 0.85 * reach]) {
+      const tip = T.base.clone().addScaledVector(d, rr), c = thumbIK(HD, tip, pole.clone().normalize());
+      if (hit(c)) continue;
+      const sc = Math.abs(sdf(tip.x, tip.y, tip.z) - 0.9 * T.r[1]) + 0.3 * tip.distanceTo(spot);
+      if (!best || sc < best.sc) best = { sc, c };
+    }
+  }
+  return best ? { tm: best.c.tm, tq: best.c.tq, t: best.c.t } : { tm: aw, tq: new V3(0, 1, 0), t: [deg(8), deg(12)] };
+}
+/* a pressing hand pivoted on its fingertip until only that touches: the curled fingers, thumb and palm lifted off the face the button is on */
+function pressClear(F0, plan, HD) {
+  const tip = S.pressLocal, n = S.face === 'top' ? UP.clone() : new V3(0, 0, 1).transformDirection(product.matrixWorld).transformDirection(human.matrixWorld.clone().invert()).normalize();
+  const p0 = tip.clone().addScaledVector(n, -0.004), pts = [];
+  fingerPts(HD, plan.hp).forEach((d, i) => { const r = i < 4 ? HD.fingers[i].r : HD.thumb.r; for (let j = 0; j + 1 < d.length; j++) for (let t = 0; t <= 3; t++) { if (i === 0 && j === d.length - 2 && t > 1) continue; pts.push([d[j].clone().lerp(d[j + 1], t / 3), r[Math.min(j, r.length - 1)]]); } }); // everything but the very tip that presses
+  for (const y of [0.1, 0.5, 0.95]) for (const z of [-0.45, 0, 0.45]) for (const x of [-0.5, 0.5]) pts.push([new V3(x * HD.palmT, y * HD.palmLen, z * HD.palmW), 0.003]);
+  const at = (q) => ({ q, W: tip.clone().sub(plan.tip.clone().applyQuaternion(q)) });
+  const gap = (o) => Math.min(...pts.map(([p, r]) => p.clone().applyQuaternion(o.q).add(o.W).sub(p0).dot(n) - r));
+  let best = at(F0.q.clone());
+  if (gap(best) < 0.002) {
+    const ax = new V3(0, 0, 1).applyQuaternion(F0.q);
+    let cand = null;
+    for (let a = 3; a <= 66 && !cand; a += 3) for (const sg of [1, -1]) { const o = at(new THREE.Quaternion().setFromAxisAngle(ax, deg(a) * sg).multiply(F0.q)); if (gap(o) >= 0.002) { cand = o; break; } }
+    if (cand) best = cand;
+  }
+  const q = best.q, v = (x) => x.applyQuaternion(q);
+  return { F: { q, x: v(new V3(1, 0, 0)), y: v(new V3(0, 1, 0)), z: v(new V3(0, 0, 1)) }, W: best.W };
+}
+/* how far a held door opens in Play: as far as the hand can keep hold of its handle, the arm not over-stretched and the hand kept off the body */
+const doorSwing = (wd) => (wd.hold && wd.holdMax ? wd.holdMax : wd.max);
+function doorHoldMax() {
+  const wd = holder.userData.door, pl = S.plan;
+  if (!wd || !wd.hold || !pl || !pl.W) return;
+  const A = S.A, P0 = basePose(A, PP(), 0), sh = P0.shR, L = A.upperArm + A.forearm, hg = human.worldToLocal(holder.localToWorld(wd.hinge.clone())), front = Math.max(A.waistD, A.chestD) / 2 + 0.07;
+  let best = deg(20);
+  for (let a = 2; a <= wd.max * 57.3; a += 2) { const W = pl.W.clone().sub(hg).applyMatrix4(new THREE.Matrix4().makeRotationY(deg(a) * (wd.sign || 1))).add(hg); if (sh.distanceTo(W) > 0.95 * L || W.z < front) break; best = deg(a); }
+  wd.holdMax = Math.min(wd.max, best);
 }
 /* a door's Play from the moment the hand is on its lever: the hand presses the lever down (the latch gives), pushes the leaf a little way and lets go;
    the leaf swings on open by itself, and the lever springs back up once the hand is off it */
@@ -4464,8 +4703,10 @@ function handGoal(plan, s, P, sh) {
     case 'press': {
       if (!right) return null;
       if (sh.distanceTo(S.pressLocal) > A.reach * 1.02) return null; // out of reach (a robot vacuum on the floor): the hand hangs like the other
-      const F = handFrame(new V3(0, -1, 0), new V3().subVectors(S.pressLocal, sh));
-      return { F, W: S.pressLocal.clone().sub(inHand(F, plan.tip)), pole: S.pressLocal.y < S.A.hipY ? new V3(-0.15, 0.1, -1) : new V3(-0.55, -1, -0.35), hp: plan.hp }; // reaching down low: the elbow back, like the other arm hanging
+      const n = S.face === 'top' ? UP.clone() : new V3(0, 0, 1).transformDirection(product.matrixWorld).transformDirection(human.matrixWorld.clone().invert()).normalize(), Y0 = new V3().subVectors(S.pressLocal, sh).normalize();
+      const into = n.clone().negate(), lim = deg(48), ang = Y0.angleTo(into), Y = ang > lim ? into.clone().lerp(Y0, 1).applyAxisAngle(new V3().crossVectors(Y0, into).normalize(), ang - lim) : Y0; // the finger meets the face at a fair angle, the pad on the button, not its side along the face
+      const F0 = handFrame(new V3(0, -1, 0), Y), { F, W } = pressClear(F0, plan, A.hd);
+      return { F, W, pole: S.pressLocal.y < S.A.hipY ? new V3(-0.15, 0.1, -1) : new V3(-0.55, -1, -0.35), hp: plan.hp }; // reaching down low: the elbow back, like the other arm hanging
     }
     case 'dab': { // over the compact while its lid lifts, then down onto the puff
       if (!right) return null;
@@ -4498,10 +4739,10 @@ function handGoal(plan, s, P, sh) {
         const ax = (v) => v.applyQuaternion(q);
         return { F: { q, x: ax(new V3(1, 0, 0)), y: ax(new V3(0, 1, 0)), z: ax(new V3(0, 0, 1)) }, W, pole: new V3(-0.7, -1, -0.15).lerp(restPole, u), hp: blendPose(plan.hp, S.handRest, u) };
       }
-      if (wd && anim.open > 0 && wd.axis !== 'x' && !wd.stay) { // the hand goes round with the door it pulls, as far as the arm follows easily, then lets go and drops back to the side as the door swings on
-        const sm = (x) => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }, u = sm((anim.open - 0.38) / 0.34);
+      if (wd && anim.open > 0 && wd.axis !== 'x' && !wd.stay) { // the hand goes round with the door it pulls; a held door (fridge, wardrobe) it keeps hold of, open as far as the arm follows; others it lets go of and drops back to the side as the door swings on
+        const sm = (x) => { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }, u = wd.hold ? 0 : sm((anim.open - 0.38) / 0.34);
         if (u >= 1) return null;
-        const th = Math.min(anim.open, 0.38 + 0.2 * u) * wd.max * (wd.sign || 1), R = new THREE.Matrix4().makeRotationY(th), hg = human.worldToLocal(holder.localToWorld(wd.hinge.clone())), F2 = handFrame(plan.F.x.clone().applyMatrix4(R), plan.F.y.clone().applyMatrix4(R));
+        const th = (wd.hold ? anim.open * doorSwing(wd) : Math.min(anim.open, 0.38 + 0.2 * u) * wd.max) * (wd.sign || 1), R = new THREE.Matrix4().makeRotationY(th), hg = human.worldToLocal(holder.localToWorld(wd.hinge.clone())), F2 = handFrame(plan.F.x.clone().applyMatrix4(R), plan.F.y.clone().applyMatrix4(R));
         const W = plan.W.clone().sub(hg).applyMatrix4(R).add(hg), restPole = new V3(s * 0.25, -0.3, -1);
         if (u > 0) { const rw = restWrist(A, P, s), rc = armIK(sh, rw, A, restPole), Fr = handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)); W.lerp(rw, u); F2.q.slerp(Fr.q, u); }
         const ax = (v) => v.applyQuaternion(F2.q);
@@ -4511,11 +4752,7 @@ function handGoal(plan, s, P, sh) {
     }
     case 'shoulderbag': { // the arm hangs down outside the bag: elbow and wrist kept out past its outer face, by the arm's own thickness
       if (!right) return null;
-      const bf = shoulderBagFrame(P), k = S.scale, D3 = dims(), face = (y) => { const a = new V3(0, 0.15 * D3.H / k, 0.004).multiplyScalar(k).applyMatrix4(bf.R).add(bf.origin), b = new V3(0, 0.95 * D3.H / k, 0.004).multiplyScalar(k).applyMatrix4(bf.R).add(bf.origin); return a.x + ((b.x - a.x) * (y - a.y)) / (b.y - a.y || 1e-6); };
-      const pr = limbProfiles(A, PERSONAS[S.persona]), J = jointSizes(pr), pole = new V3(s * 0.5, -0.25, -1), W = restWrist(A, P, s).add(new V3(0, 0.02, 0.02));
-      const room = S.look === 'tote' || S.look === 'hobo' ? 0.05 : 0; // the straps come up between arm and body: the elbow out a little further to leave them room
-      for (let it = 0; it < 8; it++) { const rc = armIK(sh, W, A, pole), outE = face(rc.el.y) - J.el - 0.006 - room - rc.el.x, outW = face(W.y) - A.forearmR - 0.008 - W.x, need = Math.min(outE, outW); if (need >= 0) break; W.x += need * 1.15; } // s < 0: outward is -x
-      const rc = armIK(sh, W, A, pole);
+      const { W, pole, rc } = shoulderBagArm(A, P);
       return { F: handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)), W, pole, hp: plan.hp };
     }
     case 'hang': { if (!right) return null; const W = restWrist(A, P, s), rc = armIK(sh, W, A, new V3(s * 0.25, -0.3, -1)); return { F: handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)), W, pole: new V3(s * 0.25, -0.3, -1), hp: plan.hp }; } // the right arm hangs, the bag in its hand
@@ -4581,13 +4818,23 @@ function cushionDab(HD, P) {
 /* a pencil case lying on the table, its length across in front of the person: the right hand comes over it from above, palm down, the
    fingers closing round its far side and the thumb round the near one, a little right of its middle, the hand turned to follow the forearm */
 function pencaseGrab(HD, P) {
-  const g = objectGrip(HD, { W: P.D, D: P.H, H: P.W }, true, 0); // a round grip: its length runs through the fist
+  // its length runs through the fist; its section a soft rounded box, as made: its height under the palm (hand x), its depth along the fingers (hand y)
+  const ax = P.H / 2, by = P.D / 2, rc = 0.42 * Math.min(P.D, P.H), yc = Math.max(0.62 * HD.palmLen, by + 0.2 * HD.palmLen + HD.thumb.r[0]);
+  const tc = new V3(0.24 * HD.palmT, 0.3 * HD.palmLen, -0.3 * HD.palmW), ts = new V3(0.44 * HD.palmT, 0.28 * HD.palmLen, 0.18 * HD.palmW);
+  let pad = 0; for (let i = 0; i <= 8; i++) for (let j = 0; j <= 8; j++) { const y = yc - by + (2 * by * i) / 8, z = -P.W / 2 + (P.W * j) / 8, kk = 1 - ((y - tc.y) / ts.y) ** 2 - ((z - tc.z) / ts.z) ** 2; if (kk > 0) pad = Math.max(pad, tc.x + ts.x * Math.sqrt(kk) - HD.palmT / 2); }
+  const off = new V3(HD.palmT / 2 + ax + 0.001 + pad, yc, 0);
   product.updateMatrixWorld(true); human.updateMatrixWorld(true);
   const c = human.worldToLocal(product.localToWorld(new V3(0, P.H / 2, -P.D / 2))), yaw = deg(14); // its middle (body frame)
   c.x -= Math.min(0.03, P.W * 0.15); // a little toward the right hand
-  const F = handFrame(new V3(0, -1, 0.3).applyAxisAngle(UP, yaw), new V3(0, -0.3, 1).applyAxisAngle(UP, yaw)); // palm down over its top, fingers forward round the far side
-  const W = c.clone().sub(F.x.clone().multiplyScalar(g.off.x).addScaledVector(F.y, g.off.y).addScaledVector(F.z, g.off.z));
-  return { ...g, kind: 'grab', grab: { W, q: F.q } };
+  const F = handFrame(new V3(0, -1, 0).applyAxisAngle(UP, yaw), new V3(0, 0, 1).applyAxisAngle(UP, yaw)); // palm down on its top, fingers forward round the far side, turned a little toward the shoulder
+  // the case itself in hand space (the hand turned on it): its length, height and depth axes, a box rounded along its length
+  const toH = (v) => new V3(v.dot(F.x), v.dot(F.y), v.dot(F.z)), pdir = (v) => human.worldToLocal(product.localToWorld(v.clone())).sub(human.worldToLocal(product.localToWorld(new V3()))).normalize();
+  const eL = toH(pdir(new V3(1, 0, 0))), eU = toH(pdir(new V3(0, 1, 0))), eD = toH(pdir(new V3(0, 0, 1)));
+  const sdf3 = (x, y, z) => { const q = new V3(x, y, z).sub(off), a = Math.abs(q.dot(eU)) - (ax - rc), b = Math.abs(q.dot(eD)) - (by - rc), l = Math.abs(q.dot(eL)) - P.W / 2; const sec = Math.hypot(Math.max(a, 0), Math.max(b, 0)) + Math.min(Math.max(a, b), 0) - rc; return Math.max(sec, l); };
+  const f = HD.fingers.map((gg) => solveClear({ sdf3 }, new V3(0, gg.y, gg.z), UP, FAX, gg.L, gg.r, [90, 105, 85]));
+  const hp = { f, ...thumbRest(HD, sdf3, f, new V3(0.5, -0.4, -0.75), off.clone().add(new V3(-ax * 0.2, -by - 0.004, -0.02))) }; // the thumb round its near side
+  const W = c.clone().sub(F.x.clone().multiplyScalar(off.x).addScaledVector(F.y, off.y).addScaledVector(F.z, off.z));
+  return { kind: 'grab', hp, off, swap: false, grab: { W, q: F.q } };
 }
 /* the right hand round a thing where it stands: the grip it would be carried in, turned about the thing's upright axis so the hand comes from the shoulder's side */
 function grabGoal(g, X, turns = [0, 1, 2, 3, 4, 5, 6, 7]) { // turns: which eighths of a turn round its upright the grip may take (a flat thing only square to its sides)
@@ -4701,7 +4948,7 @@ function placeExtras(pose) {
     for (let i = 0; i < 2; i++) { const mc = wd.hinge.clone().add(new V3(0, pz * Math.sin(th), pz * Math.cos(th))), d = e.clone().sub(mc); th = clamp(Math.atan2(d.z, -d.y), deg(95), deg(150)); }
     wd.max = th;
   }
-  if (wd) { const b = wd.lever && S.source === 'box' ? doorBeats() : null, a = (b ? b.swing : S.mode === 'use' ? anim.open : 0) * wd.max * (wd.sign || 1); if (wd.axis === 'x') wd.g.rotation.x = a; else wd.g.rotation.y = a; if (b) wd.lever.rotation.z = deg(35) * b.press * (1 - b.spring); } // a door swings out, a lid or a vane lifts // the lever: pressed down as the hand arrives, back up once it lets go
+  if (wd) { const b = wd.lever && S.source === 'box' ? doorBeats() : null, a = (b ? b.swing : S.mode === 'use' ? anim.open : 0) * (b ? wd.max : doorSwing(wd)) * (wd.sign || 1); if (wd.axis === 'x') wd.g.rotation.x = a; else wd.g.rotation.y = a; if (b) wd.lever.rotation.z = deg(35) * b.press * (1 - b.spring); } // a door swings out, a lid or a vane lifts // the lever: pressed down as the hand arrives, back up once it lets go
   const fd = holder.userData.fold; if (fd) { const t = smooth01(anim.open), a = (1 - t) * Math.PI; if (fd.book) fd.g.rotation.y = a; else fd.g.rotation.x = a; } // a foldable opens as the hands come up
   const sk = holder.userData.sink; // kitchen sink: water from the faucet into the bowl
   if (use && sk && anim.pour > 0.001) {
@@ -4994,15 +5241,15 @@ function evaluate() {
   else if (ty > shY + 0.015) { zoneTxt = L(`어깨보다 ${cmi(ty - shY)}cm 높아 팔을 들어야 해요`, `${cmi(ty - shY)} cm above the shoulder, the arm has to lift`); zoneLv = 'warn'; }
   else if (ty >= elY - 0.15) { zoneTxt = ty >= elY ? L('팔꿈치~어깨 사이라 편해요', 'between elbow and shoulder, comfortable') : L(`팔꿈치보다 ${cmi(elY - ty)}cm 아래 · 편한 높이예요`, `${cmi(elY - ty)} cm below the elbow, comfortable`); zoneLv = 'good'; }
   else { zoneTxt = L(`팔꿈치보다 ${cmi(elY - ty)}cm 낮아요`, `${cmi(elY - ty)} cm below the elbow`); zoneLv = rs.f > flexWarn ? 'warn' : 'info'; }
-  if (S.shape === 'laptop' && S.source === 'box') { // typing: the keys want to be at or just below the elbow
+  if (typedOn()) { // typing: the keys want to be at or just below the elbow
     const d = ty - elY, lv = d > 0.08 ? 'bad' : d > 0.03 ? 'warn' : d < -0.1 ? 'warn' : 'good', pre = A.seated ? L('앉은 ', 'seated ') : '';
     add(L('키보드 높이', 'Keyboard height'), `${L('키보드', 'Keys')} ${cmi(ty)}cm · ${pre}${L('팔꿈치', 'elbow')} ${cmi(elY)}cm · ` + (d > 0.03 ? L(`${cmi(d)}cm 높아 어깨가 들려요`, `${cmi(d)} cm above it, the shoulders lift`) : d < -0.1 ? L(`${cmi(-d)}cm 낮아 손목이 꺾여요`, `${cmi(-d)} cm below it, the wrists bend`) : L('타이핑하기 편한 높이예요', 'comfortable for typing')), lv);
     zoneLv = lv;
   } else add(L('높이', 'Height'), `${handNm} ${cmi(ty)}cm · ${zoneTxt}`, zoneLv);
   if (cupInHand()) { const by = sy + P.H; add(L('출수 버튼', 'Dispense button'), L(`윗면 ${cmi(by)}cm · 컵을 든 채 다른 손으로 눌러요`, `On top at ${cmi(by)} cm · pressed with the free hand`) + (by > shY + 0.015 ? L(' · 어깨보다 높아요', ', above the shoulder') : ''), by > shY + 0.015 ? 'warn' : 'good'); }
 
-  const ctl = controlWorld(), laptop = S.shape === 'laptop' && S.source === 'box';
-  if (laptop) { /* a laptop's screen height is checked below */ } else if (S.face === 'top') {
+  const ctl = controlWorld(), laptop = typedOn();
+  if (laptop) { /* a laptop's screen height is checked below; a keyboard's keys face up at the hands */ } else if (S.face === 'top') {
     const gap = eyeY - (sy + P.H);
     if (gap < 0.03) add(L('시야', 'View'), gap < 0 ? L(`윗면이 눈보다 ${cmi(-gap)}cm 높아 버튼이 안 보여요`, `The top is ${cmi(-gap)} cm above the eyes, buttons out of sight`) : L('윗면이 눈높이와 같아 버튼이 안 보여요', 'The top is at eye level, buttons out of sight'), 'bad');
     else if (gap < 0.15) add(L('시야', 'View'), L(`윗면이 눈보다 ${cmi(gap)}cm 아래라 버튼이 잘 안 보여요`, `The top is only ${cmi(gap)} cm below the eyes, buttons hard to see`), 'warn');
@@ -5303,7 +5550,7 @@ function seatSetup(p) {
   if (p.seated && !onSeat) { A.seatEdge = A.thigh; return; } // stays in the wheelchair at tables and counters
   if (onSeat) { // sits on the chair being checked; a wheelchair user moves across and parks the wheelchair beside it
     const P = dims(), round = st === 'stool' || st === 'pstool', hipZ = round ? -P.D / 2 + 0.03 : st === 'beanbag' ? -0.42 * P.D : Math.max(-P.D + 0.13, 0.05 - A.thigh);
-    Object.assign(A, { seated: true, chair: 'product', seatTop: P.H, hipZ, seatEdge: round ? P.D / 2 - 0.03 : -hipZ, footrest: null, lounge: st === 'beanbag', parked: !!p.seated });
+    Object.assign(A, { seated: true, chair: 'product', seatTop: P.H, hipZ, seatEdge: round ? P.D / 2 - 0.03 : -hipZ, seatRound: round ? { zc: -0.03, R: P.D / 2 } : null, footrest: null, lounge: st === 'beanbag', parked: !!p.seated }); // seatRound: a round seat's middle (from the hips) and radius
     if (st === 'stool') { const ring = stoolRing(S.h / 1000, S.w / 1000); A.footrest = { y: ring.y * S.scale + 0.009, z: -P.D / 2 + ring.r * S.scale + 0.015 - hipZ }; }
     return;
   }
@@ -5313,7 +5560,7 @@ function seatSetup(p) {
   const W = kind === 'chair' ? Math.max(0.42, A.hipW + 0.08) : pr.w, D = pr.d;
   const edge = kind === 'stool' ? D / 2 - 0.03 : Math.min(0.27, A.thigh - 0.06);
   const ring = kind === 'stool' ? stoolRing(seat, W, fit ? clamp(seat - A.popliteal, 0.15, seat - 0.2) : undefined) : null;
-  Object.assign(A, { seated: true, chair: 'prop', prop: kind, seatTop: seat, seatEdge: edge, propW: W, propD: D, ringY: ring ? ring.y : undefined, footrest: ring ? { y: ring.y + 0.009, z: edge - D / 2 + ring.r + 0.015 } : null });
+  Object.assign(A, { seated: true, chair: 'prop', prop: kind, seatTop: seat, seatEdge: edge, seatRound: kind === 'stool' ? { zc: -0.03, R: D / 2 } : null, propW: W, propD: D, ringY: ring ? ring.y : undefined, footrest: ring ? { y: ring.y + 0.009, z: edge - D / 2 + ring.r + 0.015 } : null });
 }
 /* "fit to the person": feet flat on the floor; a bar stool puts the elbows just under the bar top instead */
 function fitSeat(A, kind) {
@@ -5354,7 +5601,7 @@ const tgLabel = () => {
   if (st) return st === 'sink' ? L('개수대 바닥', 'Bowl bottom') : st === 'drawer' ? (drawerCols() ? L('문 손잡이', 'Door handle') : L('위 서랍', 'Top drawer')) : st === 'wardrobe' ? L('문 손잡이', 'Door handle') : S.shape === 'chair' ? L('좌면', 'Seat') : L('상판', 'Top');
   if ((S.look === 'luggage' || S.look === 'trolley') && S.source === 'box') return L('손잡이', 'Handle');
   if (lookCtrl()) return L('표시부', 'Display');
-  return cupInHand() ? L('출수구', 'Outlet') : S.shape === 'laptop' && S.source === 'box' ? L('키보드', 'Keyboard') : S.source === 'box' && holder.userData.handle ? L('손잡이', 'Handle') : L('조작부', 'Control');
+  return cupInHand() ? L('출수구', 'Outlet') : typedOn() ? L('키보드', 'Keyboard') : S.source === 'box' && holder.userData.handle ? L('손잡이', 'Handle') : L('조작부', 'Control');
 };
 function updateTags() {
   const p = PERSONAS[S.persona], P = dims();
@@ -5420,7 +5667,7 @@ function syncUI() {
   const isModel = S.source === 'model', fixedForm = isFurniture() || ring || ['cup', 'laptop', 'headphone', 'earbud'].includes(S.shape) || S.look === 'paper' || kind() !== 'free'; // these come only from the examples
   // the forms an example comes in (the cube: solid or frame; the object: sphere or cone); the plain box mockup, all of them
   const forms = !isModel && !fixedForm ? (PRESETS[S.pkey] && PRESETS[S.pkey].forms) || (S.pkey === 'box' ? Object.keys(FORMS) : null) : null;
-  $('shapeField').hidden = !forms; $('sizeField').hidden = isModel || (S.source === 'box' && (S.shape === 'cap' || S.look === 'snowman' || S.look === 'teddy')); // a cap is made to the head; a snowman's balls and a bear's size are set in the details
+  $('shapeField').hidden = !forms; $('sizeField').hidden = isModel || (S.source === 'box' && (S.shape === 'cap' || S.look === 'snowman' || S.look === 'teddy' || S.look === 'mushroom')); // a cap is made to the head; a snowman's balls and a bear's size are set in the details
   if (forms) {
     for (const b of $('shapeSeg').children) {
       b.hidden = !forms.includes(b.dataset.shape);
@@ -5452,7 +5699,7 @@ function syncUI() {
   $('sDims').textContent = L(`${isModel ? '모델' : '목업'} 실제 크기 ${mmi(P.W)} × ${mmi(P.D)} × ${mmi(P.H)} mm`, `${isModel ? 'Model' : 'Mockup'} actual size ${mmi(P.W)} × ${mmi(P.D)} × ${mmi(P.H)} mm`);
   { // controls: a plain solid (or an AI-made mockup) can have them switched off; only a dispenser offers filling a cup
     const offable = ctrlKind(); // anything with a button, tap or switch can have it off (a lamp starts off)
-    $('ctrlField').hidden = (S.source === 'box' && S.look === 'parcel') || (carried() && S.place !== 'hand') || isFurniture() || S.shape === 'laptop' || laidFlat() || !(hasControls() || offable); // held in the hand too: its button can be on or off
+    $('ctrlField').hidden = (S.source === 'box' && S.look === 'parcel') || (carried() && S.place !== 'hand') || isFurniture() || typedOn() || laidFlat() || !(hasControls() || offable); // held in the hand too: its button can be on or off
     $('ctrlOnSeg').hidden = !offable; segSet('ctrlOnSeg', 'on', ctrlOff() ? '0' : '1');
     $('ctrlBody').hidden = ctrlOff();
     $('actSeg').hidden = !canDispense();
@@ -5787,7 +6034,7 @@ function firstPerson(pose) {
   if (desk && !holder.userData.laptop) look = desk.localToWorld(desk.userData.monitor.clone()).lerp(product.localToWorld(new V3(0, P.H / 2, -P.D / 2)), 0.5); // the screen and the product beside it
   else if (kind === 'sheet' || kind === 'face') look = product.localToWorld(new V3(0, P.H / 2, 0)); // the whole sheet or screen
   else if (kind === 'palm' || kind === 'handle') look = product.localToWorld(new V3(0, P.H / 2, -P.D / 2)); // the thing in the hand
-  else if (kind === 'type') look = u.laptop ? u.laptop.scr.getWorldPosition(new V3()) : u.monitor ? holder.localToWorld(u.monitor.clone()).lerp(keyboardPoint(), 0.62) : controlWorld(); // the screen being typed at, with the hands in view
+  else if (kind === 'type') look = u.laptop ? u.laptop.scr.getWorldPosition(new V3()) : u.monitor ? holder.localToWorld(u.monitor.clone()).lerp(keyboardPoint(), 0.62) : atDesk() && surface.userData.desk ? surface.userData.desk.localToWorld(surface.userData.desk.userData.monitor.clone()).lerp(keyboardPoint(), 0.62) : controlWorld(); // the screen being typed at, with the hands in view (a keyboard: the desk's monitor)
   else if (S.place === 'head') look = human.localToWorld(pose.P.eye.clone().add(new V3(0, -0.08, 1)));
   else if (S.place === 'hand') look = hands[0].g.localToWorld(new V3(0, S.A.hd.palmLen, 0));
   else if (S.A.chair === 'product') look = human.localToWorld(new V3(0, S.A.lounge ? 0.25 : 0, S.A.lounge ? 0.75 : 0.45)); // down at your lap, knees and feet
