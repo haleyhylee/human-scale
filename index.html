@@ -4513,7 +4513,8 @@ function handGoal(plan, s, P, sh) {
       if (!right) return null;
       const bf = shoulderBagFrame(P), k = S.scale, D3 = dims(), face = (y) => { const a = new V3(0, 0.15 * D3.H / k, 0.004).multiplyScalar(k).applyMatrix4(bf.R).add(bf.origin), b = new V3(0, 0.95 * D3.H / k, 0.004).multiplyScalar(k).applyMatrix4(bf.R).add(bf.origin); return a.x + ((b.x - a.x) * (y - a.y)) / (b.y - a.y || 1e-6); };
       const pr = limbProfiles(A, PERSONAS[S.persona]), J = jointSizes(pr), pole = new V3(s * 0.5, -0.25, -1), W = restWrist(A, P, s).add(new V3(0, 0.02, 0.02));
-      for (let it = 0; it < 6; it++) { const rc = armIK(sh, W, A, pole), outE = face(rc.el.y) - J.el - 0.006 - rc.el.x, outW = face(W.y) - A.forearmR - 0.008 - W.x, need = Math.min(outE, outW); if (need >= 0) break; W.x += need * 1.15; } // s < 0: outward is -x
+      const room = S.look === 'tote' || S.look === 'hobo' ? 0.05 : 0; // the straps come up between arm and body: the elbow out a little further to leave them room
+      for (let it = 0; it < 8; it++) { const rc = armIK(sh, W, A, pole), outE = face(rc.el.y) - J.el - 0.006 - room - rc.el.x, outW = face(W.y) - A.forearmR - 0.008 - W.x, need = Math.min(outE, outW); if (need >= 0) break; W.x += need * 1.15; } // s < 0: outward is -x
       const rc = armIK(sh, W, A, pole);
       return { F: handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)), W, pole, hp: plan.hp };
     }
