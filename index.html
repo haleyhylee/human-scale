@@ -726,8 +726,8 @@ const FORMS = { box: [80, 80, 80], frame: [200, 200, 200], cyl: [80, 80, 150], s
 const roundSeat = () => S.source === 'box' && S.shape === 'chair' && (S.style === 'stool' || (S.style === 'pstool' && ['legs', 'cyl'].includes((S.det && S.det.form) || 'legs'))); // a round stool: its seat is W across, so D follows W
 const roundBase = (sh = S.shape) => sh === 'cup' || sh === 'cone' || (sh === S.shape && (S.look === 'tumbler' || roundSeat())); // W = D (a cylinder can be deeper: its middle stretches)
 const PRESET_GROUPS = [
-  [['목업', 'Mockups'], ['cube', 'cyl', 'sphere', 'snowman', 'cone', 'trap', 'plate', 'disc', 'plinthp']], // the plain forms
-  [['소품', 'Objects'], ['fam:paper', 'card', 'brochure', 'book', 'frame', 'aboard', 'banner', 'lipstick', 'tube', 'pump', 'cream', 'cushion', 'teddy']],
+  [['오브젝트', 'Objects'], ['cube', 'cyl', 'sphere', 'snowman', 'cone', 'trap', 'plate', 'disc', 'plinthp']], // the plain forms
+  [['목업', 'Mockups'], ['fam:paper', 'card', 'brochure', 'book', 'frame', 'aboard', 'banner', 'lipstick', 'tube', 'pump', 'cream', 'cushion', 'teddy']], // the things designers mock up: print, packaging, small goods
   [['전자제품', 'Electronics'], ['fam:phone', 'fam:fold', 'flip', 'fam:tablet', 'fam:laptop', 'fam:keyboard', 'airpods', 'fam:speaker', 'lightstick']],
   [['생활 제품', 'Appliances'], ['air', 'humidifier', 'purifier', 'coffee', 'robot', 'washer', 'fridge', 'standac', 'wallac']],
   [['주방·식기', 'Kitchen & tableware'], ['tumbler', 'mug', 'glass', 'latte', 'dish', 'bowl', 'jar', 'pan', 'pot', 'microwave', 'ricecooker']],
