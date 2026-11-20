@@ -75,6 +75,16 @@ button { cursor: pointer; }
 .guide.target span { left: auto; right: calc(max(12px, env(safe-area-inset-right, 0px)) + 46px); color: var(--accent-ink); } /* clear of the zoom buttons */
 .top { position: absolute; top: 12px; left: 0; right: 0; display: flex; flex-direction: row; align-items: flex-start; gap: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); pointer-events: none; }
 .views { flex: 1 1 auto; min-width: 0; display: flex; gap: 6px; overflow-x: auto; pointer-events: auto; }
+.one { flex: 0 0 auto; display: inline-flex; gap: 6px; margin-left: auto; pointer-events: auto; }
+.one + #btnMeasure { margin-left: 0; }
+.calib { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 55%, transparent); z-index: 30; }
+.calib[hidden] { display: none; }
+.calib-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; max-width: min(520px, 92%); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12); }
+.calib-card p { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+.calib-bar { height: 14px; border-left: 2px solid var(--ink); border-right: 2px solid var(--ink); position: relative; }
+.calib-bar::after { content: ''; position: absolute; left: 0; right: 0; top: 6px; border-top: 2px solid var(--accent); }
+.calib-row { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+.calib-row input { width: 96px; }
 #btnMeasure { flex: 0 0 auto; margin-left: auto; pointer-events: auto; } /* measuring stays at the right, in view on a phone too; the views beside it scroll */
 .views { scrollbar-width: thin; scrollbar-color: var(--line) transparent; padding-bottom: 4px; } /* too narrow for them all: a thin bar to scroll by (the wheel scrolls it too) */
 .views.ovf-r { mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); padding-right: 22px; } /* fades out where it scrolls on */
@@ -313,7 +323,17 @@ input:disabled { opacity: 0.55; }
         <span class="vsep" aria-hidden="true"></span>
         <div class="lens" id="lensSeg" role="group" aria-label="렌즈 초점거리" data-en-aria="Lens focal length"><span data-en="Lens mm">렌즈 mm</span><button type="button" data-lens="20">20</button><button type="button" data-lens="35">35</button><button type="button" data-lens="50">50</button><button type="button" data-lens="85">85</button></div>
       </div>
+      <span class="one"><button type="button" class="chip" id="btn11" aria-pressed="false" title="실제 크기로 보기 (화면 1:1)" data-en-title="Real size on screen (1:1)">1:1</button><button type="button" class="chip" id="oneRecal" hidden data-en="Re-measure">다시 보정</button></span>
       <button type="button" class="chip" id="btnMeasure" aria-pressed="false" data-en="Measure">치수 재기</button>
+    </div>
+    <div class="calib" id="calib" hidden role="dialog" aria-modal="true" aria-labelledby="calibT">
+      <div class="calib-card">
+        <b id="calibT" data-en="1:1 on screen: measure once">화면 1:1 보정 (한 번만)</b>
+        <p data-en="Hold a ruler to the screen and measure the bar below, end to end, then type its length. After that the front, side and top views can show things at their real size.">자를 화면에 대고 아래 막대의 양 끝 사이를 재서 길이를 넣어 주세요. 그다음부터 정면·측면·평면 뷰에서 실제 크기로 볼 수 있어요.</p>
+        <div class="calib-bar" id="calibBar"></div>
+        <div class="calib-row"><input type="number" id="calibMm" min="10" max="2000" step="0.5" inputmode="decimal" aria-label="막대 길이 (mm)" data-en-aria="Bar length (mm)"> mm <button type="button" class="btn accent" id="calibOk" data-en="Apply">적용</button><button type="button" class="btn" id="calibNo" data-en="Cancel">취소</button></div>
+        <p class="hint" data-en="Kept in this browser. Measure again if you change the browser zoom or the display.">이 브라우저에 저장돼요. 브라우저 확대나 모니터를 바꾸면 다시 보정해 주세요.</p>
+      </div>
     </div>
     <div class="zoom" role="group" aria-label="화면 확대" data-en-aria="Zoom">
       <button type="button" class="btn" id="btnSnap" aria-label="이미지로 저장" title="이미지로 저장 (PNG)" data-en-aria="Save as image" data-en-title="Save as image (PNG)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></button>
@@ -557,9 +577,9 @@ input:disabled { opacity: 0.55; }
         <div class="label"><span data-en="Model files">모델 파일 내보내기</span> <span class="muted" data-en="as drawn, at this size, mm">지금 크기 그대로 · mm</span></div>
         <label class="check"><input type="checkbox" id="expPerson"> <span data-en="With the person">사람도 함께</span></label>
         <label class="check" id="expSurfRow"><input type="checkbox" id="expSurf"> <span id="expSurfT">단상도 함께</span></label>
-        <button type="button" class="btn wide" id="btnExport" data-en="Download 3DM · OBJ · STL (zip)">3DM · OBJ · STL 받기 (zip)</button>
+        <button type="button" class="btn wide" id="btnExport" data-en="Download 3DM (Rhino 7+) · OBJ · STL (zip)">3DM 라이노(7 이상) · OBJ · STL 받기 (zip)</button>
         <p class="hint" id="expMsg" aria-live="polite" hidden></p>
-        <p class="hint" data-en="The product alone, unless you tick the person or the plinth: then the scene as drawn (floor at 0), on layers in the 3DM. Rhino: open the .3dm (Z up). SOLIDWORKS can't be written directly: open the .stl or .obj there and pick 'Solid Body' in Options (Y up). They are meshes: in Rhino, MeshToNURB or QuadRemesh turns them into surfaces.">기본은 제품만 담겨요. 사람·단상을 체크하면 화면 그대로의 장면(바닥이 0)으로 담기고, 3DM에선 레이어로 나뉘어요. 라이노는 .3dm을 열면 돼요(위쪽 Z). SOLIDWORKS 전용 파일은 만들 수 없어서, SOLIDWORKS에서 .stl이나 .obj를 열고 옵션에서 ‘솔리드 바디’로 가져와요(위쪽 Y). 모두 메시라서 라이노에선 MeshToNURB나 QuadRemesh로 면을 만들 수 있어요.</p>
+        <p class="hint" data-en="The product alone, unless you tick the person or the plinth: then the scene as drawn (floor at 0). Rhino 7 or later: open the .3dm; layers Product (its parts under it) / Person / Scene. OBJ and STL are Z up like Rhino, the floor at 0. SOLIDWORKS can't be written directly: open the .stl or .obj there and pick 'Solid Body' in Options. They are meshes: in Rhino, MeshToNURB or QuadRemesh turns them into surfaces.">기본은 제품만 담겨요. 사람·단상을 체크하면 화면 그대로의 장면(바닥이 0)으로 담겨요. 라이노 7 이상에서 .3dm을 열면 레이어가 Product(그 아래 부품별) / Person / Scene으로 나뉘어 있어요. OBJ·STL도 라이노처럼 위쪽이 Z, 바닥이 0이에요. SOLIDWORKS 전용 파일은 만들 수 없어서, .stl이나 .obj를 열고 옵션에서 ‘솔리드 바디’로 가져와요. 모두 메시라서 라이노에선 MeshToNURB나 QuadRemesh로 면을 만들 수 있어요.</p>
       </div>
     </section>
 
@@ -1953,7 +1973,7 @@ function deskLayout() {
 
 /* parts for furniture: everything is built with its front edge at z = 0, standing on y = 0 */
 function kit(group, mat) {
-  const own = (m) => { m.castShadow = true; m.receiveShadow = true; m.userData.own = true; group.add(m); return m; };
+  const own = (m) => { m.castShadow = true; m.receiveShadow = true; m.userData.own = true; if (PART) m.userData.part = PART; group.add(m); return m; };
   return {
     box(w, h, d, x, y, z, rx = 0, r = 0) {
       const rr = Math.min(r, w / 2, h / 2, d / 2) * 0.98;
@@ -2858,7 +2878,9 @@ function phoneGeo(group, W, D, H) {
 }
 
 /* ---------- appliances and a tumbler ---------- */
-const meshIn = (group) => (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; m.userData.own = true; group.add(m); return m; };
+let PART = null; // the name the meshes being made now take (a lamp's shade, its stem…), for the model file's layers
+const part = (ko, en) => { PART = ko ? [ko, en] : null; };
+const meshIn = (group) => (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; m.userData.own = true; if (PART) m.userData.part = PART; group.add(m); return m; };
 const flatUp = (w, d, rr, seg = 8) => new THREE.ShapeGeometry(roundRect(w, d, rr), seg).translate(0, -d / 2, 0).applyMatrix4(ON_DECK); // a flat rounded rectangle facing up, centred
 /* a steel grille plate with dark slots across it, w by d, facing up at height y, centred on (x, z) */
 function grille(own, w, d, y, x, z) {
@@ -3618,30 +3640,32 @@ function lampShadeParts(own, form, w, d, h, y0, cz, mat, pleat) {
   const rx = w / 2, rz = d / 2, rr = Math.max(rx, rz), segs = (n) => (pleat ? 2 * Math.max(16, Math.round((2 * Math.PI * rr) / 0.025)) : n), fold = (g) => (pleat ? pleatGeo(g, rr) : g);
   if (OPEN_SHADE(form)) {
     const [rt, rb] = shadeR(form);
-    own(fold(new THREE.CylinderGeometry(rt, rb, 1, segs(64), 1, true).scale(w, h, d)).translate(0, y0 + h / 2, cz), mat);
-    own(new THREE.SphereGeometry(Math.min(0.035, h * 0.3, rr * 0.4), 20, 14).translate(0, y0 + h * 0.45, cz), bulbMat);
+    part('갓', 'Shade'); own(fold(new THREE.CylinderGeometry(rt, rb, 1, segs(64), 1, true).scale(w, h, d)).translate(0, y0 + h / 2, cz), mat);
+    part('전구', 'Bulb'); own(new THREE.SphereGeometry(Math.min(0.035, h * 0.3, rr * 0.4), 20, 14).translate(0, y0 + h * 0.45, cz), bulbMat); part();
     return y0 + h * 0.45;
   }
   if (form === 'sphere') { // a ball, open a little underneath where the light shows
     const a = Math.asin(SPHERE_HOLE / 0.5);
-    own(fold(new THREE.SphereGeometry(0.5, segs(48), 28, 0, Math.PI * 2, 0, Math.PI - a).scale(w, h, d)).translate(0, y0 + h / 2, cz), mat);
-    own(new THREE.CircleGeometry(SPHERE_HOLE, 32).scale(w, d, 1).rotateX(Math.PI / 2).translate(0, y0 + h * (0.5 - 0.5 * Math.cos(a)) + 0.0005, cz), bulbMat);
+    part('갓', 'Shade'); own(fold(new THREE.SphereGeometry(0.5, segs(48), 28, 0, Math.PI * 2, 0, Math.PI - a).scale(w, h, d)).translate(0, y0 + h / 2, cz), mat);
+    part('전구', 'Bulb'); own(new THREE.CircleGeometry(SPHERE_HOLE, 32).scale(w, d, 1).rotateX(Math.PI / 2).translate(0, y0 + h * (0.5 - 0.5 * Math.cos(a)) + 0.0005, cz), bulbMat); part();
     return null;
   }
+  part('갓', 'Shade');
   if (form === 'dome') own(fold(new THREE.SphereGeometry(0.5, segs(48), 18, 0, Math.PI * 2, 0, Math.PI / 2).scale(w, 2 * h, d)).translate(0, y0, cz), mat);
   else own(new RoundedBoxGeometry(w, h, d, 3, Math.min(0.006, h / 2, w / 2) * 0.999).translate(0, y0 + h / 2, cz), mat);
-  own((form === 'dome' ? new THREE.CircleGeometry(0.49, 48).scale(w, d, 1) : new THREE.PlaneGeometry(w * 0.94, d * 0.94)).rotateX(Math.PI / 2).translate(0, y0 - 0.0005, cz), bulbMat); // the light underneath
+  own((form === 'dome' ? new THREE.CircleGeometry(0.49, 48).scale(w, d, 1) : new THREE.PlaneGeometry(w * 0.94, d * 0.94)).rotateX(Math.PI / 2).translate(0, y0 - 0.0005, cz), (part('전구', 'Bulb'), bulbMat)); // the light underneath
   return null;
+  part();
 }
 /* mushroom lamp (a portable lamp): a round stem (black, or the product colour) under a shade of any lamp form (a dome by default) */
 function mushroomGeo(group, W, D, H) { // the shade (head) and the stem each sized on its own in the details; W, D, H follow from them
   const own = meshIn(group), hd = +dv('headD') / 1000, hh = mushForm() === 'sphere' ? hd : +dv('headH') / 1000, sd = +dv('stemD') / 1000, sl = +dv('stemH') / 1000, bh = (+dv('baseH') || 0) / 1000, bd = bh > 0 ? +dv('baseD') / 1000 : 0, cz = -D / 2;
   const wide = Math.max(hd, sd, bd), kx = W / wide, kz = D / wide, ky = H / (bh + sl + hh), capH = hh * ky, stemR = (sd / 2) * Math.min(kx, kz), y0 = bh * ky, sh = sl * ky + capH * 0.25; // the stem runs up a little inside the shade
   const form = dv('hform') || 'dome';
-  if (bh > 0) { const r = (bd / 2) * Math.min(kx, kz); own(new THREE.CylinderGeometry(r * 0.96, r, y0, 48).translate(0, y0 / 2, cz), stemMat()); } // a base under the stem, if set
-  own(new THREE.CylinderGeometry(stemR * 0.88, stemR, sh, 40).translate(0, y0 + sh / 2, cz), stemMat());
+  if (bh > 0) { const r = (bd / 2) * Math.min(kx, kz); part('받침', 'Base'); own(new THREE.CylinderGeometry(r * 0.96, r, y0, 48).translate(0, y0 / 2, cz), stemMat()); } // a base under the stem, if set
+  part('기둥', 'Stem'); own(new THREE.CylinderGeometry(stemR * 0.88, stemR, sh, 40).translate(0, y0 + sh / 2, cz), stemMat());
   lampShadeParts(own, form, hd * kx, hd * kz, capH, H - capH, cz, shadeMat(dv('smat') || 'fabric'), dv('pleat') === 'on' && form !== 'cube');
-  own(new THREE.CylinderGeometry(0.006, 0.006, 0.004, 20).rotateX(Math.PI / 2).translate(0, y0 + Math.min(sl * ky * 0.5, 0.06), cz + stemR * (1 - 0.12 * Math.min(sl * ky * 0.5, 0.06) / Math.max(sh, 0.001)) + 0.0015), mats.trim); // the button, low on the stem's front
+  part('스위치', 'Switch'); own(new THREE.CylinderGeometry(0.006, 0.006, 0.004, 20).rotateX(Math.PI / 2).translate(0, y0 + Math.min(sl * ky * 0.5, 0.06), cz + stemR * (1 - 0.12 * Math.min(sl * ky * 0.5, 0.06) / Math.max(sh, 0.001)) + 0.0015), mats.trim); // the button, low on the stem's front
 }
 function pouchGeo(group, W, D, H) {
   const own = meshIn(group), bev = Math.min(D * 0.45, 0.02);
@@ -3676,13 +3700,14 @@ function lampGeo(group, W, D, H, floor) {
   const bh = clamp(+dv('baseH') / 1000, 0.002, H * 0.5), shH = clamp(lampShadeMm() / 1000, 0.02, H - bh), br = +dv('baseD') / 2000, pr = +dv('stemD') / 2000;
   const top = H - shH * (open ? (floor ? 0.6 : 0.7) : ball ? 0.5 : 0.9); // the stem runs up into the shade, to the bulb holder
   group.userData.focus = new V3(0, H - shH / 2, cz); // zoom closes on the shade
-  own(new THREE.CylinderGeometry(br * (floor ? 0.92 : 0.9), br, bh, 48).translate(0, bh / 2, cz), stemMat());
-  own(new THREE.CylinderGeometry(pr, pr, top - bh + 0.002, 24).translate(0, bh - 0.001 + (top - bh + 0.002) / 2, cz), stemMat());
+  part('받침', 'Base'); own(new THREE.CylinderGeometry(br * (floor ? 0.92 : 0.9), br, bh, 48).translate(0, bh / 2, cz), stemMat());
+  part('기둥', 'Stem'); own(new THREE.CylinderGeometry(pr, pr, top - bh + 0.002, 24).translate(0, bh - 0.001 + (top - bh + 0.002) / 2, cz), stemMat());
   const by = lampShadeParts(own, form, W, D, shH, H - shH, cz, shadeMat(dv('smat') || 'fabric'), dv('pleat') === 'on' && form !== 'cube');
-  if (floor && by != null) { const [rt, rb] = shadeR(form), r = (rb + (rt - rb) * 0.45) * 0.97; for (const a of [0, 2.1, 4.2]) own(new THREE.CylinderGeometry(0.003, 0.003, 1).scale(1, (2 * r) / Math.hypot(Math.cos(a) / W, Math.sin(a) / D), 1).rotateZ(Math.PI / 2).rotateY(a).translate(0, by, cz), stemMat()); } // the spokes from the bulb holder out to the shade, each side
+  if (floor && by != null) { part('살', 'Spokes'); const [rt, rb] = shadeR(form), r = (rb + (rt - rb) * 0.45) * 0.97; for (const a of [0, 2.1, 4.2]) own(new THREE.CylinderGeometry(0.003, 0.003, 1).scale(1, (2 * r) / Math.hypot(Math.cos(a) / W, Math.sin(a) / D), 1).rotateZ(Math.PI / 2).rotateY(a).translate(0, by, cz), stemMat()); } // the spokes from the bulb holder out to the shade, each side
   void R;
 }
 function buildProduct() {
+  part(); // nothing named yet
   disposeGroup(holder);
   holder.userData = {};
   const W = S.w / 1000, D = (roundBase() ? S.w : S.d) / 1000, Hh = S.h / 1000;
@@ -3747,6 +3772,7 @@ function buildProduct() {
     const off = rowOffsets(), m = rowMain();
     const ys = unitYs(); S.row.forEach((u, i) => { if (i === m) return; const g = new THREE.Group(), w = u.w / 1000, d = (roundBase() ? u.w : u.d) / 1000, h = u.h / 1000; g.position.set(off[i] / 1000, ys[i] / 1000, S.place === 'wall' ? (d - D) / 2 : stacked() || u.top ? (d - D) / 2 : 0); g.userData.own = true; g.userData.unit = u.n; holder.add(g); propSolid(g, w, d, h); });
   }
+  part(); // the names end with the product
   holder.scale.setScalar(S.scale);
 }
 
@@ -3941,20 +3967,20 @@ function kettleParts() {
 }
 const kettleDims = () => { const k = kettleParts(); return { W: k.left + k.right, D: 2 * Math.max(k.rb, k.baseR), H: k.y0 + k.bh + k.lidH + k.knobH }; };
 function kettleGeo(group, W, D, H) {
-  const own = meshIn(group), k = kettleParts(), cz = -D / 2, ax = k.ax, body = dv('mat') === 'metal' ? steel : dv('mat') === 'glass' ? TOP_MAT.glass : mats.foam, part = dv('partCol') === 'same' ? mats.foam : mats.stemBlack, V2 = THREE.Vector2;
+  const own = meshIn(group), k = kettleParts(), cz = -D / 2, ax = k.ax, body = dv('mat') === 'metal' ? steel : dv('mat') === 'glass' ? TOP_MAT.glass : mats.foam, pm = dv('partCol') === 'same' ? mats.foam : mats.stemBlack, V2 = THREE.Vector2;
   const top = k.y0 + k.bh, e = 0.008, s = 0.006; // the bottom edge's round, the shoulder's
   const prof = [new V2(0, k.y0), new V2(k.rb - e, k.y0)];
   for (let i = 1; i <= 5; i++) { const a = (i / 5) * (Math.PI / 2); prof.push(new V2(k.rb - e + e * Math.sin(a), k.y0 + e - e * Math.cos(a))); }
   prof.push(new V2(k.r(top - s), top - s));
   for (let i = 1; i <= 5; i++) { const a = (i / 5) * (Math.PI / 2); prof.push(new V2(k.rt - s + s * Math.cos(a), top - s + s * Math.sin(a))); }
   prof.push(new V2(0, top));
-  own(new THREE.LatheGeometry(prof, 72).translate(ax, 0, cz), body);
-  if (k.base) own(new THREE.CylinderGeometry(k.baseR * 0.97, k.baseR, k.y0 - 0.0005, 72).translate(ax, (k.y0 - 0.0005) / 2, cz), part); // the power base
-  own(new THREE.CylinderGeometry(k.rt - 0.004, k.rt - 0.004, k.lidH, 64).translate(ax, top + k.lidH / 2, cz), body); // a flat lid, a groove round it, a round knob
+  part('몸통', 'Body'); own(new THREE.LatheGeometry(prof, 72).translate(ax, 0, cz), body);
+  part('전원 받침', 'Power base'); if (k.base) own(new THREE.CylinderGeometry(k.baseR * 0.97, k.baseR, k.y0 - 0.0005, 72).translate(ax, (k.y0 - 0.0005) / 2, cz), pm); // the power base
+  part('뚜껑', 'Lid'); own(new THREE.CylinderGeometry(k.rt - 0.004, k.rt - 0.004, k.lidH, 64).translate(ax, top + k.lidH / 2, cz), body); // a flat lid, a groove round it, a round knob
   own(new THREE.TorusGeometry(k.rt - 0.004, 0.0009, 6, 64).rotateX(Math.PI / 2).translate(ax, top + 0.0004, cz), mats.tire);
-  own(new THREE.CylinderGeometry(0.0105, 0.0115, k.knobH - 0.003, 32).translate(ax, top + k.lidH + (k.knobH - 0.003) / 2, cz), part);
-  own(new THREE.CylinderGeometry(0.0125, 0.0105, 0.003, 32).translate(ax, top + k.lidH + k.knobH - 0.0015, cz), part);
-  // the spout, on the left
+  own(new THREE.CylinderGeometry(0.0105, 0.0115, k.knobH - 0.003, 32).translate(ax, top + k.lidH + (k.knobH - 0.003) / 2, cz), pm);
+  own(new THREE.CylinderGeometry(0.0125, 0.0105, 0.003, 32).translate(ax, top + k.lidH + k.knobH - 0.0015, cz), pm);
+  part('주둥이', 'Spout'); // the spout, on the left
   const circ = (r) => Array.from({ length: 14 }, (_, i) => [r * Math.cos((i / 14) * 2 * Math.PI), r * Math.sin((i / 14) * 2 * Math.PI)]);
   if (k.goose) {
     const y = (f) => k.y0 + f * k.bh, P = [[-k.r(y(0.16)) + 0.004, y(0.16)], [-k.r(y(0.2)) - 0.009, y(0.22)], [-k.r(y(0.45)) - 0.016, y(0.45)], [-k.rt - 0.028, y(0.74)], [-k.rt - 0.046, y(0.92)], [-k.rt - 0.07, y(1.0)], [-k.rt - 0.093, y(0.97)], [-k.rt - 0.108, y(0.9)]];
@@ -3964,12 +3990,12 @@ function kettleGeo(group, W, D, H) {
     const yA = top - 0.004, rA = k.r(yA) - 0.004, pts = [new V3(-rA, yA - 0.004, 0), new V3(-rA - 0.012, yA - 0.001, 0), new V3(-k.rt - 0.03, yA + 0.004, 0)];
     own(sweepGeo(pts, [[0, -0.016], [0, 0.016], [0.026, 0]], (f) => 1 - 0.7 * f).translate(ax, 0, cz), body); // a V trough out over the rim, narrowing to its lip
   }
-  // the handle, on the right: out from the top, down, back in near the bottom
+  part('손잡이', 'Handle'); // the handle, on the right: out from the top, down, back in near the bottom
   const rc = 0.012, hp = [[k.r(k.hT) - 0.006, k.hT], [k.hx - rc, k.hT]];
   for (let i = 1; i <= 6; i++) { const a = (i / 6) * (Math.PI / 2); hp.push([k.hx - rc + rc * Math.sin(a), k.hT - rc + rc * Math.cos(a)]); }
   for (let i = 0; i <= 6; i++) { const a = (i / 6) * (Math.PI / 2); hp.push([k.hx - rc + rc * Math.cos(a), k.hB + rc - rc * Math.sin(a)]); }
   hp.push([k.r(k.hB) - 0.006, k.hB]);
-  own(sweepGeo(hp.map(([x, yy]) => new V3(x, yy, 0)), rrectProfile(k.hw, 0.01, 0.005)).translate(ax, 0, cz), part);
+  own(sweepGeo(hp.map(([x, yy]) => new V3(x, yy, 0)), rrectProfile(k.hw, 0.01, 0.005)).translate(ax, 0, cz), pm);
   const gy = (k.hT + k.hB) / 2;
   group.userData.handle = new V3(ax + k.hx, gy, cz); group.userData.handleAxis = 'y'; group.userData.handleR = k.hw; group.userData.handleGap = k.hx - k.hw - k.r(gy); // the bar the hand closes round, and the room inside it
 }
@@ -6170,6 +6196,7 @@ function fitView() {
     orthoCam.up.copy(up); orthoCam.position.copy(pos); orthoCam.lookAt(cc);
     orthoCam.updateProjectionMatrix();
     controlsO.target.copy(cc); controlsO.update();
+    applyOne();
   } else {
     cam = perspCam; controlsO.enabled = false; controlsP.enabled = S.view !== 'first';
     perspCam.fov = lensFov(S.view === 'first' ? S.lensFP : S.lens); // 1-person starts wide, close to what eyes take in
@@ -6236,6 +6263,7 @@ function setView(v) {
   syncGhostBtn();
   for (const b of $('views').querySelectorAll('[data-view]')) b.setAttribute('aria-pressed', String(b.dataset.view === v));
   if (meas.on && !isOrtho()) setMeasure(false); // the ruler works on the flat views
+  if (ONE.on && !isOrtho()) { ONE.on = false; syncOne(); } // 1:1 is for the flat views
   syncBodyVis();
   fpLook.yaw = 0; fpLook.pitch = 0;
   syncLens();
@@ -6308,8 +6336,15 @@ function productShare() {
   for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) { const p = new V3(x, y, z).project(cam); x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
   return Math.max(x1 - x0, y1 - y0) / 2;
 }
+/* 1:1 on screen: measured once with a ruler against a bar of known pixels; then the flat views show things at their real size (the scale set
+   from the view's height in CSS pixels). Zooming leaves it */
+const ONE = { on: false, ppmm: (() => { try { return +localStorage.getItem('hs.ppmm') || 0; } catch { return 0; } })() };
+function applyOne() { if (!ONE.on || !isOrtho() || !(ONE.ppmm > 0)) return; const h = stage.clientHeight || 1; orthoCam.zoom = (ONE.ppmm * 1000 * (orthoCam.top - orthoCam.bottom)) / h; orthoCam.updateProjectionMatrix(); ONE.zoom = orthoCam.zoom; const c = new THREE.Box3().setFromObject(holder).getCenter(new V3()), t = controlsO.target, d = orthoCam.getWorldDirection(new V3()), mv = c.sub(t); mv.addScaledVector(d, -mv.dot(d)); t.add(mv); orthoCam.position.add(mv); controlsO.update(); } // at real size, the product in the middle
+function syncOne() { $('btn11').setAttribute('aria-pressed', String(ONE.on)); $('oneRecal').hidden = !ONE.on; }
+function setOne(on) { ONE.on = !!on && ONE.ppmm > 0; syncOne(); if (ONE.on && !isOrtho()) setView('front'); else fitView(); }
 function zoomView(f) {
   queueGhostCheck();
+  if (ONE.on) { ONE.on = false; syncOne(); } // zoomed: no longer 1:1
   if (f < 1 && productShare() < 0.12) f *= f; // a small thing far off: bigger steps until it fills a good part of the view
   if (isOrtho()) {
     const z0 = orthoCam.zoom, z1 = clamp(z0 / f, 0.2, 15), k = z0 / z1, c = zoomFocus(), t = controlsO.target, mv = c.clone().add(t.clone().sub(c).multiplyScalar(k < 1 ? 1 - ZOOM_PULL : k)).sub(t);
@@ -7200,6 +7235,17 @@ function setMeasure(on) {
   drawMeasure(); syncLens();
 }
 $('btnMeasure').addEventListener('click', () => setMeasure(!meas.on));
+{ // 1:1: measured once, then on and off
+  const open = () => { const w = Math.round(Math.min(320, (stage.clientWidth || 600) - 120)); $('calibBar').style.width = `${w}px`; $('calibBar').dataset.px = w; $('calibMm').value = ''; $('calib').hidden = false; setTimeout(() => $('calibMm').focus(), 30); };
+  const close = () => { $('calib').hidden = true; };
+  $('btn11').addEventListener('click', () => { if (ONE.on) setOne(false); else if (ONE.ppmm > 0) setOne(true); else open(); });
+  $('oneRecal').addEventListener('click', open);
+  $('calibNo').addEventListener('click', close);
+  const ok = () => { const mm = +$('calibMm').value, px = +$('calibBar').dataset.px; if (!(mm >= 10 && mm <= 2000) || !(px > 0)) { $('calibMm').focus(); return; } ONE.ppmm = px / mm; try { localStorage.setItem('hs.ppmm', String(ONE.ppmm)); } catch {} close(); setOne(true); };
+  $('calibOk').addEventListener('click', ok);
+  $('calibMm').addEventListener('keydown', (e) => { if (e.key === 'Enter') ok(); else if (e.key === 'Escape') close(); });
+  controlsO.addEventListener('change', () => { if (ONE.on && ONE.zoom && Math.abs(orthoCam.zoom - ONE.zoom) > 1e-4) { ONE.on = false; syncOne(); } }); // the wheel zoomed it
+}
 const worldAt = (e) => { const r = canvas.getBoundingClientRect(); return new V3(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1, 0).unproject(orthoCam); };
 canvas.addEventListener('pointerdown', (e) => {
   if (!meas.on || !isOrtho()) return;
@@ -7321,8 +7367,34 @@ function meshData(p) { // ON_Mesh::Write, chunk version 3.8, as rhino3dm writes 
 }
 function utf16z(s) { const b = new Bytes(s.length * 2 + 8).i32(s.length + 1); for (let i = 0; i < s.length; i++) b.u16(s.charCodeAt(i)); return b.u16(0).out(); }
 function uuid4() { const u = new Uint8Array(16); (globalThis.crypto || {}).getRandomValues ? crypto.getRandomValues(u) : u.forEach((_, i) => (u[i] = (Math.random() * 256) | 0)); u[7] = (u[7] & 0x0f) | 0x40; u[8] = (u[8] & 0x3f) | 0x80; return u; }
-function write3dm(parts) { // parts: [{ name, layer (0 Product, 1 Person, 2 Scene), pos (mm, Z up), nrm, idx }]
-  const pre = b64u8(T3DM.pre), hist = b64u8(T3DM.hist), OT = new Bytes(1 << 16);
+const LAYER_UUID = [0x13, 0x98, 0x80, 0x95, 0x85, 0xe9, 0xd3, 0x11, 0xbf, 0xe5, 0x00, 0x10, 0x83, 0x01, 0x22, 0xf0]; // ON_Layer's class id
+/* one layer record as openNURBS writes it (chunk 1.15): its index, colour, name, id and parent's id; its CRC leaves the nested chunk out */
+function layerRec(i, name, rgb, id, parent) {
+  const head = new Bytes(64).u8(0x1f).u32(0).i32(i).u32(0xffffffff).u32(0xffffffff).u32(0).u8(rgb[0]).u8(rgb[1]).u8(rgb[2]).u8(0);
+  for (let k = 0; k < 12; k++) head.u8(0);
+  head.f64(1); // the plot weight
+  const nm = utf16z(name), mid = new Bytes(64).u8(1).u32(0xffffffff).u32(0xffffffff); for (let k = 0; k < 9; k++) mid.u8(0);
+  const pre = cat([head.out(), nm, mid.out(), id, parent || new Uint8Array(16), new Uint8Array([1])]);
+  const nest = new Bytes(32); chunk(nest, 0x40008000, new Uint8Array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
+  const tail = new Uint8Array(17), body = cat([pre, nest.out(), tail]), own = cat([pre, tail]);
+  const cls = new Bytes(body.length + 96); chunk(cls, 0x0002fffb, new Uint8Array(LAYER_UUID)); chunk(cls, 0x0002fffc, body, own); cls.u32(0x80027fff).i64(0);
+  const rec = new Bytes(body.length + 128); chunk(rec, 0x00027ffa, cls.out());
+  return rec.out();
+}
+/* the template's own bytes before and after its layer table, found once: the layers are written per file */
+let T3DM_SPLIT = null;
+function t3dmSplit(pre) {
+  if (T3DM_SPLIT) return T3DM_SPLIT;
+  const dv = new DataView(pre.buffer, pre.byteOffset, pre.byteLength); let i = 32;
+  while (i + 12 <= pre.length) { const tc = dv.getUint32(i, true), ln = Number(dv.getBigInt64(i + 4, true)); if (tc === 0x10000011) return (T3DM_SPLIT = [i, i + 12 + ln]); i += 12 + (tc & 0x80000000 ? 0 : ln); }
+  throw new Error('3dm template: no layer table');
+}
+function write3dm(parts, layers) { // parts: [{ name, layer, pos (mm, Z up), nrm, idx }]; layers: [{ name, rgb, parent (index) }] (Product, Person, Scene and Product's own under it)
+  const pre0 = b64u8(T3DM.pre), hist = b64u8(T3DM.hist), OT = new Bytes(1 << 16), [la, lb] = t3dmSplit(pre0);
+  const pre = pre0.slice(); pre[30] = 0x37; // "70": a Rhino 7 file, which Rhino 7 and later open
+  const L = layers || [{ name: 'Product', rgb: [222, 92, 50] }, { name: 'Person', rgb: [150, 150, 150] }, { name: 'Scene', rgb: [205, 205, 200] }], ids = L.map(() => uuid4()), LT = new Bytes(1 << 14);
+  L.forEach((l, i) => chunk(LT, 0x20008050, layerRec(i, l.name, l.rgb, ids[i], l.parent != null ? ids[l.parent] : null), new Uint8Array(0)));
+  LT.u32(0xffffffff).i64(0);
   for (const p of parts) {
     if (!p.idx.length) continue;
     const md = meshData(p), cls = new Bytes(md.body.length + 64);
@@ -7338,20 +7410,20 @@ function write3dm(parts) { // parts: [{ name, layer (0 Product, 1 Person, 2 Scen
     chunk(OT, 0x20008070, rec.out(), new Uint8Array(0));
   }
   OT.u32(0xffffffff).i64(0);
-  const F = new Bytes(pre.length + OT.n + 128);
-  F.raw(pre); chunk(F, 0x10000013, OT.out()); F.raw(hist);
+  const F = new Bytes(pre.length + LT.n + OT.n + 128);
+  F.raw(pre.subarray(0, la)); chunk(F, 0x10000011, LT.out()); F.raw(pre.subarray(lb)); chunk(F, 0x10000013, OT.out()); F.raw(hist);
   const total = F.n + 20; F.u32(0x00007fff).i64(8).i64(total); // the end, with the whole file's length
   return F.out();
 }
-function writeOBJ(parts, title) { // Y up, front toward +Z, millimetres; positions welded so each part is one connected mesh
-  const L = [`# ${title}`, '# Human Scale export · units: millimetres · Y up · front +Z'], q = (x) => (Math.round(x * 1e4) / 1e4).toString();
+function writeOBJ(parts, title) { // Z up (as Rhino has it), the front toward -Y, millimetres; positions welded so each part is one connected mesh; a group per layer
+  const L = [`# ${title}`, '# Human Scale export · units: millimetres · Z up · front -Y · floor at Z 0'], q = (x) => (Math.round(x * 1e4) / 1e4).toString();
   let vBase = 1, nBase = 1;
   for (const p of parts) {
     const vk = new Map(), nk = new Map(), vs = [], ns = [], fv = [];
     const vid = (i) => { const k = q(p.pos[i * 3]) + ' ' + q(p.pos[i * 3 + 1]) + ' ' + q(p.pos[i * 3 + 2]); let j = vk.get(k); if (j === undefined) { j = vs.length; vk.set(k, j); vs.push(k); } return j; };
     const nid = (i) => { if (!p.nrm) return -1; const k = p.nrm.slice(i * 3, i * 3 + 3).map((x) => (Math.round(x * 1e4) / 1e4).toString()).join(' '); let j = nk.get(k); if (j === undefined) { j = ns.length; nk.set(k, j); ns.push(k); } return j; };
     for (let f = 0; f < p.idx.length; f += 3) { const t = [p.idx[f], p.idx[f + 1], p.idx[f + 2]].map((i) => [vid(i), nid(i)]); if (t[0][0] === t[1][0] || t[1][0] === t[2][0] || t[0][0] === t[2][0]) continue; fv.push(t); }
-    L.push(`o ${(p.name || 'part').replace(/\s+/g, '_')}`);
+    L.push(`o ${(p.name || 'part').replace(/\s+/g, '_')}`); if (p.lname) L.push(`g ${p.lname.replace(/\s+/g, '_')}`);
     for (const v of vs) L.push('v ' + v);
     for (const n of ns) L.push('vn ' + n);
     for (const t of fv) L.push('f ' + t.map(([v, n]) => (n < 0 ? `${v + vBase}` : `${v + vBase}//${n + nBase}`)).join(' '));
@@ -7359,9 +7431,9 @@ function writeOBJ(parts, title) { // Y up, front toward +Z, millimetres; positio
   }
   return L.join('\n') + '\n';
 }
-function writeSTL(parts, title) { // binary STL, Y up, front toward +Z, millimetres
+function writeSTL(parts, title) { // binary STL, Z up (Rhino, slicers), front toward -Y, millimetres
   const tris = parts.reduce((t, p) => t + p.idx.length / 3, 0), B = new Bytes(84 + tris * 50), head = new Uint8Array(80);
-  head.set(new TextEncoder().encode(`Human Scale export, mm, Y up: ${title}`.slice(0, 79)));
+  head.set(new TextEncoder().encode(`Human Scale export, mm, Z up: ${title}`.slice(0, 79)));
   B.raw(head).u32(tris);
   for (const p of parts) for (let f = 0; f < p.idx.length; f += 3) {
     const P = [0, 1, 2].map((k) => { const i = p.idx[f + k]; return [p.pos[i * 3], p.pos[i * 3 + 1], p.pos[i * 3 + 2]]; });
@@ -7427,18 +7499,34 @@ function exportParts(opt = {}) {
   product.updateMatrixWorld(true);
   const frame = scene ? new THREE.Matrix4() : new THREE.Matrix4().copy(product.matrixWorld).invert(), parts = [], names = new Map(Object.entries(mats).map(([k, m]) => [m, k])), count = {};
   if (typeof MIRROR_MAT !== 'undefined' && MIRROR_MAT) names.set(MIRROR_MAT, 'lens');
+  const subs = [], subOf = (nm) => { let i = subs.indexOf(nm); if (i < 0) { subs.push(nm); i = subs.length - 1; } return 3 + i; }; // the product's own layers, under Product
   meshesOf(holder, frame, (m, p) => {
-    let unit = ''; for (let o = m; o && o !== holder; o = o.parent) if (o.userData.unit) unit = o.userData.unit + '-';
+    let unit = '', pn = null; for (let o = m; o && o !== holder; o = o.parent) { if (o.userData.unit) unit = o.userData.unit + '-'; if (!pn && o.userData.part) pn = o.userData.part; }
     const base = unit + (names.get(m.material) || 'part'); count[base] = (count[base] || 0) + 1;
-    parts.push({ name: `${base}-${count[base]}`, layer: 0, ...p });
+    const lname = pn ? L(...pn) : matLayer(m.material);
+    parts.push({ name: `${base}-${count[base]}`, layer: subOf(lname), lname: `Product::${lname}`, ...p });
   });
   const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
   for (const p of parts) for (let i = 0; i < p.pos.length; i += 3) for (let k = 0; k < 3; k++) { lo[k] = Math.min(lo[k], p.pos[i + k]); hi[k] = Math.max(hi[k], p.pos[i + k]); }
-  if (opt.person) { const l = []; meshesOf(human, frame, (m, p) => l.push(p)); if (l.length) parts.push(mergeParts(l, 'person', 1)); }
-  if (opt.surf && expSurfOk()) { const l = []; meshesOf(surface, frame, (m, p) => l.push(p)); if (l.length) parts.push(mergeParts(l, SURF_NAME[S.place][1], 2)); }
+  if (opt.person) { const l = []; meshesOf(human, frame, (m, p) => l.push(p)); if (l.length) parts.push({ ...mergeParts(l, 'person', 1), lname: 'Person' }); }
+  if (opt.surf && expSurfOk()) { const l = []; meshesOf(surface, frame, (m, p) => l.push(p)); if (l.length) parts.push({ ...mergeParts(l, SURF_NAME[S.place][1], 2), lname: 'Scene' }); }
   const o = [(lo[0] + hi[0]) / 2, scene ? 0 : lo[1], hi[2]];
   for (const p of parts) for (let i = 0; i < p.pos.length; i += 3) for (let k = 0; k < 3; k++) p.pos[i + k] -= o[k];
-  return { parts, size: parts.length ? [hi[0] - lo[0], hi[2] - lo[2], hi[1] - lo[1]].map((x) => Math.round(x)) : [0, 0, 0] }; // the product's W D H
+  const pal = [[222, 92, 50], [70, 70, 74], [120, 150, 190], [190, 160, 90], [150, 110, 80], [230, 200, 140], [255, 215, 120], [120, 160, 120], [170, 120, 170], [110, 170, 170]];
+  const layers = [{ name: 'Product', rgb: [222, 92, 50] }, { name: 'Person', rgb: [150, 150, 150] }, { name: 'Scene', rgb: [205, 205, 200] }, ...subs.map((nm, i) => ({ name: nm, rgb: pal[i % pal.length], parent: 0 }))];
+  return { parts, layers, size: parts.length ? [hi[0] - lo[0], hi[2] - lo[2], hi[1] - lo[1]].map((x) => Math.round(x)) : [0, 0, 0] }; // the product's W D H
+}
+/* a product layer's name from what a part is made of, where the part has no name of its own */
+function matLayer(m) {
+  const is = (...a) => a.includes(m), T = TOP_MAT;
+  if (is(mats.foam, mats.foamDS)) return L('본체(제품색)', 'Body (product colour)');
+  if (is(mats.stemBlack, darkGloss, mats.tire, mats.lens)) return L('블랙 파츠', 'Black parts');
+  if (is(mats.frame, steel, mats.shadeMetal, mats.metal, T.metal, mats.gold)) return L('금속', 'Metal');
+  if (is(T.glass, mats.glass, lensMat) || (typeof MIRROR_MAT !== 'undefined' && m === MIRROR_MAT) || (m && m.transparent && m.opacity < 0.9)) return L('유리·투명', 'Glass');
+  if (is(T.wood)) return L('나무', 'Wood');
+  if (is(lampShade, mats.paper, mats.shade, mats.leather) || Object.values(SHADE_MATS).includes(m)) return L('갓·패브릭·종이', 'Shade, fabric, paper');
+  if (is(bulbMat) || (m && m.emissive && m.emissiveIntensity > 0.5) || (m && m.map)) return L('빛·화면·이미지', 'Light, screen, image');
+  return L('기타 파츠', 'Other parts');
 }
 const zUp = (p) => { const pos = new Float32Array(p.pos.length), nrm = p.nrm && new Float32Array(p.nrm.length); for (let i = 0; i < p.pos.length; i += 3) { pos[i] = p.pos[i]; pos[i + 1] = -p.pos[i + 2]; pos[i + 2] = p.pos[i + 1]; if (nrm) { nrm[i] = p.nrm[i]; nrm[i + 1] = -p.nrm[i + 2]; nrm[i + 2] = p.nrm[i + 1]; } } return { ...p, pos, nrm }; }; // Rhino: Z up, the front toward -Y
 let DL = null; // the viewer's save, where the page runs as an artifact
@@ -7456,15 +7544,15 @@ async function saveBytes(name, u8, type = 'application/zip') {
 function readme(title, size, scene) {
   return '﻿' + [
     `Human Scale — ${title}`, `크기 W×D×H ${size.join(' × ')} mm`, '',
-    scene ? '· 단위는 mm예요. 화면 그대로의 장면이에요: 바닥이 0, 제품 앞면 가운데가 원점. 3DM은 레이어 Product / Person / Scene으로 나뉘고, STL은 따로 파일이에요.' : '· 단위는 mm예요. 화면에 그려진 그대로, 지금 크기(배율 포함)로 담았어요. 사람·바닥·단상은 빠져 있어요.',
-    '· .3dm — 라이노에서 바로 열어요. 위쪽이 Z, 앞면이 -Y 쪽이에요. 부품마다 따로 된 메시예요.',
-    '· .obj / .stl — 위쪽이 Y, 앞면이 +Z 쪽이에요.',
+    scene ? '· 단위는 mm예요. 화면 그대로의 장면이에요: 바닥이 0, 제품 앞면 가운데가 원점. 사람·받침의 STL은 따로 파일이에요.' : '· 단위는 mm예요. 화면에 그려진 그대로, 지금 크기(배율 포함)로 담았어요. 사람·바닥·단상은 빠져 있어요.',
+    '· .3dm — 라이노 7 이상에서 열어요. 위쪽이 Z, 앞면이 -Y, 바닥이 Z 0이에요. 레이어: Product(그 아래 부품별) / Person / Scene.',
+    '· .obj / .stl — 라이노와 같이 위쪽이 Z, 앞면이 -Y예요 (블렌더 등 Y-up 프로그램은 가져올 때 Up을 Z로).',
     '· SOLIDWORKS: 전용 파일(.sldprt)은 만들 수 없어요. 파일 > 열기에서 파일 형식을 Mesh Files로 바꾸고, 옵션에서 가져오기를 Solid Body로 두고 .stl이나 .obj를 열어요.',
     '· 라이노에서 매끈한 면이 필요하면 QuadRemesh 뒤 ToSubD, 또는 MeshToNURB를 써요.', '',
     `Human Scale — ${title} · W×D×H ${size.join(' × ')} mm`,
-    scene ? '· Millimetres. The scene as drawn: floor at 0, the product front-centre at the origin; 3DM layers Product / Person / Scene, one STL each.' : '· Millimetres, at the size drawn (scale included). The person, floor and plinth are left out.',
-    '· .3dm opens in Rhino: Z up, the front toward -Y, one mesh per part.',
-    '· .obj / .stl: Y up, the front toward +Z.',
+    scene ? '· Millimetres. The scene as drawn: floor at 0, the product front-centre at the origin; the person and the plinth one STL each.' : '· Millimetres, at the size drawn (scale included). The person, floor and plinth are left out.',
+    '· .3dm opens in Rhino 7 and later: Z up, the front toward -Y, the floor at Z 0. Layers: Product (and its parts under it) / Person / Scene.',
+    '· .obj / .stl: Z up and the front toward -Y, as in Rhino (in Y-up apps such as Blender, import with Up = Z).',
     "· SOLIDWORKS: its own files can't be written. File > Open, Files of type: Mesh Files, Options: Import as Solid Body, then open the .stl or .obj.",
   ].join('\r\n') + '\r\n';
 }
@@ -7474,15 +7562,15 @@ $('btnExport').addEventListener('click', async () => {
   btn.disabled = true; say(L('파일을 만드는 중이에요…', 'Making the files…'));
   await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 30)));
   try {
-    const opt = { person: $('expPerson').checked, surf: $('expSurf').checked }, { parts, size } = exportParts(opt);
+    const opt = { person: $('expPerson').checked, surf: $('expSurf').checked }, { parts, layers, size } = exportParts(opt);
     if (!parts.length) { say(L('내보낼 모양이 없어요', 'Nothing to export')); return; }
     const key = String((S.source === 'model' ? 'model' : S.pkey) || 'custom').replace(/[^a-z0-9_-]+/gi, '') || 'model', base = `${key}-${size.join('x')}mm`, title = `${prodName()} ${size.join('×')} mm`;
-    const extra = parts.filter((p) => p.layer), tag = extra.map((p) => '-' + p.name).join(''), enc = new TextEncoder();
+    const extra = parts.filter((p) => p.layer === 1 || p.layer === 2), tag = extra.map((p) => '-' + p.name).join(''), enc = new TextEncoder(); // the person and the plinth (the product's own layers aren't extra)
     const zip = zipStore([
-      { name: `${base}${tag}.3dm`, data: write3dm(parts.map(zUp)) },
-      { name: `${base}${tag}.obj`, data: enc.encode(writeOBJ(parts, title)) },
-      { name: `${base}.stl`, data: writeSTL(parts.filter((p) => !p.layer), title) },
-      ...extra.map((p) => ({ name: `${base}-${p.name}.stl`, data: writeSTL([p], `${title} · ${p.name}`) })), // one STL each, to place as separate parts
+      { name: `${base}${tag}.3dm`, data: write3dm(parts.map(zUp), layers) },
+      { name: `${base}${tag}.obj`, data: enc.encode(writeOBJ(parts.map(zUp), title)) },
+      { name: `${base}.stl`, data: writeSTL(parts.filter((p) => p.layer !== 1 && p.layer !== 2).map(zUp), title) },
+      ...extra.filter((p) => p.layer === 1 || p.layer === 2).map((p) => ({ name: `${base}-${p.name}.stl`, data: writeSTL([zUp(p)], `${title} · ${p.name}`) })), // one STL each, to place as separate parts
       { name: 'README.txt', data: enc.encode(readme(title, size, extra.length > 0)) },
     ]);
     const r = await saveBytes(`human-scale-${base}${tag}.zip`, zip);
