@@ -243,6 +243,7 @@ input:disabled { opacity: 0.55; }
 .dimrow input[type="number"] { height: 34px; padding: 0 8px; }
 .presets { display: flex; flex-direction: column; gap: 14px; }
 .pgroup { display: flex; flex-direction: column; gap: 7px; }
+.pgroup + .pgroup { border-top: 1px solid var(--line); padding-top: 14px; } /* a rule between categories */
 .pgroup > .gname { font-size: 12px; font-weight: 600; color: var(--ink-2); display: flex; align-items: center; gap: 6px; width: 100%; padding: 2px 0; margin: 0; border: 0; background: none; font-family: inherit; text-align: left; cursor: pointer; }
 .pgroup > .gname:hover { color: var(--ink); }
 .pgroup > .gname::after { content: ''; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-2px) rotate(45deg); transition: transform .15s; margin-left: 2px; }
