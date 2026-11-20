@@ -681,7 +681,7 @@ const PRESETS = {
   ricecooker: { name: '전기밥솥', en: 'Rice cooker', shape: 'box', look: 'ricecooker', w: 270, d: 320, h: 290, place: 'counter', face: 'top', ctrl: 285, action: 'press', noHand: true }, // press the button at the front of the lid: it lifts on the pot
   humidifier: { name: '가습기', en: 'Humidifier', shape: 'box', look: 'humidifier', w: 180, d: 180, h: 280, place: 'plinth', face: 'front', ctrl: 30, action: 'press', noHand: true }, // a glowing frosted column on a white base
   pan: { name: '프라이팬', en: 'Frying pan', shape: 'box', look: 'pan', w: 280, d: 480, h: 55, place: 'counter', face: 'front', ctrl: 40, action: 'press', noCtrl: true, noHand: true }, // the handle toward you
-  pot: { name: '냄비', en: 'Pot', shape: 'box', look: 'pot', w: 300, d: 220, h: 130, place: 'counter', face: 'front', ctrl: 100, action: 'press', noCtrl: true, noHand: true }, // two side handles, no lid
+  pot: { name: '냄비', en: 'Pot', shape: 'box', look: 'pot', w: 220, d: 220, h: 130, place: 'counter', face: 'front', ctrl: 100, action: 'press', noCtrl: true, noHand: true }, // W: the pot's diameter (D follows); two side handles loop out past it; no lid
   card: { name: '명함', en: 'Business card', shape: 'box', look: 'paper', w: 90, d: 1, h: 50, place: 'hand', face: 'front', ctrl: 25, action: 'press' }, // held up by its edge to be read
   brochure: { name: '브로셔', en: 'Brochure', shape: 'box', look: 'paper', w: 100, d: 3, h: 210, place: 'hand', face: 'front', ctrl: 100, action: 'press' }, // a folded leaflet
   pencase: { name: '필통', en: 'Pencil case', shape: 'box', look: 'pencase', w: 200, d: 55, h: 55, place: 'table', face: 'front', ctrl: 27, action: 'press', prop: true, noCtrl: true }, // a soft zipped case
@@ -718,7 +718,7 @@ const FAMILIES = {
   laptop: { ko: '노트북', en: 'Laptop', sizes: [['macbook', '13인치', '13"'], ['macbook15', '15인치', '15"'], ['macbook17', '17인치', '17"']] },
   keyboard: { ko: '키보드', en: 'Keyboard', sizes: [['keyboard', '풀배열', 'Full size'], ['keyboardTkl', '텐키리스', 'Tenkeyless']] },
   speaker: { ko: '블루투스 스피커', en: 'Bluetooth speaker', sizes: [['speaker', '원통', 'Round'], ['speakerbox', '큐브', 'Cube']] },
-  fold: { ko: '폴더블폰', en: 'Foldable phone', sizes: [['fold', '8인치', '8"'], ['foldxl', '와이드 7.6인치', 'Wide 7.6"']] },
+  fold: { ko: '폴더블폰', en: 'Foldable phone', last: 'foldxl', sizes: [['foldxl', '와이드 7.6인치', 'Wide 7.6"'], ['fold', '8인치', '8"']] }, // the wide one first, and the default
   phone: { ko: '스마트폰', en: 'Smartphone', last: 'galaxy', sizes: [['phonemini', '5.4인치 미니', '5.4" mini'], ['phone', '6.3인치', '6.3"'], ['galaxy', '6.9인치', '6.9"']] },
   tablet: { ko: '태블릿', en: 'Tablet', sizes: [['ipadmini', '8.3인치 미니', '8.3" mini'], ['ipadair', '11인치', '11"']] },
   sofa: { ko: '소파', en: 'Sofa', sizes: [['armchair', '1인', '1-seat'], ['sofa2', '2인', '2-seat'], ['sofa', '3인', '3-seat'], ['sofa4', '4인', '4-seat']] },
@@ -730,7 +730,7 @@ const familyOf = (k) => Object.keys(FAMILIES).find((f) => FAMILIES[f].sizes.some
 /* the plain object's forms, each with its own starting size (W, D, H mm) */
 const FORMS = { box: [80, 80, 80], frame: [200, 200, 200], cyl: [80, 80, 150], sphere: [100, 100, 100], cone: [100, 100, 150], plate: [100, 100, 5] };
 const roundSeat = () => S.source === 'box' && S.shape === 'chair' && (S.style === 'stool' || (S.style === 'pstool' && ['legs', 'cyl'].includes((S.det && S.det.form) || 'legs'))); // a round stool: its seat is W across, so D follows W
-const roundBase = (sh = S.shape) => sh === 'cup' || sh === 'cone' || (sh === S.shape && (S.look === 'tumbler' || roundSeat())); // W = D (a cylinder can be deeper: its middle stretches)
+const roundBase = (sh = S.shape) => sh === 'cup' || sh === 'cone' || (sh === S.shape && (S.look === 'tumbler' || S.look === 'pot' || roundSeat())); // W = D (a cylinder can be deeper: its middle stretches)
 const PRESET_GROUPS = [
   [['오브젝트', 'Objects'], ['cube', 'cyl', 'sphere', 'snowman', 'cone', 'trap', 'plate', 'disc', 'plinthp']], // the plain forms
   [['목업', 'Mockups'], ['fam:paper', 'card', 'brochure', 'book', 'frame', 'aboard', 'banner', 'lipstick', 'tube', 'pump', 'cream', 'cushion', 'teddy']], // the things designers mock up: print, packaging, small goods
@@ -2753,12 +2753,12 @@ function foldGeo(group) {
   const zb = -D - 0.0002, lens = (own, cx, cy, rr) => { own(new THREE.CylinderGeometry(rr * 1.3, rr * 1.36, 0.0012, 32).rotateX(Math.PI / 2).translate(cx, cy, zb - 0.0006), mats.frame); own(new THREE.CircleGeometry(rr, 28).rotateY(Math.PI).translate(cx, cy, zb - 0.0013), lensMat); };
   if (book) { // the cover screen on the left half's back; the cameras at the top outer corner of the right half's back
     const own = meshIn(piv), cb = Math.max(0.026 * hw, bev + 0.0012);
-    own(new THREE.ShapeGeometry(roundRect(hw - 2 * cb, hh - 2 * cb, Math.max(r - cb, 0.0008)), 10).rotateY(Math.PI).translate(-hw / 2, cb, zb), screenLit());
+    own(fitUV(new THREE.ShapeGeometry(roundRect(hw - 2 * cb, hh - 2 * cb, Math.max(r - cb, 0.0008)), 10)).rotateY(Math.PI).translate(-hw / 2, cb, zb), userImgMat('screen', hw - 2 * cb, hh - 2 * cb) || screenLit()); // your image on the cover screen too, upright when it is folded shut
     const ow = meshIn(group), q = 0.0048;
     for (const k of [0, 1, 2]) lens(ow, hw / 2 - 0.009, hh - 0.012 - k * q * 2.6, q);
   } else { // the flip's cover screen on the back of its top half, cameras at its bottom right as seen closed (the far edge here, the hinge folding it over)
     const own = meshIn(piv), sw = hw - 0.006, sh = hh - 0.006;
-    own(new THREE.ShapeGeometry(roundRect(sw, sh, Math.max(r - 0.003, 0.0005)), 8).rotateY(Math.PI).translate(0, 0.003, zb), screenLit());
+    own(fitUV(new THREE.ShapeGeometry(roundRect(sw, sh, Math.max(r - 0.003, 0.0005)), 8)).rotateX(Math.PI).translate(0, 0.003 + sh, zb), userImgMat('screen', sw, sh) || screenLit()); // your image here too: turned over with the top half, it reads upright when the phone is shut
     const rr = 0.0042, cy = hh - 0.003 - rr * 1.9;
     for (const dx of [0, rr * 2.9]) lens(own, hw / 2 - 0.003 - rr * 1.9 - dx, cy, rr);
   }
@@ -3848,13 +3848,21 @@ function panGeo(group, W, D, H) {
   group.userData.handle = new V3(0, hy + 0.02, -0.05); group.userData.handleAxis = 'z'; group.userData.handleR = 0.012; group.userData.handleRise = 0.015 / Math.max(hl * 0.5, 0.01); // rising toward its end
 }
 /* a pot: straight sides, a rolled rim, a loop handle on each side, no lid */
+const POT_LOOP = 0.036, POT_LOOP_W = 0.05; // a side handle: a squared loop, its bar this far out from the pot's wall and straight across the fingers (±POT_LOOP_W), room inside for them hooked round it
+/* the side handle's path, out from the wall (x 0) to its bar (x POT_LOOP) and back, round-cornered; z across */
+function potLoopGeo() {
+  const L = POT_LOOP, w = POT_LOOP_W, rc = 0.012, P = [];
+  const arc = (cx, cz, a0, a1) => { for (let i = 0; i <= 6; i++) { const a = a0 + ((a1 - a0) * i) / 6; P.push(new V3(cx + rc * Math.cos(a), 0, cz + rc * Math.sin(a))); } };
+  P.push(new V3(-0.004, 0, -w)); arc(L - rc, -w + rc, -Math.PI / 2, 0); arc(L - rc, w - rc, 0, Math.PI / 2); P.push(new V3(-0.004, 0, w));
+  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(P, false, 'catmullrom', 0.05), 48, 0.006, 10, false);
+}
 function potGeo(group, W, D, H) {
-  const own = meshIn(group), R = D / 2, cz = -D / 2, t = 0.0025, V2 = THREE.Vector2;
+  const own = meshIn(group), R = W / 2, cz = -W / 2, t = 0.0025, V2 = THREE.Vector2; // round: W is the diameter (D follows it)
   const wall = [new V2(0, 0), new V2(R * 0.96, 0), new V2(R * 0.98, 0.004), new V2(R, H), new V2(R - t, H), new V2(R * 0.98 - t, 0.0065), new V2(R * 0.96 - t, 0.005), new V2(0, 0.005)]; // a wall with a thickness: outside up, inside down, so the inside shows when you look in
   own(new THREE.LatheGeometry(wall, 72).translate(0, 0, cz), steel);
   own(new THREE.TorusGeometry(R - t / 2, 0.003, 8, 64).rotateX(Math.PI / 2).translate(0, H, cz), steel);
-  for (const sx of [-1, 1]) own(new THREE.TorusGeometry(0.025, 0.006, 10, 24, Math.PI).rotateX(Math.PI / 2).rotateY(sx > 0 ? Math.PI / 2 : -Math.PI / 2).translate(sx * (R + 0.002), H * 0.82, cz), mats.pad); // side handles, looping outward
-  group.userData.potHandles = [-1, 1].map((sx) => new V3(sx * (R + 0.026), H * 0.82, cz));
+  for (const sx of [-1, 1]) own(potLoopGeo().rotateY(sx > 0 ? 0 : Math.PI).translate(sx * (R + 0.002), H * 0.82, cz), mats.pad); // side handles, looping outward
+  group.userData.potHandles = [-1, 1].map((sx) => new V3(sx * (R + 0.002 + POT_LOOP), H * 0.82, cz));
 }
 /* a pencil case: a soft rounded tube of fabric, a zip along the top, a pull at one end */
 function pencaseGeo(group, W, D, H) {
@@ -4237,6 +4245,7 @@ function controlWorld() {
   if (S.look === 'luggage' && S.source === 'box') return new V3(0, sy + Math.max(luggageHandle(), (S.h / 1000 + 0.08) * S.scale), -P.D * 0.82); // the pulled-out trolley handle (never lower than it goes: 8 cm over the case)
   if (S.look === 'trolley' && S.source === 'box') return new V3(0, sy + luggageHandle(), 0.03); // the push bar
   if (S.look === 'door' && S.source === 'box' && holder.userData.handle) return holder.userData.handle.clone().multiplyScalar(S.scale).add(new V3(0, sy, 0)); // a door: its lever (off to one side, further on a wide door)
+  if (S.source === 'box' && holder.userData.potHandles) return holder.userData.potHandles[1].clone().multiplyScalar(S.scale).add(new V3(0, sy, 0)); // a pot: the side handle by the right hand (facing it, +x), so the lean is enough for both hands
   if (S.face === 'top') return new V3(0, sy + P.H, -topCtrlZ(P.D));
   if (lampCtrl()) return lampCtrl().add(new V3(0, sy, 0));
   return new V3(0, sy + ctrlM(), (holder.userData.ctrlZ || 0) * S.scale); // on the control's own face (a dial stands off the front)
@@ -4664,8 +4673,9 @@ function planHands() {
     S.pressLocal = bar; doorHoldMax();
   } else if (S.source === 'box' && holder.userData.potHandles) { // a pot: one hand on each side handle, palms down, fingers hooked under the loops
     const k = S.scale, rr = 0.006 * k, hs = holder.userData.potHandles.map((p) => human.worldToLocal(product.localToWorld(p.clone().multiplyScalar(k))));
-    const c = new V3(HD.palmT / 2 + rr + 0.002, 0.58 * HD.palmLen, 0), lr = 0.025 * k, Ct = c.clone().add(new V3(lr, 0, 0)); // the loop: a half ring out from the pot's side, flat, its outer bar in the fingers
-    const sdf3 = (x, y, z) => { const qx = x - Ct.x, qz = z - Ct.z; let ph = Math.atan2(qz, qx); if (Math.cos(ph) > 0) ph = qz >= 0 ? Math.PI / 2 : -Math.PI / 2; return Math.min(Math.hypot(qx - lr * Math.cos(ph), y - Ct.y, qz - lr * Math.sin(ph)) - rr, Ct.x - 0.001 - x); }; // ring and the pot's wall behind it
+    const c = new V3(HD.palmT / 2 + rr + 0.002, 0.58 * HD.palmLen, 0), lr = POT_LOOP * k, Ct = c.clone().add(new V3(lr, 0, 0)); // the loop: a half ring out from the pot's side, flat, its outer bar in the fingers
+    const lw = POT_LOOP_W * k, seg = (x, y, z, ax, az, bx, bz) => { const dx = bx - ax, dz = bz - az, t = clamp(((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1), 0, 1); return Math.hypot(x - ax - dx * t, y - c.y, z - az - dz * t); };
+    const sdf3 = (x, y, z) => Math.min(Math.min(seg(x, y, z, c.x, -lw, c.x, lw), seg(x, y, z, c.x, -lw, Ct.x, -lw), seg(x, y, z, c.x, lw, Ct.x, lw)) - rr, Ct.x - 0.001 - x); // the loop (its bar across the fingers, a leg back to the wall at each end) and the pot's wall behind it
     const f = HD.fingers.map((g) => solveClear({ sdf3, curlPast: true }, new V3(0, g.y, g.z), UP, FAX, g.L, g.r, [95, 105, 85]));
     const hp = { f, ...thumbRest(HD, sdf3, f, new V3(0.3, 0.3, -0.9), c.clone().add(new V3(0.006, -(rr + 0.01), -0.012))) }; // the thumb along the top of the loop
     const side = (s) => { const b = hs.find((p) => Math.sign(p.x) === Math.sign(s)) || hs[0], F = handFrame(new V3(-Math.sign(b.x), 0, 0), new V3(Math.sign(b.x) * 0.15, -1, 0.2)); return { F, W: b.clone().sub(inHand(F, c)) }; };
@@ -5474,6 +5484,14 @@ function bodyClearFlex(A, p, maxFlex) {
   }
   return maxFlex;
 }
+/* a pot lifted by its side handles: lean on until each wrist is within the arm's reach of its own handle (the reach to the pot's middle
+   isn't enough: the hands are out at the sides) */
+function potFlex(f0) {
+  const A = S.A, p = PP(), arm = (A.upperArm + A.forearm) * 0.985, wr = S.plan.side(-1).W, wl = S.plan.side(1).W, mf = p.maxFlex ?? 60, top = Math.min(mf, bodyClearFlex(A, p, mf));
+  let f = f0;
+  while (f < top) { const P = basePose(A, p, f); if (P.shR.distanceTo(wr) <= arm && P.shL.distanceTo(wl) <= arm) break; f += 2; }
+  return f;
+}
 function reachText(rs, A, careful) {
   const warnF = careful ? 6 : 10, badF = careful ? 20 : 30;
   if (!rs.ok && rs.blocked) return [L('허리를 숙이면 몸이 제품에 닿아요 · 쪼그려 앉아야 손이 닿아요', 'Bending over, the body meets it · crouch to reach'), 'bad'];
@@ -5681,6 +5699,7 @@ function refresh(o = {}) {
   product.updateMatrixWorld(true);
   S.E = evaluate();
   planHands();
+  if (S.plan && S.plan.kind === 'pot2' && S.E && S.mode === 'use' && !carried()) S.E.flex = potFlex(S.E.flex || 0); // both hands out at the side handles
   const pose = poseNow();
   applyPose(pose);
   placeExtras(pose);
