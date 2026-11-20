@@ -606,8 +606,8 @@ const PRESETS = {
   tumbler: { name: '텀블러', en: 'Tumbler', shape: 'cyl', look: 'tumbler', w: 72, d: 72, h: 190, place: 'hand', face: 'front', ctrl: 120, action: 'press' },
   phonemini: { name: '스마트폰 5.4인치', en: 'Smartphone 5.4"', shape: 'box', w: 64, d: 7, h: 131, place: 'hand', face: 'front', ctrl: 65, action: 'press', screen: true },
   phone: { name: '스마트폰 6.3인치', en: 'Smartphone 6.3"', shape: 'box', w: 72, d: 8, h: 150, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true },
-  fold: { name: '폴더블폰 7.6인치', en: 'Foldable 7.6"', shape: 'box', w: 73, d: 9, h: 158, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true, fold: 'book' }, // folded size; open about 143 x 4 mm, like a small tablet
-  foldxl: { name: '폴더블폰 8인치 대형', en: 'Foldable 8" large', shape: 'box', w: 78, d: 10, h: 166, place: 'hand', face: 'front', ctrl: 80, action: 'press', screen: true, fold: 'book' },
+  fold: { name: '폴더블폰 8인치', en: 'Foldable 8"', shape: 'box', w: 73, d: 9, h: 158, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true, fold: 'book' }, // folded size; open about 143 x 158 x 4 mm, the inner screen near square (a tall fold)
+  foldxl: { name: '폴더블폰 와이드 7.6인치', en: 'Foldable wide 7.6"', shape: 'box', w: 82, d: 10, h: 124, place: 'hand', face: 'front', ctrl: 62, action: 'press', screen: true, fold: 'book' }, // a wide, passport-shaped fold: 10:16 cover screen, open about 161 x 124 x 4.5 mm with a 4:3 inner screen
   flip: { name: '플립폰', en: 'Flip phone', shape: 'box', w: 75, d: 14, h: 86, place: 'hand', face: 'front', ctrl: 40, action: 'press', screen: true, fold: 'flip' }, // folded size; open about 75 x 167 mm
   galaxy: { name: '대화면 스마트폰 6.9인치', en: 'Large smartphone 6.9"', shape: 'box', w: 78, d: 8, h: 163, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true },
   ipadmini: { name: '태블릿 8.3인치', en: 'Tablet 8.3"', shape: 'box', w: 135, d: 6, h: 195, place: 'hand', face: 'front', ctrl: 100, action: 'press', screen: true },
@@ -718,7 +718,7 @@ const FAMILIES = {
   laptop: { ko: '노트북', en: 'Laptop', sizes: [['macbook', '13인치', '13"'], ['macbook15', '15인치', '15"'], ['macbook17', '17인치', '17"']] },
   keyboard: { ko: '키보드', en: 'Keyboard', sizes: [['keyboard', '풀배열', 'Full size'], ['keyboardTkl', '텐키리스', 'Tenkeyless']] },
   speaker: { ko: '블루투스 스피커', en: 'Bluetooth speaker', sizes: [['speaker', '원통', 'Round'], ['speakerbox', '큐브', 'Cube']] },
-  fold: { ko: '폴더블폰', en: 'Foldable phone', sizes: [['fold', '7.6인치', '7.6"'], ['foldxl', '8인치 대형', '8" large']] },
+  fold: { ko: '폴더블폰', en: 'Foldable phone', sizes: [['fold', '8인치', '8"'], ['foldxl', '와이드 7.6인치', 'Wide 7.6"']] },
   phone: { ko: '스마트폰', en: 'Smartphone', last: 'galaxy', sizes: [['phonemini', '5.4인치 미니', '5.4" mini'], ['phone', '6.3인치', '6.3"'], ['galaxy', '6.9인치', '6.9"']] },
   tablet: { ko: '태블릿', en: 'Tablet', sizes: [['ipadmini', '8.3인치 미니', '8.3" mini'], ['ipadair', '11인치', '11"']] },
   sofa: { ko: '소파', en: 'Sofa', sizes: [['armchair', '1인', '1-seat'], ['sofa2', '2인', '2-seat'], ['sofa', '3인', '3-seat'], ['sofa4', '4인', '4-seat']] },
@@ -1851,8 +1851,8 @@ function dims() { // a book foldable keeps its folded size for the hold: it open
 const ctrlM = () => (S.ctrl / 1000) * S.scale;
 const lampCtrl = () => { // a lamp's switch spot (product frame, scaled): on the front of the table lamp's base, or on the floor lamp's pole
   if (S.source !== 'box' || S.face !== 'front') return null; const k = S.scale, W = S.w / 1000, D = S.d / 1000;
-  if (S.look === 'tablelamp') return new V3(0, Math.min(ctrlM(), 0.022 * k), (-D / 2 + Math.min(0.085, W * 0.275) * 0.96) * k);
-  if (S.look === 'floorlamp') return new V3(0, ctrlM(), (-D / 2 + 0.013) * k);
+  if (S.look === 'tablelamp') return new V3(0, Math.min(ctrlM(), (+dv('baseH') / 1000) * 0.73 * k), (-D / 2 + (+dv('baseD') / 2000) * 0.94) * k); // a button on the base's front
+  if (S.look === 'floorlamp') return new V3(0, ctrlM(), (-D / 2 + +dv('stemD') / 2000 + 0.002) * k); // the pull switch on the pole
   if (S.look === 'microwave') return new V3((W / 2 - W * 0.12) * k, ctrlM(), -0.012 * k); // on the panel at the right
   return null;
 };
@@ -1949,11 +1949,24 @@ function stoolRing(H, W, y) {
 const TOP_MAT = { ceramic: new THREE.MeshStandardMaterial({ color: 0xf3f1ec, roughness: 0.3, metalness: 0 }), wood: new THREE.MeshStandardMaterial({ color: 0x9c6b43, roughness: 0.72 }), glass: new THREE.MeshStandardMaterial({ color: 0xcfe2e4, roughness: 0.06, transparent: true, opacity: 0.4, depthWrite: false }), metal: mats.metal };
 const MAT_ROW = { k: 'mat', ko: '재질', en: 'Material', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['glass', '유리', 'Glass'], ['metal', '메탈', 'Metal']], def: 'solid' };
 /* a lamp's shade: what it is made of, and pleated or plain */
-const SHADE_ROW = (def) => ({ k: 'smat', ko: '갓 재질', en: 'Shade material', opts: [['solid', '솔리드(제품색)', 'Solid (product colour)'], ['fabric', '패브릭', 'Fabric'], ['paper', '종이(한지)', 'Paper'], ['glass', '유리(우윳빛)', 'Opal glass'], ['metal', '메탈', 'Metal']], def });
+const SHADE_ROW = (def) => ({ k: 'smat', ko: '갓 재질', en: 'Shade material', opts: [['solid', '솔리드', 'Solid'], ['fabric', '패브릭', 'Fabric'], ['paper', '종이(한지)', 'Paper'], ['glass', '유리(우윳빛)', 'Opal glass'], ['metal', '메탈', 'Metal']], def });
 const PLEAT_ROW = { k: 'pleat', ko: '갓 주름', en: 'Pleats', opts: [['off', '없음', 'Plain'], ['on', '있음', 'Pleated']], def: 'off' };
 const LAMP_FORM_ROW = (def, apply) => ({ k: 'hform', ko: '갓 모양', en: 'Shade shape', opts: [['taper', '원통사다리꼴', 'Tapered drum'], ['taperInv', '역사다리꼴', 'Inverted taper'], ['dome', '반원구(버섯)', 'Dome (mushroom)'], ['cyl', '원통', 'Cylinder'], ['cube', '큐브', 'Cube'], ['sphere', '구', 'Sphere']], def, apply });
 const OPEN_SHADE = (f) => f === 'taper' || f === 'taperInv' || f === 'cyl'; // open top and bottom, the bulb inside; the rest are closed and glow through a diffuser
+const lampForm = () => (S.det && S.det.hform) || (S.look === 'floorlamp' ? 'cyl' : 'taper');
+const lampShadeMm = () => (lampForm() === 'sphere' ? Math.min(S.w, S.d) : +dv('shadeH')); // a ball shade is as tall as it is wide
+/* a floor or table lamp's part set in the details: H stays the whole lamp, so the stem takes up the rest; a taller shade or base (or a ball
+   for a shade) keeps the stem and makes the lamp taller; the stem's own height sets H. Returns true when it was one of these */
+function lampDet(k, v) {
+  if (!['lamp', 'lampS'].includes(detKind()) || !['shadeH', 'baseH', 'stemH', 'hform'].includes(k)) return false;
+  const stem = k === 'stemH' ? v : Math.max(0, S.h - +dv('baseH') - lampShadeMm());
+  if (k !== 'stemH') S.det = { ...(S.det || {}), [k]: v };
+  S.h = Math.round(stem + +dv('baseH') + lampShadeMm()); S.ctrl = Math.min(S.ctrl, S.h); S.preset = null;
+  return true;
+}
 const mushForm = () => (S.det && S.det.hform) || 'dome'; // read straight off the details: the rows themselves depend on it (a ball has no height of its own)
+const STEM_COL = (ko, en) => ({ k: 'stemCol', ko, en, opts: [['black', '블랙', 'Black'], ['same', '제품색', 'Product colour']], def: 'black' }); // a lamp's stem (and base): black, or the product colour
+const stemMat = () => (dv('stemCol') === 'same' ? mats.foam : mats.stemBlack);
 const SHADE_MATS = {};
 const shadeMat = (k) => (k === 'solid' ? mats.foamDS : k === 'metal' ? mats.shadeMetal : k === 'fabric' ? lampShade : (SHADE_MATS[k] ||= k === 'paper' ? new THREE.MeshStandardMaterial({ color: 0xfbf7ee, emissive: 0xffe7c2, emissiveIntensity: 0.5, roughness: 0.96, side: THREE.DoubleSide }) : new THREE.MeshStandardMaterial({ color: 0xf6f4f0, emissive: 0xffecd0, emissiveIntensity: 0.42, roughness: 0.14, side: THREE.DoubleSide }))); // fabric and paper glow warm, opal glass a little glossy, solid and metal don't
 const SFORM = () => (S.det && S.det.sform) || 'square'; // the sunglasses' shape sets their default lens and rim sizes
@@ -1988,8 +2001,15 @@ const DETAIL = {
   mushroom: [LAMP_FORM_ROW('dome', true),
     { ...DR('headD', '갓 지름(폭)', 'Shade diameter (width)', 60, 400, 150), apply: true }, { ...DR('headH', '갓 높이', 'Shade height', 20, 250, 97), apply: true },
     { ...DR('stemD', '기둥 지름', 'Stem diameter', 15, 300, 72), apply: true }, { ...DR('stemH', '기둥 높이(갓 아래)', 'Stem height (below the shade)', 20, 800, 133), apply: true },
-    SHADE_ROW('fabric'), PLEAT_ROW, { k: 'stemCol', ko: '기둥 색', en: 'Stem colour', opts: [['black', '블랙', 'Black'], ['same', '제품색', 'Product colour']], def: 'black' }],
-  lamp: [LAMP_FORM_ROW(() => (S.look === 'floorlamp' ? 'cyl' : 'taper')), SHADE_ROW('fabric'), PLEAT_ROW], // a floor or table lamp's shade
+    { ...DR('baseD', '받침 지름', 'Base diameter', 20, 400, () => Math.round(+dv('stemD') * 1.4)), apply: true }, { ...DR('baseH', '받침 높이(0: 없음)', 'Base height (0: none)', 0, 200, 0), apply: true },
+    SHADE_ROW('fabric'), PLEAT_ROW, STEM_COL('기둥 색', 'Stem colour')],
+  lamp: [LAMP_FORM_ROW(() => (S.look === 'floorlamp' ? 'cyl' : 'taper')), // a floor or table lamp: its shade, stem and base each sized; H is the whole lamp, so a change in H is the stem's
+    DR('shadeH', '갓 높이', 'Shade height', 40, 800, () => (S.look === 'floorlamp' ? 300 : 190)),
+    DR('stemH', '기둥 높이(받침~갓)', 'Stem height (base to shade)', 0, 2500, () => Math.max(0, S.h - +dv('baseH') - lampShadeMm())),
+    DR('stemD', '기둥 지름', 'Stem diameter', 6, 120, () => (S.look === 'floorlamp' ? 22 : 24)),
+    DR('baseD', '받침 지름', 'Base diameter', 40, 600, () => (S.look === 'floorlamp' ? 320 : 170)),
+    DR('baseH', '받침 높이', 'Base height', 3, 300, () => (S.look === 'floorlamp' ? 25 : 30)),
+    SHADE_ROW('fabric'), PLEAT_ROW, STEM_COL('기둥·받침 색', 'Stem and base colour')],
   disc: [{ k: 'hole', ko: '가운데 구멍', en: 'Centre hole', opts: [['off', '없음', 'None'], ['on', '있음', 'Hole']], def: 'off' }, DR('holeD', '구멍 지름', 'Hole diameter', 1, 400, 15, 0.5), MAT_ROW], // a disc with a hole through its middle: a CD is 120 x 1.2 with a 15 mm hole
   snowman2: SNOW_ROWS(2), snowman3: SNOW_ROWS(3), snowman4: SNOW_ROWS(4),
   teddy: [{ k: 'tsize', ko: '크기', en: 'Size', opts: [[50, '5cm', '5 cm'], [100, '10cm', '10 cm'], [150, '15cm', '15 cm'], [200, '20cm', '20 cm'], [300, '30cm', '30 cm']], def: 100, apply: true }],
@@ -2028,6 +2048,7 @@ const DETAIL = {
   headphone: [DR('cupH', '귀마개 높이', 'Ear cushion height', 60, 130, () => Math.round(clamp(0.5 * S.h, 75, 115))), DR('cupL', '귀마개 폭', 'Ear cushion width', 50, 115, () => Math.round(clamp(0.88 * S.d, 58, 95))), DR('cupT', '귀마개 두께', 'Ear cup thickness', 12, 45, () => Math.round(clamp(0.13 * S.w, 17, 30))), DR('bandW', '머리띠 폭', 'Headband width', 12, 45, 29), DR('slide', '슬라이더 길이', 'Slider extension', 0, 50, 20)],
 };
 DETAIL.dish.push(DETAIL.bowl[1], DETAIL.bowl[2]); // a plate: its own types, the bowl's sizes and materials
+DETAIL.lampS = DETAIL.lamp.filter((r) => r.k !== 'shadeH'); // a ball shade: as wide (W) as it is tall
 DETAIL.mushroomS = DETAIL.mushroom.filter((r) => r.k !== 'headH').map((r) => (r.k === 'headD' ? { ...r, ko: '갓(구) 지름', en: 'Ball diameter' } : r)); // a ball shade: as tall as it is wide
 
 const BOWL_SIZES = { plate: { S: [200, 22], M: [250, 25], L: [280, 27] }, rice: { S: [105, 55], M: [115, 65], L: [125, 72] }, soup: { S: [130, 62], M: [145, 70], L: [160, 80] }, shallow: { S: [150, 45], M: [180, 55], L: [210, 62] } }; // diameter, height (mm)
@@ -2040,7 +2061,7 @@ function detApply() { // a bowl's type and size, or a jar's form and volume, set
   else if (S.look === 'cushion') { const sq = dv('form') === 'cube'; S.w = S.d = sq ? 80 : 84; S.h = 26; }
   else if (S.shape === 'ring' && S.source === 'box') S.h = +dv('stone'); // the stone's width (0: a plain band)
   else if (S.look === 'snowman') { const b = snowBalls(); S.w = S.d = Math.max(...b.d); S.h = Math.round(b.h); }
-  else if (S.look === 'mushroom') { S.w = S.d = Math.max(+dv('headD'), +dv('stemD')); S.h = +dv('stemH') + (mushForm() === 'sphere' ? +dv('headD') : +dv('headH')); } // the lamp's overall size from its shade and stem (a ball shade as tall as it is wide)
+  else if (S.look === 'mushroom') { const bh = +dv('baseH') || 0; S.w = S.d = Math.max(+dv('headD'), +dv('stemD'), bh > 0 ? +dv('baseD') : 0); S.h = bh + +dv('stemH') + (mushForm() === 'sphere' ? +dv('headD') : +dv('headH')); } // the lamp's overall size from its shade and stem (a ball shade as tall as it is wide)
   else if (S.look === 'teddy') { const t = +dv('tsize'); S.h = t; S.w = Math.round(0.62 * t); S.d = Math.round(0.55 * t); S.place = t <= 200 ? 'hand' : 'plinth'; } // a keyring size goes in the hand, a big one on the plinth
   else if (S.look === 'cream') { const [w, h] = { 15: [45, 35], 30: [55, 42], 50: [62, 48], 100: [75, 58] }[dv('ml')]; const k = dv('form') === 'cube' ? 0.92 : 1; S.w = S.d = Math.round(w * k); S.h = h; }
 }
@@ -2055,7 +2076,7 @@ function detKind() {
   if (S.shape === 'cap') return 'cap';
   if (S.look === 'bowl' && S.source === 'box') return S.pkey === 'dish' ? 'dish' : 'bowl';
   if (S.look === 'snowman') return `snowman${snowTiers()}`;
-  if (S.source === 'box' && (S.look === 'floorlamp' || S.look === 'tablelamp')) return 'lamp';
+  if (S.source === 'box' && (S.look === 'floorlamp' || S.look === 'tablelamp')) return lampForm() === 'sphere' ? 'lampS' : 'lamp';
   if (S.look === 'mushroom' && S.source === 'box') return mushForm() === 'sphere' ? 'mushroomS' : 'mushroom';
   if (S.look === 'teddy') return 'teddy';
   if (['washer', 'humidifier', 'standac', 'frame', 'cushion'].includes(S.look) && S.source === 'box') return S.look; // plates and bowls share the lathe, not the choices
@@ -2701,23 +2722,45 @@ function fitUV(geo) {
 /* phone or tablet: a rounded slab with softly rounded edges; the front is black glass with the lit screen inside a thin bezel (a phone has a
    punch-hole camera in the screen, a tablet a camera in the bezel); the back has a camera island in its top corner; buttons on the sides and
    a port at the bottom. Built round its middle so the whole device turns about when the screen should face the eyes */
-/* a foldable, open: two halves on a hinge, the inner screen across both; the left (book) or top (flip) half swings round as Play unfolds it */
+/* a rounded rectangle (x −w/2..w/2, y 0..h) with the corners along one side square (sq: 'l', 'r', 't' or 'b'): a foldable's half meets the
+   other at its hinge edge, so body and screen run straight on across it */
+function cornerRect(w, h, r, sq) {
+  const q = { bl: sq === 'l' || sq === 'b' ? 0 : r, br: sq === 'r' || sq === 'b' ? 0 : r, tr: sq === 'r' || sq === 't' ? 0 : r, tl: sq === 'l' || sq === 't' ? 0 : r };
+  const s = new THREE.Shape(), x0 = -w / 2, x1 = w / 2;
+  s.moveTo(x0 + q.bl, 0); s.lineTo(x1 - q.br, 0); if (q.br) s.quadraticCurveTo(x1, 0, x1, q.br);
+  s.lineTo(x1, h - q.tr); if (q.tr) s.quadraticCurveTo(x1, h, x1 - q.tr, h);
+  s.lineTo(x0 + q.tl, h); if (q.tl) s.quadraticCurveTo(x0, h, x0, h - q.tl);
+  if (q.bl) { s.lineTo(x0, q.bl); s.quadraticCurveTo(x0, 0, x0 + q.bl, 0); } // square there: the shape closes itself (no repeated point)
+  return s;
+}
+/* a foldable, open: two halves on a hinge with one inner screen running across both (no bezel at the fold), opened flat; the left (book) or
+   top (flip) half swings round as Play unfolds it. A book's cover screen is on the back of its left half, the cameras on the back of the right */
 function foldGeo(group) {
   const fk = foldKind(), P = openDims(), W = P.W / S.scale, D = P.D / S.scale, H = P.H / S.scale, book = fk === 'book';
-  const hw = book ? W / 2 : W, hh = book ? H : H / 2, bev = Math.min(0.0016, D * 0.35), r = Math.min(0.009, hw * 0.12);
-  const half = (g, x0, y0) => {
+  const hw = book ? W / 2 : W, hh = book ? H : H / 2, bev = Math.min(0.0016, D * 0.35), r = Math.min(0.009, hw * 0.12), bz = 0.0035; // bz: the inner screen's bezel round the outside
+  const fw = book ? 2 * hw - 2 * bz : hw - 2 * bz, fh = book ? hh - 2 * bz : 2 * hh - 2 * bz; // the whole inner screen, flat
+  const im = userImgMat('screen', fw, fh), scr = im || screenLit();
+  const uvTo = (geo, ox, oy) => { const p = geo.attributes.position, uv = []; for (let i = 0; i < p.count; i++) uv.push((p.getX(i) + ox) / fw, (p.getY(i) + oy) / fh); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); return geo; }; // where this half's screen sits in the whole one
+  const half = (g, x0, y0, sq, ox, oy) => {
     const own = meshIn(g);
-    own(new THREE.ExtrudeGeometry(roundRect(hw - 2 * bev, hh - 2 * bev, Math.max(r - bev, 0.0005)), { depth: Math.max(D - 2 * bev, 0.0003), bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 3, curveSegments: 12 }).translate(x0, y0 + bev, -D + bev), mats.foam);
-    own(new THREE.ShapeGeometry(roundRect(hw - 0.004, hh - 0.004, Math.max(r - 0.002, 0.0005)), 8).translate(x0, y0 + 0.002, 0.0002), userImgMat('screen', hw - 0.004, hh - 0.004) || screenLit());
+    own(new THREE.ExtrudeGeometry(cornerRect(hw - 2 * bev, hh - 2 * bev, Math.max(r - bev, 0.0005), sq), { depth: Math.max(D - 2 * bev, 0.0003), bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 3, curveSegments: 12 }).translate(x0, y0 + bev, -D + bev), mats.foam);
+    const sw = book ? hw - bz : hw - 2 * bz, sh = book ? hh - 2 * bz : hh - bz, cx = book ? x0 + (sq === 'l' ? -bz / 2 : bz / 2) : x0, cy = book ? y0 + bz : y0 + (sq === 'b' ? 0 : bz); // to the hinge edge, a bezel elsewhere
+    own(uvTo(new THREE.ShapeGeometry(cornerRect(sw, sh, Math.max(r - bz, 0.0008), sq), 10).translate(cx, cy, 0.0002), ox, oy), scr);
   };
   const piv = new THREE.Group(); group.add(piv);
-  if (book) { half(group, 0, 0); piv.position.x = -hw / 2; half(piv, -hw / 2, 0); } // the right half stays where the folded phone was, in the right hand; the left half swings out to the left on the hinge at its left edge
-  else { half(group, 0, 0); piv.position.y = hh; half(piv, 0, 0); } // the bottom half stays in the hand; the top half turns on the hinge at its bottom edge
-  if (!book) { // the flip's cover screen on the back of its top half, cameras at its bottom right as seen closed (the far edge here, the hinge folding it over)
-    const own = meshIn(piv), sw = hw - 0.006, sh = hh - 0.006, zb = -D - 0.0002;
+  if (book) { half(group, 0, 0, 'l', hw * 1.5 - bz, -bz); piv.position.x = -hw / 2; half(piv, -hw / 2, 0, 'r', hw - bz, -bz); } // the right half stays where the folded phone was, in the right hand; the left half swings out to the left on the hinge at its left edge
+  else { half(group, 0, 0, 't', hw / 2 - bz, -bz); piv.position.y = hh; half(piv, 0, 0, 'b', hw / 2 - bz, hh - bz); } // the bottom half stays in the hand; the top half turns on the hinge at its bottom edge
+  const zb = -D - 0.0002, lens = (own, cx, cy, rr) => { own(new THREE.CylinderGeometry(rr * 1.3, rr * 1.36, 0.0012, 32).rotateX(Math.PI / 2).translate(cx, cy, zb - 0.0006), mats.frame); own(new THREE.CircleGeometry(rr, 28).rotateY(Math.PI).translate(cx, cy, zb - 0.0013), lensMat); };
+  if (book) { // the cover screen on the left half's back; the cameras at the top outer corner of the right half's back
+    const own = meshIn(piv), cb = Math.max(0.026 * hw, bev + 0.0012);
+    own(new THREE.ShapeGeometry(roundRect(hw - 2 * cb, hh - 2 * cb, Math.max(r - cb, 0.0008)), 10).rotateY(Math.PI).translate(-hw / 2, cb, zb), screenLit());
+    const ow = meshIn(group), q = 0.0048;
+    for (const k of [0, 1, 2]) lens(ow, hw / 2 - 0.009, hh - 0.012 - k * q * 2.6, q);
+  } else { // the flip's cover screen on the back of its top half, cameras at its bottom right as seen closed (the far edge here, the hinge folding it over)
+    const own = meshIn(piv), sw = hw - 0.006, sh = hh - 0.006;
     own(new THREE.ShapeGeometry(roundRect(sw, sh, Math.max(r - 0.003, 0.0005)), 8).rotateY(Math.PI).translate(0, 0.003, zb), screenLit());
     const rr = 0.0042, cy = hh - 0.003 - rr * 1.9;
-    for (const dx of [0, rr * 2.9]) { const cx = hw / 2 - 0.003 - rr * 1.9 - dx; own(new THREE.CylinderGeometry(rr * 1.3, rr * 1.36, 0.0012, 32).rotateX(Math.PI / 2).translate(cx, cy, zb - 0.0006), mats.frame); own(new THREE.CircleGeometry(rr, 28).rotateY(Math.PI).translate(cx, cy, zb - 0.0013), lensMat); }
+    for (const dx of [0, rr * 2.9]) lens(own, hw / 2 - 0.003 - rr * 1.9 - dx, cy, rr);
   }
   group.userData.fold = { g: piv, book };
 }
@@ -3529,12 +3572,13 @@ function lampShadeParts(own, form, w, d, h, y0, cz, mat, pleat) {
 }
 /* mushroom lamp (a portable lamp): a round stem (black, or the product colour) under a shade of any lamp form (a dome by default) */
 function mushroomGeo(group, W, D, H) { // the shade (head) and the stem each sized on its own in the details; W, D, H follow from them
-  const own = meshIn(group), hd = +dv('headD') / 1000, hh = mushForm() === 'sphere' ? hd : +dv('headH') / 1000, sd = +dv('stemD') / 1000, sl = +dv('stemH') / 1000, cz = -D / 2;
-  const kx = W / Math.max(hd, sd), kz = D / Math.max(hd, sd), ky = H / (sl + hh), capH = hh * ky, stemR = (sd / 2) * Math.min(kx, kz), sh = sl * ky + capH * 0.25; // the stem runs up a little inside the shade
+  const own = meshIn(group), hd = +dv('headD') / 1000, hh = mushForm() === 'sphere' ? hd : +dv('headH') / 1000, sd = +dv('stemD') / 1000, sl = +dv('stemH') / 1000, bh = (+dv('baseH') || 0) / 1000, bd = bh > 0 ? +dv('baseD') / 1000 : 0, cz = -D / 2;
+  const wide = Math.max(hd, sd, bd), kx = W / wide, kz = D / wide, ky = H / (bh + sl + hh), capH = hh * ky, stemR = (sd / 2) * Math.min(kx, kz), y0 = bh * ky, sh = sl * ky + capH * 0.25; // the stem runs up a little inside the shade
   const form = dv('hform') || 'dome';
-  own(new THREE.CylinderGeometry(stemR * 0.88, stemR, sh, 40).translate(0, sh / 2, cz), dv('stemCol') === 'same' ? mats.foam : mats.stemBlack);
+  if (bh > 0) { const r = (bd / 2) * Math.min(kx, kz); own(new THREE.CylinderGeometry(r * 0.96, r, y0, 48).translate(0, y0 / 2, cz), stemMat()); } // a base under the stem, if set
+  own(new THREE.CylinderGeometry(stemR * 0.88, stemR, sh, 40).translate(0, y0 + sh / 2, cz), stemMat());
   lampShadeParts(own, form, hd * kx, hd * kz, capH, H - capH, cz, shadeMat(dv('smat') || 'fabric'), dv('pleat') === 'on' && form !== 'cube');
-  own(new THREE.CylinderGeometry(0.006, 0.006, 0.004, 20).rotateX(Math.PI / 2).translate(0, Math.min(sl * ky * 0.5, 0.06), cz + stemR * 0.94 + 0.0015), mats.trim); // the button, low on the stem's front
+  own(new THREE.CylinderGeometry(0.006, 0.006, 0.004, 20).rotateX(Math.PI / 2).translate(0, y0 + Math.min(sl * ky * 0.5, 0.06), cz + stemR * (1 - 0.12 * Math.min(sl * ky * 0.5, 0.06) / Math.max(sh, 0.001)) + 0.0015), mats.trim); // the button, low on the stem's front
 }
 function pouchGeo(group, W, D, H) {
   const own = meshIn(group), bev = Math.min(D * 0.45, 0.02);
@@ -3565,23 +3609,15 @@ function partsGeo(group, W, D, H) {
   }
 }
 function lampGeo(group, W, D, H, floor) {
-  const own = meshIn(group), cz = -D / 2, R = W / 2;
-  if (floor) {
-    const form = dv('hform') || 'cyl', open = OPEN_SHADE(form), ball = form === 'sphere';
-    const shH = ball ? Math.min(W, D, H * 0.5) : Math.min(0.3, H * 0.2), br = Math.min(0.16, R * 0.75), top = H - shH * (open ? 0.6 : ball ? 0.5 : 0.9); // a ball shade as tall as it is wide; the pole up into the shade
-    group.userData.focus = new V3(0, H - shH / 2, cz); // zoom closes on the shade
-    own(new THREE.CylinderGeometry(br * 0.92, br, 0.025, 48).translate(0, 0.0125, cz), mats.frame);
-    own(new THREE.CylinderGeometry(0.011, 0.011, top, 20).translate(0, top / 2, cz), mats.frame);
-    const by = lampShadeParts(own, form, W, D, shH, H - shH, cz, shadeMat(dv('smat') || 'fabric'), dv('pleat') === 'on' && form !== 'cube');
-    if (by != null) { const [rt, rb] = shadeR(form), r = (rb + (rt - rb) * 0.45) * 0.97; for (const a of [0, 2.1, 4.2]) own(new THREE.CylinderGeometry(0.003, 0.003, 1).scale(1, (2 * r) / Math.hypot(Math.cos(a) / W, Math.sin(a) / D), 1).rotateZ(Math.PI / 2).rotateY(a).translate(0, by, cz), mats.frame); } // the spokes from the bulb holder out to the shade, each side
-    return;
-  }
-  const form = dv('hform') || 'taper', open = OPEN_SHADE(form), ball = form === 'sphere';
-  const br = Math.min(0.085, R * 0.55), sh = ball ? Math.min(W, D, H * 0.75) : H * 0.42, top = H - sh * (open ? 0.7 : ball ? 0.5 : 0.9);
-  group.userData.focus = new V3(0, H - sh * 0.45, cz); // zoom closes on the shade, the bulb in it
-  own(new THREE.CylinderGeometry(br * 0.9, br, 0.03, 48).translate(0, 0.015, cz), mats.foam);
-  own(new THREE.CylinderGeometry(0.012, 0.012, top, 16).translate(0, top / 2, cz), mats.frame);
-  lampShadeParts(own, form, W, D, sh, H - sh, cz, shadeMat(dv('smat') || 'fabric'), dv('pleat') === 'on' && form !== 'cube');
+  const own = meshIn(group), cz = -D / 2, R = W / 2, form = dv('hform') || (floor ? 'cyl' : 'taper'), open = OPEN_SHADE(form), ball = form === 'sphere';
+  const bh = clamp(+dv('baseH') / 1000, 0.002, H * 0.5), shH = clamp(lampShadeMm() / 1000, 0.02, H - bh), br = +dv('baseD') / 2000, pr = +dv('stemD') / 2000;
+  const top = H - shH * (open ? (floor ? 0.6 : 0.7) : ball ? 0.5 : 0.9); // the stem runs up into the shade, to the bulb holder
+  group.userData.focus = new V3(0, H - shH / 2, cz); // zoom closes on the shade
+  own(new THREE.CylinderGeometry(br * (floor ? 0.92 : 0.9), br, bh, 48).translate(0, bh / 2, cz), stemMat());
+  own(new THREE.CylinderGeometry(pr, pr, top - bh + 0.002, 24).translate(0, bh - 0.001 + (top - bh + 0.002) / 2, cz), stemMat());
+  const by = lampShadeParts(own, form, W, D, shH, H - shH, cz, shadeMat(dv('smat') || 'fabric'), dv('pleat') === 'on' && form !== 'cube');
+  if (floor && by != null) { const [rt, rb] = shadeR(form), r = (rb + (rt - rb) * 0.45) * 0.97; for (const a of [0, 2.1, 4.2]) own(new THREE.CylinderGeometry(0.003, 0.003, 1).scale(1, (2 * r) / Math.hypot(Math.cos(a) / W, Math.sin(a) / D), 1).rotateZ(Math.PI / 2).rotateY(a).translate(0, by, cz), stemMat()); } // the spokes from the bulb holder out to the shade, each side
+  void R;
 }
 function buildProduct() {
   disposeGroup(holder);
@@ -5321,7 +5357,8 @@ function evaluate() {
   // use mode: bend forward until the hand reaches the control
   const tw = targetWorld(), tl = human.worldToLocal(tw.clone());
   out.target = tw; out.targetLocal = tl;
-  const rs = reachSolve(A, p, tl, p.maxFlex ?? (p.seated ? 25 : 60));
+  const mf = p.maxFlex ?? (p.seated ? 25 : 60), cf = bodyClearFlex(A, p, mf), rs = reachSolve(A, p, tl, cf); // no deeper than the body clears the product
+  if (cf < mf && !rs.ok) rs.blocked = true;
   out.flex = rs.f;
   const ty = tl.y, careful = p.kind === 'elder' || p.seated, flexWarn = careful ? 6 : 10;
   const [reachTxt, reachLv] = reachText(rs, A, careful);
@@ -5423,8 +5460,23 @@ function reachSolve(A, p, tl, maxFlex) {
   for (let f = 0; f <= maxFlex; f += 2) { const r = ratioAt(f); if (r <= 0.985) return { f, r, ok: true, comfy: false }; }
   return { f: best.f, r: best.r, ok: false, comfy: false };
 }
+/* bending forward, the head and the chest stop short of the product: a door, a fridge's face or a tall cabinet stops the lean, and a control
+   lower than that is one to crouch for. The largest forward bend (°, in 2° steps) that keeps them clear, up to maxFlex */
+function bodyClearFlex(A, p, maxFlex) {
+  if (S.mode !== 'use' || carried() || A.seated || !(maxFlex > 0)) return maxFlex;
+  product.updateMatrixWorld(true); human.updateMatrixWorld(true);
+  const wb = new THREE.Box3().setFromObject(holder); if (wb.isEmpty()) return maxFlex;
+  const lb = new THREE.Box3(); for (const x of [wb.min.x, wb.max.x]) for (const y of [wb.min.y, wb.max.y]) for (const z of [wb.min.z, wb.max.z]) lb.expandByPoint(human.worldToLocal(new V3(x, y, z)));
+  const rh = 0.5 * A.headD + 0.035, rc = 0.5 * A.chestD + 0.015; // the face stands a little proud of the head's round
+  for (let f = 0; f <= maxFlex; f += 2) {
+    const P = basePose(A, p, f), chest = P.pelvis.clone().addScaledVector(P.spine, 0.8 * A.torso);
+    if (lb.distanceToPoint(P.headCenter) < rh || lb.distanceToPoint(chest) < rc) return Math.max(0, f - 2);
+  }
+  return maxFlex;
+}
 function reachText(rs, A, careful) {
   const warnF = careful ? 6 : 10, badF = careful ? 20 : 30;
+  if (!rs.ok && rs.blocked) return [L('허리를 숙이면 몸이 제품에 닿아요 · 쪼그려 앉아야 손이 닿아요', 'Bending over, the body meets it · crouch to reach'), 'bad'];
   if (!rs.ok) { const c = Math.max(1, cmi((rs.r - 0.985) * A.reach)); return [L(`손이 ${c}cm 모자라요`, `The hand falls ${c} cm short`), 'bad']; }
   if (rs.f > warnF) return [L(`허리를 ${rs.f}° 숙여야 닿아요`, `Lean forward ${rs.f}° to reach`), rs.f > badF ? 'bad' : 'warn'];
   if (!rs.comfy) return [L('팔을 끝까지 뻗어야 닿아요', 'Reachable only at full stretch'), 'warn'];
@@ -6359,7 +6411,7 @@ function applyPreset(k) {
   const pr = PRESETS[k];
   Object.assign(S, { source: 'box', preset: k, pkey: k, name: pr.name, shape: pr.shape, style: pr.style || null, look: pr.look || null, noHand: !!pr.noHand, noCtrl: !!pr.noCtrl, w: pr.w, d: pr.d, h: pr.h, place: pr.place, face: pr.face, ctrl: pr.ctrl, action: pr.action, scale: 1, posture: pr.posture || 'stand', base: { w: pr.w, d: pr.d, h: pr.h }, screen: !!pr.screen, lift: 0, ringSize: pr.size || S.ringSize });
   S.mode = 'use'; S.itemMode = null; // every product starts in use
-  S.seatMode = 'fixed'; S.seatH = PROPS[propKind()].h; S.preDesk = null; S.row = null; S.pick = 0; S.det = {}; S.parts = null; S.pbase = null; S.mineId = null; S.cup = false;
+  S.seatMode = 'fixed'; S.seatH = PROPS[propKind()].h; S.preDesk = null; S.row = null; S.pick = 0; S.det = {}; S.ctrlWant = null; S.parts = null; S.pbase = null; S.mineId = null; S.cup = false;
   anim.lift = 0; anim.fill = 0;
   refresh({ rebuild: true, refit: true });
 }
@@ -6412,13 +6464,13 @@ for (const [id, key] of [['pW', 'w'], ['pD', 'd'], ['pH', 'h']]) {
   });
 }
 $('sIn').addEventListener('input', (e) => { S.scale = +e.target.value / 100; refresh({ rebuild: true }); });
-$('cIn').addEventListener('input', (e) => { S.ctrl = +e.target.value; refresh(); });
+$('cIn').addEventListener('input', (e) => { S.ctrl = +e.target.value; S.ctrlWant = null; refresh(); });
 $('ringIn').addEventListener('input', (e) => { S.ringSize = +e.target.value; refresh({ rebuild: true }); });
 /* 형태 changes only the form of a plain mockup (box, cylinder, sphere); furniture, cups and rings come from the examples */
 segBind('shapeSeg', 'shape', (v) => {
   const own = S.source === 'box' && PRESETS[S.pkey] && PRESETS[S.pkey].forms; // an example's own forms keep its size: the same cube, solid or as a frame
   S.shape = v; S.style = null;
-  if (!own && FORMS[v] && S.source === 'box') { [S.w, S.d, S.h] = FORMS[v]; S.base = { w: S.w, d: S.d, h: S.h }; S.ctrl = Math.round(S.h * 0.5); } // the plain box mockup: each form at its own size
+  if (!own && FORMS[v] && S.source === 'box') { [S.w, S.d, S.h] = FORMS[v]; S.base = { w: S.w, d: S.d, h: S.h }; S.ctrl = Math.round(S.h * 0.5); S.ctrlWant = null; } // the plain box mockup: each form at its own size
   if (roundBase(v)) S.d = S.w;
   S.screen = S.screen && v === 'box';
   if (!own) S.preset = null;
@@ -6487,7 +6539,7 @@ $('surfReset').addEventListener('click', () => { if (!S.surf) return; const n = 
 $('surfNum').addEventListener('change', (e) => setSurf(+e.target.value));
 for (const [id, k] of [['plW', 'plinthW'], ['plD', 'plinthD'], ['plR', 'plinthR'], ['wallD', 'wallD']]) { $(id).addEventListener('input', (e) => setSurf(+e.target.value, k)); $(id + 'n').addEventListener('change', (e) => setSurf(+e.target.value, k)); }
 /* detail sizes: a slider or a number sets one part; a button picks a material or armrests on/off */
-function setDet(k, v) { const sp = detSpec().find((x) => x.k === k); if (!sp) return; if (!sp.opts) v = clamp(Math.round(+v / sp.step) * sp.step, sp.min, sp.max); else v = sp.opts.find((o) => String(o[0]) === String(v))[0]; S.det = { ...(S.det || {}), [k]: v }; if (sp.apply) { detApply(); refresh({ rebuild: true, refit: true }); } else refresh({ rebuild: true }); }
+function setDet(k, v) { const sp = detSpec().find((x) => x.k === k); if (!sp) return; if (!sp.opts) v = clamp(Math.round(+v / sp.step) * sp.step, sp.min, sp.max); else v = sp.opts.find((o) => String(o[0]) === String(v))[0]; if (lampDet(k, v)) { refresh({ rebuild: true, refit: true }); return; } S.det = { ...(S.det || {}), [k]: v }; if (sp.apply) { detApply(); refresh({ rebuild: true, refit: true }); } else refresh({ rebuild: true }); }
 $('detRows').addEventListener('input', (e) => { const el = e.target; if (el.dataset.det && el.value !== '' && (el.type === 'range' || !isNaN(+el.value))) { if (el.type === 'number' && (+el.value < +el.min || +el.value > +el.max)) return; setDet(el.dataset.det, el.value); } });
 $('detRows').addEventListener('change', (e) => { const el = e.target; if (el.type === 'number' && el.dataset.det) setDet(el.dataset.det, el.value); });
 $('detRows').addEventListener('click', (e) => { const b = e.target.closest('button[data-v]'); if (b) setDet(b.parentElement.dataset.det, b.dataset.v); });
@@ -6569,8 +6621,8 @@ $('fileIn').addEventListener('change', async (e) => {
   }
   e.target.value = '';
 });
-$('unitSel').addEventListener('change', (e) => { if (!modelRaw) return; S.unit = +e.target.value; prepareModel(); S.ctrl = Math.round(S.model.h * 0.6); refresh({ rebuild: true, refit: true }); });
-$('zupIn').addEventListener('change', (e) => { if (!modelRaw) return; S.zup = e.target.checked; prepareModel(); S.ctrl = Math.round(S.model.h * 0.6); refresh({ rebuild: true, refit: true }); });
+$('unitSel').addEventListener('change', (e) => { if (!modelRaw) return; S.unit = +e.target.value; prepareModel(); S.ctrl = Math.round(S.model.h * 0.6); S.ctrlWant = null; refresh({ rebuild: true, refit: true }); });
+$('zupIn').addEventListener('change', (e) => { if (!modelRaw) return; S.zup = e.target.checked; prepareModel(); S.ctrl = Math.round(S.model.h * 0.6); S.ctrlWant = null; refresh({ rebuild: true, refit: true }); });
 $('backToBox').addEventListener('click', () => {
   S.source = 'box'; S.scale = 1;
   if (boxSaved) { Object.assign(S, boxSaved); boxSaved = null; anim.lift = S.lift; }
@@ -6812,7 +6864,7 @@ async function makeAI(answers = '') {
       Object.assign(S, common, { shape: 'parts', style: null, parts: n.parts, pbase: n.base, w: Math.max(1, Math.round(n.base.w)), d: Math.max(1, Math.round(n.base.d)), h: Math.max(1, Math.round(n.base.h)), place: PLACES.includes(r.place) ? r.place : 'desk' });
       if (S.place === 'desk') deskSeat();
     }
-    S.ctrl = num(r.ctrl, 0, S.h, Math.round(S.h * 0.6));
+    S.ctrl = num(r.ctrl, 0, S.h, Math.round(S.h * 0.6)); S.ctrlWant = null;
     S.base = { w: S.w, d: S.d, h: S.h };
     rememberMade();
     refresh({ rebuild: true, refit: true });
@@ -6881,11 +6933,11 @@ function setDimRaw(key, v) {
   if (su) { const o = roundBase() && (key === 'w' || key === 'd') ? { w: v, d: v } : { [key]: v }; S.row = S.row.map((u, i) => (i === S.pick ? { ...u, ...o } : u)); return; } // a mockup beside the main one: its own size
   S[key] = v;
   if (roundBase() && (key === 'w' || key === 'd')) { S.w = v; S.d = v; }
-  if (key === 'h' && S.shape !== 'ring') S.ctrl = Math.min(S.ctrl, v);
+  if (key === 'h' && S.shape !== 'ring') { if (S.ctrlWant == null) S.ctrlWant = S.ctrl; S.ctrl = Math.min(S.ctrlWant, v); } // a lower product pulls its control down with it; taller again, the control goes back up to where it was
   S.preset = null;
 }
 for (const [id, key] of [['rW', 'w'], ['rD', 'd'], ['rH', 'h']]) $(id).addEventListener('input', (e) => { setDimRaw(key, dimRound(+e.target.value)); refresh({ rebuild: true }); });
-$('dimReset').addEventListener('click', () => { if (!S.base) return; if (sizeUnit()) { S.row = S.row.map((u, i) => (i === S.pick ? { ...u, w: S.base.w, d: roundBase() ? S.base.w : S.base.d, h: S.base.h } : u)); refresh({ rebuild: true }); return; } Object.assign(S, S.base); if (roundBase()) S.d = S.w; S.ctrl = Math.min(S.ctrl, S.h); refresh({ rebuild: true }); });
+$('dimReset').addEventListener('click', () => { if (!S.base) return; if (sizeUnit()) { S.row = S.row.map((u, i) => (i === S.pick ? { ...u, w: S.base.w, d: roundBase() ? S.base.w : S.base.d, h: S.base.h } : u)); refresh({ rebuild: true }); return; } Object.assign(S, S.base); if (roundBase()) S.d = S.w; S.ctrl = Math.min(S.ctrlWant ?? S.ctrl, S.h); S.ctrlWant = null; refresh({ rebuild: true }); });
 
 /* ---------- lens, posture, history, resets, 1-person look ---------- */
 for (const b of $('lensSeg').querySelectorAll('button')) b.addEventListener('click', () => {
@@ -6902,7 +6954,7 @@ segBind('postureSeg', 'posture', (v) => { S.posture = v; refresh({ refit: true }
 $('hReset').addEventListener('click', () => { S.height = PERSONAS[S.persona].h; refresh(); });
 $('wReset').addEventListener('click', () => { S.bmi = PERSONAS[S.persona].bmi; refresh(); });
 $('sReset').addEventListener('click', () => { S.scale = 1; refresh({ rebuild: true }); });
-$('cReset').addEventListener('click', () => { S.ctrl = ctrlDefault(); refresh(); });
+$('cReset').addEventListener('click', () => { S.ctrl = ctrlDefault(); S.ctrlWant = null; refresh(); });
 
 const HKEYS = ['surf', 'det', 'row', 'pick', 'persona', 'height', 'bmi', 'posture', 'source', 'preset', 'pkey', 'name', 'shape', 'style', 'look', 'noHand', 'noCtrl', 'parts', 'pbase', 'cup', 'w', 'd', 'h', 'scale', 'place', 'face', 'ctrl', 'action', 'mode', 'base', 'screen', 'seatMode', 'seatH', 'lift', 'ringSize'];
 const hist = { list: [], i: -1, timer: 0 };
