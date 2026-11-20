@@ -1836,7 +1836,7 @@ function dims() { // a book foldable keeps its folded size for the hold: it open
   if (false) { const k = S.scale / 1000; return foldKind() === 'book' ? { W: (2 * S.w - 3) * k, D: S.d * 0.47 * k, H: S.h * k } : { W: S.w * k, D: S.d * 0.47 * k, H: (2 * S.h - 4) * k }; } // opened: twice as wide (or tall), half as thick
   if (S.source === 'model' && S.model) return { W: (S.model.w / 1000) * S.scale, D: (S.model.d / 1000) * S.scale, H: (S.model.h / 1000) * S.scale };
   if (S.shape === 'ring') { const o = (ringD(S.ringSize) + 2 * S.d) / 1000; return laidFlat() ? { W: o, D: o + S.h / 1000, H: S.w / 1000 } : { W: o, D: S.w / 1000, H: o + S.h / 1000 }; } // set down: lying flat
-  const W = (S.w / 1000) * S.scale, D = ((roundBase() ? S.w : S.d) / 1000) * S.scale, H = ((S.h - sphereCut()) / 1000) * S.scale; // a sphere cut flat underneath stands that much lower
+  const W = (S.w / 1000) * S.scale, D = ((roundBase() ? S.w : S.d) / 1000) * S.scale, H = ((S.h - sphereCut() - sphereCutTop()) / 1000) * S.scale; // a sphere cut flat underneath (or on top) stands that much lower
   return laidFlat() || plateUp() ? { W, D: H, H: D } : { W, D, H }; // a sheet set down on the desk or a plinth lies flat; a plate on a wall hangs flat against it
 }
 const ctrlM = () => (S.ctrl / 1000) * S.scale;
@@ -1872,6 +1872,7 @@ const placeOk = (p) => p === 'wall' ? wallOk() : (kind() === 'free' ? !(p === 'h
 const isProp = () => S.source === 'box' && !!(PRESETS[S.pkey] && PRESETS[S.pkey].prop); // a plain mockup solid: cube, cylinder, sphere, cone, plate
 const SPHERE_CUT_DEF = () => Math.round(0.067 * Math.min(S.w, S.h)); // by default a ball is cut flat underneath to about half its width across, so it stands
 const sphereCut = () => (S.source === 'box' && S.shape === 'sphere' && S.pkey === 'sphere' ? clamp(S.det && S.det.cut != null ? +S.det.cut : SPHERE_CUT_DEF(), 0, 0.45 * S.h) : 0); // mm cut off the bottom of the sphere (its H stays the ball's own height)
+const sphereCutTop = () => (S.source === 'box' && S.shape === 'sphere' && S.pkey === 'sphere' ? clamp(S.det && S.det.cutTop != null ? +S.det.cutTop : 0, 0, 0.45 * S.h) : 0); // and off its top (0: round)
 const canDispense = () => kind() === 'dispenser' || (kind() === 'free' && !isProp() && (S.source === 'model' || S.pkey === 'box' || !!S.cup)); // a mockup solid never fills a cup; an AI-made one only if AI said it dispenses
 const ctrlKind = () => ['free', 'dispenser', 'floor', 'lamp'].includes(kind()); // things with a button, a tap or a switch
 const ctrlOff = () => ctrlKind() && !!S.noCtrl; // controls switched off: it is only looked at
@@ -1946,11 +1947,12 @@ const SNOW_D = { 2: [120, 80], 3: [120, 90, 65], 4: [120, 95, 75, 55] };
 const snowTiers = () => (S.det && S.det.tiers) || 2;
 const SNOW_ROWS = (n) => [{ k: 'tiers', ko: '단 수', en: 'Tiers', opts: [[2, '2단', '2'], [3, '3단', '3'], [4, '4단', '4']], def: 2, apply: true },
   ...Array.from({ length: n }, (_, i) => ({ ...DR(`d${i + 1}`, i ? `${i + 1}단 공 지름` : '1단(맨 아래) 공 지름', i ? `Ball ${i + 1} diameter` : 'Ball 1 (bottom) diameter', 20, 600, () => SNOW_D[snowTiers()][i], 1), apply: true })).flatMap((r, i) => (i ? [r] : [r, { ...DR('cut', '1단 공 바닥 깎기', 'Ball 1 base cut', 0, 270, () => Math.round(+dv('d1') * 0.067), 1), apply: true }])),
+  { ...DR('cutTop', `${n}단(맨 위) 공 윗부분 깎기`, `Ball ${n} (top) top cut`, 0, 270, 0, 1), apply: true },
   { ...DR('ov', '겹침(−는 간격)', 'Overlap (− for a gap)', -30, 45, 15, 1, '%'), apply: true }, MAT_ROW];
 const snowBalls = () => { // diameters (mm), bottom up, and each ball's centre height; c: how much of the bottom ball is cut off flat so it stands (0: round)
-  const n = snowTiers(), d = Array.from({ length: n }, (_, i) => +dv(`d${i + 1}`)), ov = +dv('ov') / 100, c = clamp(+dv('cut') || 0, 0, d[0] * 0.45), y = [d[0] / 2 - c];
+  const n = snowTiers(), d = Array.from({ length: n }, (_, i) => +dv(`d${i + 1}`)), ov = +dv('ov') / 100, c = clamp(+dv('cut') || 0, 0, d[0] * 0.45), t = clamp(+dv('cutTop') || 0, 0, d[n - 1] * 0.45), y = [d[0] / 2 - c];
   for (let i = 1; i < n; i++) y.push(y[i - 1] + d[i - 1] / 2 - ov * d[i] + d[i] / 2);
-  return { d, y, c, flat: 2 * Math.sqrt(Math.max(0, c * (d[0] - c))), h: y[n - 1] + d[n - 1] / 2 }; // flat: the diameter of the flat it stands on
+  return { d, y, c, t, flat: 2 * Math.sqrt(Math.max(0, c * (d[0] - c))), flatTop: 2 * Math.sqrt(Math.max(0, t * (d[n - 1] - t))), h: y[n - 1] + d[n - 1] / 2 - t }; // flat: the diameter of the flat it stands on; t, flatTop: the top ball's top cut off flat
 };
 const PULL_Z = 0.03; // a bar pull's rod stands this far off the front: room for the fingers behind it
 const DETAIL = {
@@ -1965,7 +1967,7 @@ const DETAIL = {
   frame: [DR('frameT', '프레임 두께', 'Frame thickness', 2, 100, 10), MAT_ROW],
   prop: [MAT_ROW], // the plain mockup solids
   propR: [DR('rad', '모서리 R', 'Corner radius', 0, 50, 0), MAT_ROW], // the cube and the cylinder: sharp edges unless rounded
-  propS: [DR('cut', '바닥 깎기', 'Base cut', 0, 450, SPHERE_CUT_DEF), MAT_ROW], // the sphere: cut flat underneath to stand (0: a whole ball)
+  propS: [DR('cut', '바닥 깎기', 'Base cut', 0, 450, SPHERE_CUT_DEF), DR('cutTop', '윗부분 깎기', 'Top cut', 0, 450, 0), MAT_ROW], // the sphere: cut flat underneath to stand (0: a whole ball), and on top if wanted
   mushroom: [{ ...DR('headD', '갓 지름', 'Shade diameter', 60, 400, 150), apply: true }, { ...DR('headH', '갓 높이', 'Shade height', 20, 250, 97), apply: true },
     { ...DR('stemD', '기둥 지름', 'Stem diameter', 15, 300, 72), apply: true }, { ...DR('stemH', '기둥 높이(갓 아래)', 'Stem height (below the shade)', 20, 800, 133), apply: true }],
   snowman2: SNOW_ROWS(2), snowman3: SNOW_ROWS(3), snowman4: SNOW_ROWS(4),
@@ -3879,10 +3881,9 @@ function frameGeo(group, W, D, H) {
 /* a snowman: its balls stacked on one axis, each sunk a little into the one below; scaled to the size boxes */
 function snowmanGeo(group, W, D, H) {
   const own = meshIn(group), b = snowBalls(), kx = W / (Math.max(...b.d) / 1000), ky = H / (b.h / 1000), mat = propMat();
-  b.d.forEach((d, i) => { // the bottom one cut flat underneath (closed with a disc), to stand on
-    const r = d / 2000, c = i ? 0 : b.c / 1000, th = c > 0 ? Math.PI - Math.acos(clamp((r - c) / r, -1, 1)) : Math.PI;
-    own(new THREE.SphereGeometry(r, 48, 32, 0, Math.PI * 2, 0, th).scale(kx, ky, kx).translate(0, (b.y[i] / 1000) * ky, -D / 2), mat);
-    if (c > 0) own(new THREE.CircleGeometry(b.flat / 2000, 48).rotateX(Math.PI / 2).scale(kx, 1, kx).translate(0, 0, -D / 2), mat);
+  b.d.forEach((d, i) => { // the bottom one cut flat underneath to stand on, the top one cut flat on top if asked (each closed with a disc)
+    const dm = d / 1000, c = i ? 0 : b.c / 1000, t = i === b.d.length - 1 ? b.t / 1000 : 0;
+    own(ballGeo(dm * kx, dm * kx, dm * ky, c * ky, t * ky).translate(0, (b.y[i] / 1000 - dm / 2 + c) * ky, -D / 2), mat);
   });
 }
 /* a sitting teddy bear (H from its seat to the top of its ears); up to 20 cm a keyring rides on its head: a little loop, a short chain, a split ring */
@@ -3997,19 +3998,20 @@ function frameSolid(group, W, D, Hh) {
   for (const y of [t / 2, Hh - t / 2]) { for (const sz of [-1, 1]) bars.push([new THREE.BoxGeometry(W - 2 * t, t, t), new THREE.Matrix4().makeTranslation(0, y, -D / 2 + sz * (D - t) / 2)]); for (const sx of [-1, 1]) bars.push([new THREE.BoxGeometry(t, t, D - 2 * t), new THREE.Matrix4().makeTranslation(sx * (W - t) / 2, y, -D / 2)]); }
   meshIn(group)(mergeGeo(bars), propMat());
 }
-/* a ball W x Hh x D, c cut off flat underneath (closed with a disc), standing on the cut */
-function ballGeo(W, D, Hh, c) {
-  const k = clamp(c / Hh, 0, 0.45), th = k > 0 ? Math.PI - Math.acos(clamp((0.5 - k) / 0.5, -1, 1)) : Math.PI, g = new THREE.SphereGeometry(0.5, 48, 32, 0, Math.PI * 2, 0, th);
-  if (k <= 0) return g.scale(W, Hh, D).translate(0, Hh / 2, -D / 2);
-  const rc = Math.sqrt(Math.max(0, 0.25 - (0.5 - k) ** 2)), disc = new THREE.CircleGeometry(rc, 48).rotateX(Math.PI / 2).translate(0, -(0.5 - k), 0);
-  return mergeGeo([[g, new THREE.Matrix4()], [disc, new THREE.Matrix4()]]).scale(W, Hh, D).translate(0, Hh / 2 - c, -D / 2);
+/* a ball W x Hh x D (centred across), c cut off flat underneath and t off its top (each closed with a disc), standing on its cut at y 0 */
+function ballGeo(W, D, Hh, c, t = 0) {
+  const k = clamp(c / Hh, 0, 0.45), kt = clamp(t / Hh, 0, 0.45), th0 = kt > 0 ? Math.acos(clamp((0.5 - kt) / 0.5, -1, 1)) : 0, th1 = k > 0 ? Math.PI - Math.acos(clamp((0.5 - k) / 0.5, -1, 1)) : Math.PI;
+  const parts = [[new THREE.SphereGeometry(0.5, 48, 32, 0, Math.PI * 2, th0, th1 - th0), new THREE.Matrix4()]];
+  if (k > 0) parts.push([new THREE.CircleGeometry(Math.sqrt(Math.max(0, 0.25 - (0.5 - k) ** 2)), 48).rotateX(Math.PI / 2).translate(0, -(0.5 - k), 0), new THREE.Matrix4()]); // facing down
+  if (kt > 0) parts.push([new THREE.CircleGeometry(Math.sqrt(Math.max(0, 0.25 - (0.5 - kt) ** 2)), 48).rotateX(-Math.PI / 2).translate(0, 0.5 - kt, 0), new THREE.Matrix4()]); // facing up
+  return (parts.length > 1 ? mergeGeo(parts) : parts[0][0]).scale(W, Hh, D).translate(0, Hh / 2 - k * Hh, 0);
 }
 /* a plain box, cylinder (round ends, a longer middle when deeper), cone or sphere; a sheet of paper, with your image on its face */
 function plainSolid(group, W, D, Hh) {
   const rr = ['cube', 'cyl', 'plinthp'].includes(S.pkey) && S.source === 'box' ? Math.min((+dv('rad') || 0) / 1000, Math.min(W, D, Hh) / 2 - 0.0002) : null; // the cube and cylinder: the chosen edge radius, 0 = sharp
   const geo = S.shape === 'cyl' ? stadiumPlate(W, D, Hh, rr != null ? Math.max(0, rr) : Math.min(0.004, Math.min(W, D) * 0.05, Hh * 0.08)).applyMatrix4(ON_DECK)
     : S.shape === 'cone' ? new THREE.CylinderGeometry(0.0002, W / 2, Hh, 56).translate(0, Hh / 2, -D / 2)
-    : S.shape === 'sphere' ? ballGeo(W, D, Hh, sphereCut() / 1000)
+    : S.shape === 'sphere' ? ballGeo(W, D, Hh, sphereCut() / 1000, sphereCutTop() / 1000).translate(0, 0, -D / 2)
     : rr != null && rr <= 0 ? new THREE.BoxGeometry(W, Hh, D).translate(0, Hh / 2, -D / 2)
     : new RoundedBoxGeometry(W, Hh, D, rr != null ? 6 : 3, rr != null ? rr : Math.min(0.016, Math.min(W, D, Hh) * 0.12)).translate(0, Hh / 2, -D / 2);
   const m = new THREE.Mesh(geo, S.look === 'paper' ? mats.paper : propMat());
@@ -4355,12 +4357,12 @@ function palmGrip(HD, P) {
   const x0 = HD.palmT / 2 + 0.001 + pad;
   const round = S.source === 'box' && S.shape === 'sphere';
   const disc = !flat && !round && S.source === 'box' && (['cyl', 'cup'].includes(S.shape) || (['cream', 'cushion', 'jar', 'pump', 'lipstick'].includes(S.look) && dv('form') !== 'cube')); // a round thing standing on the palm
-  const cutB = round ? (sphereCut() / 1000) * S.scale : 0, shape = { kind: round ? 'c' : 'r', cx: x0 + (up + cutB) / 2 - cutB, cy: yc, r: Math.min(up + cutB, along) / 2, ax: up / 2, by: along / 2, z0: -P.W / 2, z1: P.W / 2 }; // a ball cut flat underneath: its middle that much nearer the palm
+  const cutB = round ? (sphereCut() / 1000) * S.scale : 0, cutT = round ? (sphereCutTop() / 1000) * S.scale : 0, shape = { kind: round ? 'c' : 'r', cx: x0 + (up + cutB + cutT) / 2 - cutB, cy: yc, r: Math.min(up + cutB + cutT, along) / 2, ax: up / 2, by: along / 2, z0: -P.W / 2, z1: P.W / 2 }; // a ball cut flat underneath (or on top): its middle that much nearer the palm, its sides as round as ever
   const f = HD.fingers.map((F) => solve(shape, new V3(0, F.y, F.z), UP, FAX, F.L, F.r, [12, 16, 10])); // an open, slightly cupped hand
   // the thumb rests along its side, its pad against it: never through it, never standing off in the air
   const C = new V3(x0 + up / 2, yc, 0), T = HD.thumb;
   const sd = (q) => {
-    if (round) return q.distanceTo(C) - Math.min(up, along) / 2;
+    if (round) { const R = Math.min(up + cutB + cutT, along) / 2; return Math.max(q.distanceTo(new V3(x0 + R - cutB, yc, 0)) - R, x0 - q.x, q.x - (x0 + up)); } // a ball, its cut-off cap and top flat
     const dx = Math.abs(q.x - C.x) - up / 2;
     if (disc) { const dr = Math.hypot(q.y - yc, q.z) - Math.min(along, P.W) / 2; return Math.hypot(Math.max(dr, 0), Math.max(dx, 0)) + Math.min(Math.max(dr, dx), 0); }
     const dy = Math.abs(q.y - yc) - along / 2, dz = Math.abs(q.z) - P.W / 2;
@@ -6270,8 +6272,10 @@ function syncDetail() {
   $('detHint').textContent = k === 'office' ? L('좌면 높이(H)는 가스 실린더 최저~최고 안에서 이 사람에게 맞게 정해져요. 바퀴가 커지면 다리만 올라가요.', 'The seat (H) is set for this person within the gas lift’s lowest to highest. Bigger casters raise only the base.')
     : k === 'headphone' ? L('W·D·H는 전체 크기, 여기서는 귀마개와 머리띠를 따로 정해요.', 'W, D and H are the overall size; set the ear cushions and the headband here.')
     : k === 'glasses' || k === 'sunglasses' ? L('렌즈와 테로 앞면의 폭(W)·높이(H)가 정해져요. 깊이(D)는 다리 길이예요. 콧등에 얹히고 다리는 귀에 걸려요.', 'The lenses and rims set the front’s width (W) and height (H); D is the temple length. It rests on the nose, the temples over the ears.')
-    : /^snowman/.test(k) ? (() => { const b = snowBalls(); return b.c > 0 ? L(`1단 공 밑을 ${Math.round(b.c)}mm 평평하게 깎아 세워요. 바닥 평면 지름 약 ${Math.round(b.flat)}mm (0이면 동그란 그대로).`, `The bottom ball is cut ${Math.round(b.c)} mm flat to stand on: a base about ${Math.round(b.flat)} mm across (0 leaves it round).`) : L('1단 공 밑이 동그란 그대로예요. 바닥 깎기를 주면 평평하게 서요.', 'The bottom ball is left round; give it a base cut to stand flat.'); })()
-    : k === 'propS' ? (() => { const c = sphereCut(), fl = c > 0 ? Math.round(S.w * Math.sqrt(Math.max(0, 1 - (1 - (2 * c) / S.h) ** 2))) : 0; return c > 0 ? L(`H ${S.h}mm 공의 밑을 ${Math.round(c)}mm 평평하게 깎아 세워요. 실제 높이 ${Math.round(S.h - c)}mm, 바닥 평면 지름 약 ${fl}mm (0이면 완전한 구).`, `The ${S.h} mm ball is cut ${Math.round(c)} mm flat underneath to stand: ${Math.round(S.h - c)} mm tall on a base about ${fl} mm across (0 leaves a whole ball).`) : L('완전한 구예요. 바닥 깎기를 주면 평평하게 서요.', 'A whole ball; give it a base cut to stand flat.'); })()
+    : /^snowman/.test(k) ? (() => { const b = snowBalls(), top = b.t > 0 ? L(` 맨 위 공은 윗부분을 ${Math.round(b.t)}mm 깎아 평면 지름 약 ${Math.round(b.flatTop)}mm예요.`, ` The top ball's top is cut ${Math.round(b.t)} mm: a flat about ${Math.round(b.flatTop)} mm across.`) : ''; return (b.c > 0 ? L(`1단 공 밑을 ${Math.round(b.c)}mm 평평하게 깎아 세워요. 바닥 평면 지름 약 ${Math.round(b.flat)}mm (0이면 동그란 그대로).`, `The bottom ball is cut ${Math.round(b.c)} mm flat to stand on: a base about ${Math.round(b.flat)} mm across (0 leaves it round).`) : L('1단 공 밑이 동그란 그대로예요. 바닥 깎기를 주면 평평하게 서요.', 'The bottom ball is left round; give it a base cut to stand flat.')) + top; })()
+    : k === 'propS' ? (() => { const c = sphereCut(), t = sphereCutTop(), fw = (x) => Math.round(S.w * Math.sqrt(Math.max(0, 1 - (1 - (2 * x) / S.h) ** 2))), hh = Math.round(S.h - c - t);
+        if (!c && !t) return L('완전한 구예요. 바닥 깎기를 주면 평평하게 서요.', 'A whole ball; give it a base cut to stand flat.');
+        return L(`H ${S.h}mm 공을 ${c ? `밑 ${Math.round(c)}mm(평면 지름 약 ${fw(c)}mm)` : ''}${c && t ? ', ' : ''}${t ? `위 ${Math.round(t)}mm(평면 지름 약 ${fw(t)}mm)` : ''} 깎았어요. 실제 높이 ${hh}mm.`, `The ${S.h} mm ball is cut ${c ? `${Math.round(c)} mm underneath (a flat about ${fw(c)} mm across)` : ''}${c && t ? ' and ' : ''}${t ? `${Math.round(t)} mm on top (about ${fw(t)} mm across)` : ''}: ${hh} mm tall.`); })()
     : ['desk', 'standing', 'dining', 'bar', 'coffee'].includes(k) ? L('다리 높이는 전체 높이(H)에서 상판 두께를 뺀 값이에요.', 'The legs are the overall height (H) less the top.')
     : ''; // the rest need no note
   $('detHint').hidden = !$('detHint').textContent;
