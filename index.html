@@ -73,8 +73,10 @@ button { cursor: pointer; }
 .guide span { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); top: -17px; font: 500 11px/1 var(--font-mono); color: var(--ink-2); background: color-mix(in srgb, var(--viewport) 85%, transparent); padding: 2px 4px; }
 .guide.target { border-top-color: var(--accent); }
 .guide.target span { left: auto; right: calc(max(12px, env(safe-area-inset-right, 0px)) + 46px); color: var(--accent-ink); } /* clear of the zoom buttons */
-.top { position: absolute; top: 12px; left: 0; right: 0; display: flex; flex-direction: column; gap: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); pointer-events: none; }
-.views { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; pointer-events: auto; }
+.top { position: absolute; top: 12px; left: 0; right: 0; display: flex; flex-direction: row; align-items: flex-start; gap: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); pointer-events: none; }
+.views { flex: 1 1 auto; min-width: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; pointer-events: auto; }
+#btnMeasure { flex: 0 0 auto; margin-left: auto; pointer-events: auto; } /* measuring stays at the right, in view on a phone too; the views beside it scroll */
+@media (max-width: 760px) { .views { mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); padding-right: 22px; } } /* fades out where it scrolls on */
 .views::-webkit-scrollbar { display: none; }
 .chip { flex: 0 0 auto; height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); font-size: 13px; font-weight: 500; color: var(--ink); }
 .chip:hover { border-color: var(--ink-2); }
@@ -94,6 +96,10 @@ button { cursor: pointer; }
 .det .dimrow input[type=number] { width: 100%; min-width: 0; box-sizing: border-box; }
 .det .dimrows, .det .dimrow { min-width: 0; max-width: 100%; }
 .det .seg { grid-column: 1 / -1; }
+.det .seg.wrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(98px, 1fr)); gap: 4px; border: 0; background: none; overflow: visible; }
+.det .seg.wrap button { height: 30px; padding: 0 4px; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); }
+.det .seg.wrap button + button { border-left: 1px solid var(--line); }
+.det .seg.wrap button[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
 .tag.unit { font-weight: 600; }
 .toast { pointer-events: auto; align-self: center; width: min(480px, 100%); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; background: var(--raise); border: 1px solid var(--line); border-radius: 8px; padding: 10px 10px 10px 12px; box-shadow: 0 6px 20px rgb(0 0 0 / 0.12); animation: rise 0.22s ease-out; }
 .toast .kicker { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; }
@@ -291,9 +297,8 @@ input:disabled { opacity: 0.55; }
         <button type="button" class="chip" data-view="bird" aria-pressed="false" data-en="Bird's-eye">버드뷰</button>
         <span class="vsep" aria-hidden="true"></span>
         <div class="lens" id="lensSeg" role="group" aria-label="렌즈 초점거리" data-en-aria="Lens focal length"><span data-en="Lens mm">렌즈 mm</span><button type="button" data-lens="20">20</button><button type="button" data-lens="35">35</button><button type="button" data-lens="50">50</button><button type="button" data-lens="85">85</button></div>
-        <span class="vsep" aria-hidden="true"></span>
-        <button type="button" class="chip" id="btnMeasure" aria-pressed="false" data-en="Measure">치수 재기</button>
       </div>
+      <button type="button" class="chip" id="btnMeasure" aria-pressed="false" data-en="Measure">치수 재기</button>
     </div>
     <div class="zoom" role="group" aria-label="화면 확대" data-en-aria="Zoom">
       <button type="button" class="btn" id="btnSnap" aria-label="이미지로 저장" title="이미지로 저장 (PNG)" data-en-aria="Save as image" data-en-title="Save as image (PNG)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></button>
@@ -1176,6 +1181,9 @@ function chromeEnv() {
 const mats = {
   body: new THREE.MeshPhysicalMaterial({ roughness: 0.4, clearcoat: 0.55, clearcoatRoughness: 0.25 }), // satin, like a display mannequin
   foam: new THREE.MeshStandardMaterial({ roughness: 0.88 }),
+  foamDS: new THREE.MeshStandardMaterial({ roughness: 0.88, side: THREE.DoubleSide }), // the product colour seen from both sides (an open lamp shade)
+  shadeMetal: new THREE.MeshStandardMaterial({ roughness: 0.32, metalness: 0.65, side: THREE.DoubleSide }), // a painted metal shade, the product colour
+  stemBlack: new THREE.MeshStandardMaterial({ color: 0x1c1c1e, roughness: 0.42, metalness: 0.15 }), // a black lamp stem
   pad: new THREE.MeshStandardMaterial({ roughness: 0.97 }), // a product's soft parts (ear cushions, headband pad, ear tips): the product colour, deeper
   trim: new THREE.MeshStandardMaterial({ roughness: 0.5 }), // a product's hard small parts and face panels: the product colour, lighter and smoother
   surface: new THREE.MeshStandardMaterial({ roughness: 0.75 }),
@@ -1250,7 +1258,7 @@ function applyTheme() {
   scene.background = new THREE.Color(tok('--viewport'));
   for (const m of [mats.body, mats.joint, mats.band]) m.color.set(tok('--body'));
   mats.leather.color.set(tok('--foam')).multiplyScalar(0.78);
-  mats.foam.color.set(tok('--foam')); mats.glaze.color.set(tok('--foam'));
+  mats.foam.color.set(tok('--foam')); mats.glaze.color.set(tok('--foam')); mats.foamDS.color.set(tok('--foam')); mats.shadeMetal.color.set(tok('--foam'));
   mats.pad.color.set(tok('--foam')).multiplyScalar(0.62);
   mats.trim.color.set(tok('--foam')).lerp(new THREE.Color(0xffffff), 0.08);
   mats.surface.color.set(tok('--surface'));
@@ -1940,6 +1948,14 @@ function stoolRing(H, W, y) {
 // ceramic: a white glaze with no clear coat (a clear coat with no surroundings to reflect goes black round every rim and edge)
 const TOP_MAT = { ceramic: new THREE.MeshStandardMaterial({ color: 0xf3f1ec, roughness: 0.3, metalness: 0 }), wood: new THREE.MeshStandardMaterial({ color: 0x9c6b43, roughness: 0.72 }), glass: new THREE.MeshStandardMaterial({ color: 0xcfe2e4, roughness: 0.06, transparent: true, opacity: 0.4, depthWrite: false }), metal: mats.metal };
 const MAT_ROW = { k: 'mat', ko: '재질', en: 'Material', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['glass', '유리', 'Glass'], ['metal', '메탈', 'Metal']], def: 'solid' };
+/* a lamp's shade: what it is made of, and pleated or plain */
+const SHADE_ROW = (def) => ({ k: 'smat', ko: '갓 재질', en: 'Shade material', opts: [['solid', '솔리드(제품색)', 'Solid (product colour)'], ['fabric', '패브릭', 'Fabric'], ['paper', '종이(한지)', 'Paper'], ['glass', '유리(우윳빛)', 'Opal glass'], ['metal', '메탈', 'Metal']], def });
+const PLEAT_ROW = { k: 'pleat', ko: '갓 주름', en: 'Pleats', opts: [['off', '없음', 'Plain'], ['on', '있음', 'Pleated']], def: 'off' };
+const LAMP_FORM_ROW = (def, apply) => ({ k: 'hform', ko: '갓 모양', en: 'Shade shape', opts: [['taper', '원통사다리꼴', 'Tapered drum'], ['taperInv', '역사다리꼴', 'Inverted taper'], ['dome', '반원구(버섯)', 'Dome (mushroom)'], ['cyl', '원통', 'Cylinder'], ['cube', '큐브', 'Cube'], ['sphere', '구', 'Sphere']], def, apply });
+const OPEN_SHADE = (f) => f === 'taper' || f === 'taperInv' || f === 'cyl'; // open top and bottom, the bulb inside; the rest are closed and glow through a diffuser
+const mushForm = () => (S.det && S.det.hform) || 'dome'; // read straight off the details: the rows themselves depend on it (a ball has no height of its own)
+const SHADE_MATS = {};
+const shadeMat = (k) => (k === 'solid' ? mats.foamDS : k === 'metal' ? mats.shadeMetal : k === 'fabric' ? lampShade : (SHADE_MATS[k] ||= k === 'paper' ? new THREE.MeshStandardMaterial({ color: 0xfbf7ee, emissive: 0xffe7c2, emissiveIntensity: 0.5, roughness: 0.96, side: THREE.DoubleSide }) : new THREE.MeshStandardMaterial({ color: 0xf6f4f0, emissive: 0xffecd0, emissiveIntensity: 0.42, roughness: 0.14, side: THREE.DoubleSide }))); // fabric and paper glow warm, opal glass a little glossy, solid and metal don't
 const SFORM = () => (S.det && S.det.sform) || 'square'; // the sunglasses' shape sets their default lens and rim sizes
 const DR = (k, ko, en, min, max, def, step = 1, unit = 'mm') => ({ k, ko, en, min, max, def, step, unit });
 const TABLE_ROWS = (t, leg, legKo = '다리 굵기', legEn = 'Leg thickness') => [DR('topT', '상판 두께', 'Top thickness', 12, 80, t), DR('legT', legKo, legEn, 15, 120, leg), MAT_ROW];
@@ -1969,8 +1985,12 @@ const DETAIL = {
   prop: [MAT_ROW], // the plain mockup solids
   propR: [DR('rad', '모서리 R', 'Corner radius', 0, 50, 0), MAT_ROW], // the cube and the cylinder: sharp edges unless rounded
   propS: [DR('cut', '바닥 깎기', 'Base cut', 0, 450, SPHERE_CUT_DEF), DR('cutTop', '윗부분 깎기', 'Top cut', 0, 450, 0), MAT_ROW], // the sphere: cut flat underneath to stand (0: a whole ball), and on top if wanted
-  mushroom: [{ ...DR('headD', '갓 지름', 'Shade diameter', 60, 400, 150), apply: true }, { ...DR('headH', '갓 높이', 'Shade height', 20, 250, 97), apply: true },
-    { ...DR('stemD', '기둥 지름', 'Stem diameter', 15, 300, 72), apply: true }, { ...DR('stemH', '기둥 높이(갓 아래)', 'Stem height (below the shade)', 20, 800, 133), apply: true }],
+  mushroom: [LAMP_FORM_ROW('dome', true),
+    { ...DR('headD', '갓 지름(폭)', 'Shade diameter (width)', 60, 400, 150), apply: true }, { ...DR('headH', '갓 높이', 'Shade height', 20, 250, 97), apply: true },
+    { ...DR('stemD', '기둥 지름', 'Stem diameter', 15, 300, 72), apply: true }, { ...DR('stemH', '기둥 높이(갓 아래)', 'Stem height (below the shade)', 20, 800, 133), apply: true },
+    SHADE_ROW('fabric'), PLEAT_ROW, { k: 'stemCol', ko: '기둥 색', en: 'Stem colour', opts: [['black', '블랙', 'Black'], ['same', '제품색', 'Product colour']], def: 'black' }],
+  lamp: [LAMP_FORM_ROW(() => (S.look === 'floorlamp' ? 'cyl' : 'taper')), SHADE_ROW('fabric'), PLEAT_ROW], // a floor or table lamp's shade
+  disc: [{ k: 'hole', ko: '가운데 구멍', en: 'Centre hole', opts: [['off', '없음', 'None'], ['on', '있음', 'Hole']], def: 'off' }, DR('holeD', '구멍 지름', 'Hole diameter', 1, 400, 15, 0.5), MAT_ROW], // a disc with a hole through its middle: a CD is 120 x 1.2 with a 15 mm hole
   snowman2: SNOW_ROWS(2), snowman3: SNOW_ROWS(3), snowman4: SNOW_ROWS(4),
   teddy: [{ k: 'tsize', ko: '크기', en: 'Size', opts: [[50, '5cm', '5 cm'], [100, '10cm', '10 cm'], [150, '15cm', '15 cm'], [200, '20cm', '20 cm'], [300, '30cm', '30 cm']], def: 100, apply: true }],
   pump: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], cream: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl', apply: true }, { k: 'ml', ko: '용량', en: 'Volume', opts: [[15, '15ml', '15 ml'], [30, '30ml', '30 ml'], [50, '50ml', '50 ml'], [100, '100ml', '100 ml']], def: 50, apply: true }, DR('rad', '모서리 R', 'Corner radius', 0, 20, 0), { k: 'mat', ko: '뚜껑 재질', en: 'Lid', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['metal', '메탈', 'Metal']], def: 'solid' }], lipstick: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl' }, MAT_ROW], tube: [MAT_ROW], // cosmetics: the body round or square
@@ -2008,6 +2028,7 @@ const DETAIL = {
   headphone: [DR('cupH', '귀마개 높이', 'Ear cushion height', 60, 130, () => Math.round(clamp(0.5 * S.h, 75, 115))), DR('cupL', '귀마개 폭', 'Ear cushion width', 50, 115, () => Math.round(clamp(0.88 * S.d, 58, 95))), DR('cupT', '귀마개 두께', 'Ear cup thickness', 12, 45, () => Math.round(clamp(0.13 * S.w, 17, 30))), DR('bandW', '머리띠 폭', 'Headband width', 12, 45, 29), DR('slide', '슬라이더 길이', 'Slider extension', 0, 50, 20)],
 };
 DETAIL.dish.push(DETAIL.bowl[1], DETAIL.bowl[2]); // a plate: its own types, the bowl's sizes and materials
+DETAIL.mushroomS = DETAIL.mushroom.filter((r) => r.k !== 'headH').map((r) => (r.k === 'headD' ? { ...r, ko: '갓(구) 지름', en: 'Ball diameter' } : r)); // a ball shade: as tall as it is wide
 
 const BOWL_SIZES = { plate: { S: [200, 22], M: [250, 25], L: [280, 27] }, rice: { S: [105, 55], M: [115, 65], L: [125, 72] }, soup: { S: [130, 62], M: [145, 70], L: [160, 80] }, shallow: { S: [150, 45], M: [180, 55], L: [210, 62] } }; // diameter, height (mm)
 const JAR_SIZES = { cyl: { 250: [65, 100], 500: [80, 130], 1000: [100, 170] }, cube: { 250: [60, 95], 500: [75, 120], 1000: [95, 150] } }; // width, height (mm)
@@ -2019,7 +2040,7 @@ function detApply() { // a bowl's type and size, or a jar's form and volume, set
   else if (S.look === 'cushion') { const sq = dv('form') === 'cube'; S.w = S.d = sq ? 80 : 84; S.h = 26; }
   else if (S.shape === 'ring' && S.source === 'box') S.h = +dv('stone'); // the stone's width (0: a plain band)
   else if (S.look === 'snowman') { const b = snowBalls(); S.w = S.d = Math.max(...b.d); S.h = Math.round(b.h); }
-  else if (S.look === 'mushroom') { S.w = S.d = Math.max(+dv('headD'), +dv('stemD')); S.h = +dv('stemH') + +dv('headH'); } // the lamp's overall size from its shade and stem
+  else if (S.look === 'mushroom') { S.w = S.d = Math.max(+dv('headD'), +dv('stemD')); S.h = +dv('stemH') + (mushForm() === 'sphere' ? +dv('headD') : +dv('headH')); } // the lamp's overall size from its shade and stem (a ball shade as tall as it is wide)
   else if (S.look === 'teddy') { const t = +dv('tsize'); S.h = t; S.w = Math.round(0.62 * t); S.d = Math.round(0.55 * t); S.place = t <= 200 ? 'hand' : 'plinth'; } // a keyring size goes in the hand, a big one on the plinth
   else if (S.look === 'cream') { const [w, h] = { 15: [45, 35], 30: [55, 42], 50: [62, 48], 100: [75, 58] }[dv('ml')]; const k = dv('form') === 'cube' ? 0.92 : 1; S.w = S.d = Math.round(w * k); S.h = h; }
 }
@@ -2034,11 +2055,12 @@ function detKind() {
   if (S.shape === 'cap') return 'cap';
   if (S.look === 'bowl' && S.source === 'box') return S.pkey === 'dish' ? 'dish' : 'bowl';
   if (S.look === 'snowman') return `snowman${snowTiers()}`;
-  if (S.look === 'mushroom' && S.source === 'box') return 'mushroom';
+  if (S.source === 'box' && (S.look === 'floorlamp' || S.look === 'tablelamp')) return 'lamp';
+  if (S.look === 'mushroom' && S.source === 'box') return mushForm() === 'sphere' ? 'mushroomS' : 'mushroom';
   if (S.look === 'teddy') return 'teddy';
   if (['washer', 'humidifier', 'standac', 'frame', 'cushion'].includes(S.look) && S.source === 'box') return S.look; // plates and bowls share the lathe, not the choices
   if (['tube', 'pump', 'lipstick', 'cream', 'trap', 'bowl', 'jar', 'trolley'].includes(S.look) && S.source === 'box') return S.look; // book and disc: the plain mockups' material row
-  if (isProp()) return ['cube', 'cyl', 'plinthp'].includes(S.pkey) ? 'propR' : S.pkey === 'sphere' ? 'propS' : 'prop';
+  if (isProp()) return ['cube', 'cyl', 'plinthp'].includes(S.pkey) ? 'propR' : S.pkey === 'sphere' ? 'propS' : S.pkey === 'disc' ? 'disc' : 'prop';
   if (S.look === 'hobo') return 'hobo';
   if (S.shape === 'laptop') return 'laptop';
   if (S.look === 'purifier' || S.look === 'airpurifier') return S.look;
@@ -3471,13 +3493,47 @@ function speakerGeo(group, W, D, H) {
   for (const x of [-0.018, 0, 0.018]) if (Math.abs(x) < W / 2 - 0.012) own(new THREE.CylinderGeometry(0.0065, 0.0065, 0.002, 20).translate(x, H + 0.001, -D / 2), mats.cup);
   own(new THREE.TorusGeometry(0.014, 0.003, 8, 24, Math.PI).rotateY(Math.PI / 2).translate(0, H * 0.82, -D - 0.001), mats.tire);
 }
-/* mushroom lamp: a round stem and a dome cap over it, the cap's underside the light */
+/* pleats: push a round geometry's vertices in and out round its axis (y), one fold every ~25 mm at its widest; fade: how much each vertex
+   takes by its distance from the axis (0 at the axis) */
+function pleatGeo(g, rMax) {
+  const pa = g.attributes.position, n = Math.max(16, Math.round((2 * Math.PI * rMax) / 0.025)), amp = Math.min(0.006, rMax * 0.05), v = new V3();
+  for (let i = 0; i < pa.count; i++) {
+    v.fromBufferAttribute(pa, i); const r = Math.hypot(v.x, v.z); if (r < 1e-6) continue;
+    const idx = Math.round((((Math.atan2(v.z, v.x) / (2 * Math.PI)) * 2 * n) % (2 * n) + 2 * n) % (2 * n)), k = 1 + (amp * (r / rMax) * (idx % 2 ? -1 : 1)) / r; // a zigzag round its 2n vertices: crest, fold, crest
+    pa.setX(i, v.x * k); pa.setZ(i, v.z * k);
+  }
+  pa.needsUpdate = true; const ng = g.toNonIndexed(); ng.computeVertexNormals(); return ng; // each fold's face its own way: crisp, not smoothed away
+}
+/* a lamp's shade, its bottom at y0, w x d at its widest, h tall: a tapered drum or a cylinder (open, the bulb inside), a dome or a cube
+   (closed above, glowing through a diffuser underneath); pleated if asked (not a cube). Returns the open forms' bulb height or null */
+const shadeR = (form) => (form === 'taper' ? [0.31, 0.5] : form === 'taperInv' ? [0.5, 0.31] : [0.5, 0.5]); // an open shade's top and bottom radius (its width 1)
+const SPHERE_HOLE = 0.16; // a ball shade's opening underneath, its radius (the ball 1 across): the light shows through it
+function lampShadeParts(own, form, w, d, h, y0, cz, mat, pleat) {
+  const rx = w / 2, rz = d / 2, rr = Math.max(rx, rz), segs = (n) => (pleat ? 2 * Math.max(16, Math.round((2 * Math.PI * rr) / 0.025)) : n), fold = (g) => (pleat ? pleatGeo(g, rr) : g);
+  if (OPEN_SHADE(form)) {
+    const [rt, rb] = shadeR(form);
+    own(fold(new THREE.CylinderGeometry(rt, rb, 1, segs(64), 1, true).scale(w, h, d)).translate(0, y0 + h / 2, cz), mat);
+    own(new THREE.SphereGeometry(Math.min(0.035, h * 0.3, rr * 0.4), 20, 14).translate(0, y0 + h * 0.45, cz), bulbMat);
+    return y0 + h * 0.45;
+  }
+  if (form === 'sphere') { // a ball, open a little underneath where the light shows
+    const a = Math.asin(SPHERE_HOLE / 0.5);
+    own(fold(new THREE.SphereGeometry(0.5, segs(48), 28, 0, Math.PI * 2, 0, Math.PI - a).scale(w, h, d)).translate(0, y0 + h / 2, cz), mat);
+    own(new THREE.CircleGeometry(SPHERE_HOLE, 32).scale(w, d, 1).rotateX(Math.PI / 2).translate(0, y0 + h * (0.5 - 0.5 * Math.cos(a)) + 0.0005, cz), bulbMat);
+    return null;
+  }
+  if (form === 'dome') own(fold(new THREE.SphereGeometry(0.5, segs(48), 18, 0, Math.PI * 2, 0, Math.PI / 2).scale(w, 2 * h, d)).translate(0, y0, cz), mat);
+  else own(new RoundedBoxGeometry(w, h, d, 3, Math.min(0.006, h / 2, w / 2) * 0.999).translate(0, y0 + h / 2, cz), mat);
+  own((form === 'dome' ? new THREE.CircleGeometry(0.49, 48).scale(w, d, 1) : new THREE.PlaneGeometry(w * 0.94, d * 0.94)).rotateX(Math.PI / 2).translate(0, y0 - 0.0005, cz), bulbMat); // the light underneath
+  return null;
+}
+/* mushroom lamp (a portable lamp): a round stem (black, or the product colour) under a shade of any lamp form (a dome by default) */
 function mushroomGeo(group, W, D, H) { // the shade (head) and the stem each sized on its own in the details; W, D, H follow from them
-  const own = meshIn(group), hd = +dv('headD') / 1000, hh = +dv('headH') / 1000, sd = +dv('stemD') / 1000, sl = +dv('stemH') / 1000, cz = -D / 2;
+  const own = meshIn(group), hd = +dv('headD') / 1000, hh = mushForm() === 'sphere' ? hd : +dv('headH') / 1000, sd = +dv('stemD') / 1000, sl = +dv('stemH') / 1000, cz = -D / 2;
   const kx = W / Math.max(hd, sd), kz = D / Math.max(hd, sd), ky = H / (sl + hh), capH = hh * ky, stemR = (sd / 2) * Math.min(kx, kz), sh = sl * ky + capH * 0.25; // the stem runs up a little inside the shade
-  own(new THREE.CylinderGeometry(stemR * 0.88, stemR, sh, 40).translate(0, sh / 2, cz), mats.foam);
-  own(new THREE.SphereGeometry(0.5, 48, 18, 0, Math.PI * 2, 0, Math.PI / 2).scale(hd * kx, 2 * capH, hd * kz).translate(0, H - capH, cz), mats.foam);
-  own(new THREE.CircleGeometry(0.5, 48).rotateX(Math.PI / 2).scale(hd * kx * 0.98, 1, hd * kz * 0.98).translate(0, H - capH - 0.0005, cz), mats.cup);
+  const form = dv('hform') || 'dome';
+  own(new THREE.CylinderGeometry(stemR * 0.88, stemR, sh, 40).translate(0, sh / 2, cz), dv('stemCol') === 'same' ? mats.foam : mats.stemBlack);
+  lampShadeParts(own, form, hd * kx, hd * kz, capH, H - capH, cz, shadeMat(dv('smat') || 'fabric'), dv('pleat') === 'on' && form !== 'cube');
   own(new THREE.CylinderGeometry(0.006, 0.006, 0.004, 20).rotateX(Math.PI / 2).translate(0, Math.min(sl * ky * 0.5, 0.06), cz + stemR * 0.94 + 0.0015), mats.trim); // the button, low on the stem's front
 }
 function pouchGeo(group, W, D, H) {
@@ -3511,21 +3567,21 @@ function partsGeo(group, W, D, H) {
 function lampGeo(group, W, D, H, floor) {
   const own = meshIn(group), cz = -D / 2, R = W / 2;
   if (floor) {
-    const shH = Math.min(0.3, H * 0.2), br = Math.min(0.16, R * 0.75);
+    const form = dv('hform') || 'cyl', open = OPEN_SHADE(form), ball = form === 'sphere';
+    const shH = ball ? Math.min(W, D, H * 0.5) : Math.min(0.3, H * 0.2), br = Math.min(0.16, R * 0.75), top = H - shH * (open ? 0.6 : ball ? 0.5 : 0.9); // a ball shade as tall as it is wide; the pole up into the shade
     group.userData.focus = new V3(0, H - shH / 2, cz); // zoom closes on the shade
     own(new THREE.CylinderGeometry(br * 0.92, br, 0.025, 48).translate(0, 0.0125, cz), mats.frame);
-    own(new THREE.CylinderGeometry(0.011, 0.011, H - shH * 0.6, 20).translate(0, (H - shH * 0.6) / 2, cz), mats.frame);
-    own(new THREE.CylinderGeometry(R, R * 1.02, shH, 64, 1, true).translate(0, H - shH / 2, cz), lampShade);
-    own(new THREE.SphereGeometry(0.035, 20, 14).translate(0, H - shH * 0.55, cz), bulbMat);
-    for (const a of [0, 2.1, 4.2]) own(new THREE.CylinderGeometry(0.003, 0.003, R).rotateZ(Math.PI / 2).rotateY(a).translate(Math.cos(a) * R / 2 * 0, H - shH * 0.55, cz), mats.frame);
+    own(new THREE.CylinderGeometry(0.011, 0.011, top, 20).translate(0, top / 2, cz), mats.frame);
+    const by = lampShadeParts(own, form, W, D, shH, H - shH, cz, shadeMat(dv('smat') || 'fabric'), dv('pleat') === 'on' && form !== 'cube');
+    if (by != null) { const [rt, rb] = shadeR(form), r = (rb + (rt - rb) * 0.45) * 0.97; for (const a of [0, 2.1, 4.2]) own(new THREE.CylinderGeometry(0.003, 0.003, 1).scale(1, (2 * r) / Math.hypot(Math.cos(a) / W, Math.sin(a) / D), 1).rotateZ(Math.PI / 2).rotateY(a).translate(0, by, cz), mats.frame); } // the spokes from the bulb holder out to the shade, each side
     return;
   }
-  const br = Math.min(0.085, R * 0.55), sh = H * 0.42;
+  const form = dv('hform') || 'taper', open = OPEN_SHADE(form), ball = form === 'sphere';
+  const br = Math.min(0.085, R * 0.55), sh = ball ? Math.min(W, D, H * 0.75) : H * 0.42, top = H - sh * (open ? 0.7 : ball ? 0.5 : 0.9);
   group.userData.focus = new V3(0, H - sh * 0.45, cz); // zoom closes on the shade, the bulb in it
   own(new THREE.CylinderGeometry(br * 0.9, br, 0.03, 48).translate(0, 0.015, cz), mats.foam);
-  own(new THREE.CylinderGeometry(0.012, 0.012, H - sh * 0.7, 16).translate(0, (H - sh * 0.7) / 2, cz), mats.frame);
-  own(new THREE.CylinderGeometry(R * 0.6, R, sh, 64, 1, true).translate(0, H - sh / 2, cz), lampShade);
-  own(new THREE.SphereGeometry(0.03, 20, 14).translate(0, H - sh * 0.6, cz), bulbMat);
+  own(new THREE.CylinderGeometry(0.012, 0.012, top, 16).translate(0, top / 2, cz), mats.frame);
+  lampShadeParts(own, form, W, D, sh, H - sh, cz, shadeMat(dv('smat') || 'fabric'), dv('pleat') === 'on' && form !== 'cube');
 }
 function buildProduct() {
   disposeGroup(holder);
@@ -4007,10 +4063,18 @@ function ballGeo(W, D, Hh, c, t = 0) {
   if (kt > 0) parts.push([new THREE.CircleGeometry(Math.sqrt(Math.max(0, 0.25 - (0.5 - kt) ** 2)), 48).rotateX(-Math.PI / 2).translate(0, 0.5 - kt, 0), new THREE.Matrix4()]); // facing up
   return (parts.length > 1 ? mergeGeo(parts) : parts[0][0]).scale(W, Hh, D).translate(0, Hh / 2 - k * Hh, 0);
 }
+/* a disc (a stadium when deeper than wide) with a round hole through its middle, lying flat, its front at z 0 */
+function holedDisc(W, D, Hh, holeD, b) {
+  const sh = stadiumShape(Math.max(W - 2 * b, 0.0004), Math.max(D - 2 * b, 0.0004)), hole = new THREE.Path();
+  hole.absarc(0, (D - 2 * b) / 2, Math.min(holeD / 2, Math.min(W, D) / 2 - 0.001) + b, 0, Math.PI * 2, true); sh.holes.push(hole); // the bevel eats into the hole as it rounds the edge: drawn that much wider
+  return new THREE.ExtrudeGeometry(sh, { depth: Math.max(Hh - 2 * b, 0.0001), bevelEnabled: b > 0, bevelThickness: b, bevelSize: b, bevelSegments: 3, curveSegments: 64 }).translate(0, b, b).applyMatrix4(ON_DECK);
+}
+const discHole = () => (S.source === 'box' && S.pkey === 'disc' && dv('hole') === 'on' ? +dv('holeD') / 1000 : 0); // a CD's 15 mm, or as set
 /* a plain box, cylinder (round ends, a longer middle when deeper), cone or sphere; a sheet of paper, with your image on its face */
 function plainSolid(group, W, D, Hh) {
   const rr = ['cube', 'cyl', 'plinthp'].includes(S.pkey) && S.source === 'box' ? Math.min((+dv('rad') || 0) / 1000, Math.min(W, D, Hh) / 2 - 0.0002) : null; // the cube and cylinder: the chosen edge radius, 0 = sharp
-  const geo = S.shape === 'cyl' ? stadiumPlate(W, D, Hh, rr != null ? Math.max(0, rr) : Math.min(0.004, Math.min(W, D) * 0.05, Hh * 0.08)).applyMatrix4(ON_DECK)
+  const geo = S.shape === 'cyl' && discHole() > 0 ? holedDisc(W, D, Hh, discHole(), Math.min(0.004, Math.min(W, D) * 0.05, Hh * 0.08))
+    : S.shape === 'cyl' ? stadiumPlate(W, D, Hh, rr != null ? Math.max(0, rr) : Math.min(0.004, Math.min(W, D) * 0.05, Hh * 0.08)).applyMatrix4(ON_DECK)
     : S.shape === 'cone' ? new THREE.CylinderGeometry(0.0002, W / 2, Hh, 56).translate(0, Hh / 2, -D / 2)
     : S.shape === 'sphere' ? ballGeo(W, D, Hh, sphereCut() / 1000, sphereCutTop() / 1000).translate(0, 0, -D / 2)
     : rr != null && rr <= 0 ? new THREE.BoxGeometry(W, Hh, D).translate(0, Hh / 2, -D / 2)
@@ -4061,7 +4125,13 @@ function layoutHuman() {
     const E = rowExt(), top = S.place === 'plinth' || S.place === 'air' ? 0 : S.place === 'counter' ? Math.max(1.1, E.w + 0.6) : S.place === 'table' ? Math.max(1.0, E.w + 0.6) : 0; // the counter or table it stands on
     const near = (rowUnits() ? Math.max((rowSpan().left / 1000) * S.scale, S.place === 'plinth' && !isFurniture() ? plinthSize().w / 2 - E.c : 0) : S.place === 'plinth' ? Math.max(P.W, plinthSize().w) / 2 : P.W / 2) + (top ? 0.12 : 0); // the product sits just in from the end nearest the person, so its size reads against them
     if (top) surface.position.x = top / 2 - near - E.c;
-    human.position.set(-(near + (top ? 0.12 : 0.3) + (A.chair === 'prop' && A.prop === 'sofa' ? 0.86 : A.seated ? 0.34 : A.shoulderHalf)), 0, A.seated ? -0.12 : -0.08);
+    let z = A.seated ? -0.12 : -0.08;
+    if (S.place === 'wall') { // beside a thing on the wall: the back (and a chair or wheelchair behind) stays in front of the wall's face
+      const tk = torsoKeys(A, PERSONAS[S.persona]), body = Math.max(...tk.map((k) => k[2] - k[3]), 0.3 * A.footL, A.headD / 2 - basePose(A, PP(), 0).headCenter.z);
+      const chair = A.chair === 'wheel' ? 0.32 : A.chair === 'prop' ? (A.propD || 0.5) - (A.seatEdge || 0) + 0.05 : 0;
+      z = Math.max(z, -P.D + Math.max(body, chair) + 0.025);
+    }
+    human.position.set(-(near + (top ? 0.12 : 0.3) + (A.chair === 'prop' && A.prop === 'sofa' ? 0.86 : A.seated ? 0.34 : A.shoulderHalf)), 0, z);
     human.rotation.set(0, 0, 0);
     return;
   }
@@ -6253,7 +6323,7 @@ function syncDetail() {
       const row = document.createElement('div'); row.className = 'dimrow';
       const lab = document.createElement('label'); lab.textContent = L(sp.ko, sp.en) + (sp.unit === '°' ? ' °' : ''); row.append(lab);
       if (sp.opts) {
-        const seg = document.createElement('div'); seg.className = 'seg'; seg.dataset.det = sp.k;
+        const seg = document.createElement('div'); seg.className = sp.opts.length > 4 || sp.opts.reduce((n, o) => n + L(o[1], o[2]).length, 0) > 18 ? 'seg wrap' : 'seg'; seg.dataset.det = sp.k; // many or long choices wrap onto a second line as chips
         for (const [v, ko, en] of sp.opts) { const b = document.createElement('button'); b.type = 'button'; b.dataset.v = v; b.textContent = L(ko, en); seg.append(b); }
         row.append(seg);
       } else {
