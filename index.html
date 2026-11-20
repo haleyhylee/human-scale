@@ -74,10 +74,14 @@ button { cursor: pointer; }
 .guide.target { border-top-color: var(--accent); }
 .guide.target span { left: auto; right: calc(max(12px, env(safe-area-inset-right, 0px)) + 46px); color: var(--accent-ink); } /* clear of the zoom buttons */
 .top { position: absolute; top: 12px; left: 0; right: 0; display: flex; flex-direction: row; align-items: flex-start; gap: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); pointer-events: none; }
-.views { flex: 1 1 auto; min-width: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; pointer-events: auto; }
+.views { flex: 1 1 auto; min-width: 0; display: flex; gap: 6px; overflow-x: auto; pointer-events: auto; }
 #btnMeasure { flex: 0 0 auto; margin-left: auto; pointer-events: auto; } /* measuring stays at the right, in view on a phone too; the views beside it scroll */
-@media (max-width: 760px) { .views { mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); padding-right: 22px; } } /* fades out where it scrolls on */
-.views::-webkit-scrollbar { display: none; }
+.views { scrollbar-width: thin; scrollbar-color: var(--line) transparent; padding-bottom: 4px; } /* too narrow for them all: a thin bar to scroll by (the wheel scrolls it too) */
+.views.ovf-r { mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); padding-right: 22px; } /* fades out where it scrolls on */
+.views.ovf-l { mask-image: linear-gradient(to right, transparent, #000 24px); -webkit-mask-image: linear-gradient(to right, transparent, #000 24px); }
+.views.ovf-l.ovf-r { mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 28px), transparent); }
+.views::-webkit-scrollbar { height: 4px; }
+.views::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
 .chip { flex: 0 0 auto; height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); font-size: 13px; font-weight: 500; color: var(--ink); }
 .chip:hover { border-color: var(--ink-2); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
@@ -255,6 +259,11 @@ input:disabled { opacity: 0.55; }
 .dimrow input[type="number"] { height: 34px; padding: 0 8px; }
 .presets { display: flex; flex-direction: column; gap: 14px; }
 .pgroup { display: flex; flex-direction: column; gap: 7px; }
+.gall { margin-left: auto; display: inline-flex; gap: 10px; }
+.setfor .stepper { display: inline-flex; gap: 4px; margin-left: auto; flex: 0 0 auto; }
+.setfor .stepper .reset { min-width: 28px; font-size: 15px; line-height: 1; }
+.setfor .stepper + .reset { margin-left: 6px; }
+.setfor > .muted { white-space: nowrap; flex: 0 0 auto; }
 .pgroup + .pgroup { border-top: 1px solid var(--line); padding-top: 14px; } /* a rule between categories */
 .pgroup > .gname { font-size: 12px; font-weight: 600; color: var(--ink-2); display: flex; align-items: center; gap: 6px; width: 100%; padding: 2px 0; margin: 0; border: 0; background: none; font-family: inherit; text-align: left; cursor: pointer; }
 .pgroup > .gname:hover { color: var(--ink); }
@@ -262,7 +271,7 @@ input:disabled { opacity: 0.55; }
 .pgroup.collapsed > .gname::after { transform: translateY(1px) rotate(-45deg); }
 .pgroup.collapsed > :not(.gname) { display: none !important; }
 .pgroup > .field-sub { margin-top: 2px; }
-.setfor { display: flex; align-items: baseline; gap: 8px; font-size: 13px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.setfor { display: flex; align-items: baseline; gap: 8px; font-size: 13px; } /* the line under it is the next section's own */
 .setfor b { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .setfor .reset { margin-left: auto; flex: 0 0 auto; }
 .seg.lang button { padding: 0 10px; font-size: 12px; }
@@ -331,6 +340,7 @@ input:disabled { opacity: 0.55; }
         <span class="scalebar" id="scalebar" hidden><i id="scalebarI"></i><span id="scalebarT"></span></span>
         <button type="button" class="btn tipbtn" id="btnTip" aria-pressed="true" data-en="Tips">팁</button>
         <button type="button" class="btn" id="btnGhost" aria-pressed="false" data-en="See-through">사람 반투명</button>
+        <button type="button" class="btn" id="btnSupport" aria-pressed="false" data-en="Support" hidden>보조 O</button>
         <button type="button" class="btn" id="btnGuides" aria-pressed="true" data-en="Dimensions">치수 표시</button>
         <button type="button" class="btn" id="btnPlay" data-en="Play">동작 보기</button>
         <button type="button" class="btn accent" id="btnAI" hidden>AI 제안</button>
@@ -399,7 +409,7 @@ input:disabled { opacity: 0.55; }
 
     <section class="tabpanel" id="tab-product" role="tabpanel" aria-labelledby="tb-product" hidden>
       <div class="field">
-        <div class="label"><span data-en="Examples">예시 제품</span> <span class="muted" data-en="pick one, then fine-tune it in Settings">고른 뒤 설정 탭에서 다듬어요</span></div>
+        <div class="label"><span data-en="Examples">예시 제품</span> <span class="muted" data-en="pick one, then fine-tune it in Settings">고른 뒤 설정 탭에서 다듬어요</span><span class="gall"><button type="button" class="reset" id="grpClose" data-en="Collapse all">전체 접기</button><button type="button" class="reset" id="grpOpen" data-en="Expand all">전체 펼치기</button></span></div>
         <div class="presets" id="presetChips"></div>
         <div class="field-sub" id="variantField" hidden><div class="label" data-en="Size">크기</div><div class="seg full" id="variantSeg"></div></div>
       </div>
@@ -446,7 +456,7 @@ input:disabled { opacity: 0.55; }
     </section>
 
     <section class="tabpanel" id="tab-set" role="tabpanel" aria-labelledby="tb-set" hidden>
-      <div class="setfor"><span class="muted" data-en="Setting up">설정 중인 제품</span> <b id="setName"></b><button type="button" class="reset" id="toProducts" data-en="Change product">제품 바꾸기</button></div>
+      <div class="setfor"><span class="muted" data-en="Setting up">설정 중인 제품</span> <b id="setName"></b><span class="stepper"><button type="button" class="reset" id="prodPrev" aria-label="이전 제품" data-en-aria="Previous product" title="이전 제품" data-en-title="Previous product">‹</button><button type="button" class="reset" id="prodNext" aria-label="다음 제품" data-en-aria="Next product" title="다음 제품" data-en-title="Next product">›</button></span><button type="button" class="reset" id="toProducts" data-en="Change product">제품 바꾸기</button></div>
       <div class="field" id="shapeField">
         <div class="label" data-en="Shape">형태</div>
         <div class="seg" id="shapeSeg">
@@ -493,7 +503,7 @@ input:disabled { opacity: 0.55; }
       <div class="field" id="unitField" hidden>
         <div class="label"><span id="unitLbl">유닛 이어 붙이기</span> <span class="muted" id="unitSub">최대 3개 · 1mm 간격 · 크기는 고른 유닛 것</span></div>
         <div class="seg" id="unitSeg" role="group" aria-label="사람이 쓸 유닛" data-en-aria="Unit the person uses"></div>
-        <div class="chips unit-acts"><button type="button" class="chip" id="unitAddL" data-en="+ Left">+ 왼쪽에</button><button type="button" class="chip" id="unitAddR" data-en="+ Right">+ 오른쪽에</button><button type="button" class="chip" id="unitDel">고른 유닛 빼기</button></div>
+        <div class="chips unit-acts"><button type="button" class="chip" id="unitAddL" data-en="+ Left">+ 왼쪽에</button><button type="button" class="chip" id="unitAddR" data-en="+ Right">+ 오른쪽에</button><button type="button" class="chip" id="unitAddT" data-en="+ On top" hidden>+ 위에</button><button type="button" class="chip" id="unitDel">고른 유닛 빼기</button></div>
         <div class="dimrow surfrow" id="gapRow" hidden><label for="gapIn" id="gapLbl">간격</label><input type="range" id="gapIn" min="0" max="1000" step="5"><input type="number" id="gapNum" inputmode="decimal" min="0" max="3000" step="1"></div>
         <p class="hint" id="unitHint"></p>
       </div>
@@ -1893,7 +1903,9 @@ function kind() {
 const PLACE_OK = { bag: ['back', 'hand', 'floor', 'plinth', 'air'], luggage: ['floor', 'plinth', 'air'], pack: ['back', 'floor', 'plinth', 'air'], lamp: ['desk', 'table', 'counter', 'plinth', 'air'], worn: ['head'], flat: ['hand', 'desk', 'plinth', 'air'], laptop: ['table', 'desk', 'plinth', 'air'], small: ['hand', 'desk', 'table', 'counter', 'plinth', 'air'], dispenser: ['counter', 'table', 'desk', 'plinth', 'air'], floor: ['floor', 'plinth', 'air'] }; // plinth: a plain cube to stand it on; air: floating at a set height
 const plateUp = () => S.source === 'box' && S.shape === 'plate' && S.place === 'wall'; // a plate hangs flat on the wall, its thickness out from it
 const wallOk = () => S.source === 'box' && (S.look === 'paper' || S.shape === 'plate' || !!S.screen); // a sheet, a plate or a screen can hang on a wall
-const placeOk = (p) => p === 'wall' ? wallOk() : (kind() === 'free' ? !(p === 'hand' && S.noHand) && p !== 'back' : PLACE_OK[kind()].includes(p));
+const placeOk = (p) => (p === 'air' && S.supOff) || (p === 'wall' ? wallOk() : (kind() === 'free' ? !(p === 'hand' && S.noHand) && p !== 'back' : PLACE_OK[kind()].includes(p))); // with its support hidden, anything floats where it stood
+const PL = () => (S.supOff && S.supPrev) || S.place; // where it stands for the person's sake: under a hidden support, where it stood
+const supportable = () => ['table', 'desk', 'counter', 'plinth', 'wall'].includes(S.place) && !atDesk() && !isFurniture(); // stood on (or hung on) something that can be hidden
 const isProp = () => S.source === 'box' && !!(PRESETS[S.pkey] && PRESETS[S.pkey].prop); // a plain mockup solid: cube, cylinder, sphere, cone, plate
 const SPHERE_CUT_DEF = () => Math.round(0.067 * Math.min(S.w, S.h)); // by default a ball is cut flat underneath to about half its width across, so it stands
 const sphereCut = () => (S.source === 'box' && S.shape === 'sphere' && S.pkey === 'sphere' ? clamp(S.det && S.det.cut != null ? +S.det.cut : SPHERE_CUT_DEF(), 0, 0.45 * S.h) : 0); // mm cut off the bottom of the sphere (its H stays the ball's own height)
@@ -2009,6 +2021,7 @@ const DETAIL = {
   pstool: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원기둥', 'Cylinder'], ['cube', '큐브', 'Cube'], ['frame', '프레임', 'Frame'], ['legs', '다리', 'Legs']], def: 'cyl' }, DR('seatT', '좌판 두께', 'Seat thickness', 15, 90, 40), DR('legT', '다리 굵기', 'Leg thickness', 15, 60, 28), MAT_ROW],
   stool: [DR('seatT', '좌판 두께', 'Seat thickness', 15, 90, 50), DR('legT', '다리 굵기', 'Leg thickness', 15, 60, 26), MAT_ROW],
   sofa: [DR('backH', '등받이 높이(좌면 위)', 'Backrest above seat', 200, 800, 420, 5)], armchair: [DR('backH', '등받이 높이(좌면 위)', 'Backrest above seat', 200, 800, 420, 5)],
+  wardrobe: [{ k: 'form', ko: '형태', en: 'Form', opts: [['solid', '솔리드', 'Solid'], ['frame', '프레임', 'Frame']], def: 'solid' }, MAT_ROW], // a frame: bars and glass, seen into
   drawer: [{ k: 'form', ko: '형태', en: 'Form', opts: [['solid', '솔리드', 'Solid'], ['frame', '프레임', 'Frame']], def: 'solid' }, { k: 'tiers', ko: '서랍 수', en: 'Drawers', opts: [[1, '1단', '1'], [2, '2단', '2'], [3, '3단', '3'], [4, '4단', '4'], [5, '5단', '5'], [6, '6단', '6']], def: () => clamp(Math.round((S.h / 1000 - 0.08) / 0.19), 1, 6) }, { k: 'split', ko: '나누기', en: 'Split', opts: [['rows', '가로로 나누기', 'Stacked'], ['cols', '세로로 나누기', 'Side by side']], def: 'rows' }, { k: 'casters', ko: '바퀴', en: 'Casters', opts: [[0, '없음', 'None'], [1, '있음', 'On']], def: 0 }, DR('caster', '바퀴 지름', 'Caster diameter', 30, 100, 50, 5)],
   desk: TABLE_ROWS(25, 22, '옆판 두께', 'Side panel thickness'), standing: TABLE_ROWS(25, 70, '기둥 굵기', 'Column thickness'), dining: TABLE_ROWS(30, 55), bar: TABLE_ROWS(35, 44), coffee: TABLE_ROWS(30, 50, '발 굵기', 'Foot thickness'),
   frame: [DR('frameT', '프레임 두께', 'Frame thickness', 2, 100, 10), MAT_ROW],
@@ -2312,19 +2325,33 @@ function tableGeo(group, style, W, D, H, mat, keys = true, mouseX = 0.3) { // ke
     group.userData.sink = { tip: new V3(0, H + 0.245, zf + 0.2), bottom: H - depth };
     return;
   }
-  if (style === 'wardrobe') { // wardrobe: plinth, carcass, two doors with long bar handles, a hanging rail and a shelf inside (seen at the gap)
-    const base = 0.06, t = 0.02, dw = W / 2 - 0.004, hy = Math.min(1.1, H * 0.5);
+  if (style === 'wardrobe') { // wardrobe: plinth, a carcass open inside (sides, top, bottom, back), two doors with long bar handles, a hanging rail and a shelf inside
+    const base = 0.06, t = 0.02, dw = W / 2 - 0.004, hy = Math.min(1.1, H * 0.5), open = DET_ON && dv('form') === 'frame', zb = -0.02, cd = D - 0.02; // a frame: square bars, glass panels and doors
     T.box(W - 0.04, base, D - 0.04, 0, base / 2, -D / 2 - 0.01);
-    K.box(W, H - base, D - 0.02, 0, base + (H - base) / 2, -0.02 - (D - 0.02) / 2);
+    if (open) {
+      const b = 0.022, ht = H - base, G = kit(group, TOP_MAT.glass);
+      for (const sx of [-1, 1]) for (const sz of [0, 1]) X.box(b, ht, b, sx * (W / 2 - b / 2), base + ht / 2, zb - b / 2 - sz * (cd - b));
+      for (const y of [base + b / 2, H - b / 2]) { for (const sz of [0, 1]) X.box(W - 2 * b, b, b, 0, y, zb - b / 2 - sz * (cd - b)); for (const sx of [-1, 1]) X.box(b, b, cd - 2 * b, sx * (W / 2 - b / 2), y, zb - cd / 2); }
+      for (const sx of [-1, 1]) G.box(0.004, ht - 2 * b, cd - 2 * b, sx * (W / 2 - b / 2), base + ht / 2, zb - cd / 2); // glass sides and back
+      G.box(W - 2 * b, ht - 2 * b, 0.004, 0, base + ht / 2, zb - cd + b / 2);
+    } else { // the carcass's boards, hollow between them
+      for (const sx of [-1, 1]) K.box(t, H - base, cd, sx * (W / 2 - t / 2), base + (H - base) / 2, zb - cd / 2);
+      K.box(W, t, cd, 0, H - t / 2, zb - cd / 2); K.box(W - 2 * t, t, cd, 0, base + t / 2, zb - cd / 2);
+      K.box(W - 2 * t, H - base - 2 * t, 0.008, 0, base + (H - base) / 2, zb - cd + 0.004); // the back
+    }
+    const ix = W / 2 - (open ? 0.022 : t), inner = (y) => [new V3(-ix + 0.002, y, zb - cd / 2), new V3(ix - 0.002, y, zb - cd / 2)];
+    X.rod(...inner(H - 0.16), 0.012); // the hanging rail
+    kit(group, open ? TOP_MAT.glass : topMat(mat)).box(2 * ix - 0.004, 0.018, cd - 0.05, 0, H - 0.09, zb - cd / 2 - 0.01); // the shelf over it
     const hx = W / 2 - 0.002, door = new THREE.Group(); door.position.set(hx, 0, 0); group.add(door); // the right door hangs on a hinge at its outer edge
     for (const sx of [-1, 1]) {
       const g = sx > 0 ? door : group, ox = sx > 0 ? -hx : 0, Xd = kit(g, mats.frame);
-      kit(g, mat).box(dw, H - base - 0.006, 0.019, sx * (dw / 2 + 0.002) + ox, base + (H - base) / 2, -0.0095, 0, 0.003);
+      kit(g, open ? TOP_MAT.glass : topMat(mat)).box(dw, H - base - 0.006, 0.019, sx * (dw / 2 + 0.002) + ox, base + (H - base) / 2, -0.0095, 0, 0.003);
+      if (open) for (const e of [-1, 1]) { Xd.box(0.016, H - base - 0.006, 0.02, sx * (dw / 2 + 0.002) + ox + e * (dw / 2 - 0.008), base + (H - base) / 2, -0.0095); Xd.box(dw, 0.016, 0.02, sx * (dw / 2 + 0.002) + ox, base + (H - base) / 2 + e * ((H - base - 0.006) / 2 - 0.008), -0.0095); } // a frame round the glass door
       Xd.rod(new V3(sx * 0.04 + ox, hy - 0.2, PULL_Z), new V3(sx * 0.04 + ox, hy + 0.2, PULL_Z), 0.006);
       for (const py of [hy - 0.19, hy + 0.19]) Xd.rod(new V3(sx * 0.04 + ox, py, -0.001), new V3(sx * 0.04 + ox, py, PULL_Z), 0.004);
     }
     group.userData.door = { g: door, max: deg(80), hinge: new V3(hx, 0, 0), hold: true }; // the hand keeps hold of it as it opens
-    T.box(0.004, H - base - 0.01, 0.002, 0, base + (H - base) / 2, 0.0005); // the gap between the doors
+    if (!open) T.box(0.004, H - base - 0.01, 0.002, 0, base + (H - base) / 2, 0.0005); // the gap between the doors
     group.userData.wardrobe = { rail: H - 0.12, shelf: H - 0.06, handle: hy };
     return;
   }
@@ -2401,26 +2428,36 @@ function meshMat() { // wire mesh: a grid of thin bars, see-through between them
    line (backs, on a wall). Not in the hands or at the desk */
 const rowProp = () => isProp() || (S.source === 'box' && S.look === 'parcel'); // mockups set in a row: the plain solids, and parcel boxes set down
 const propRowOn = () => rowProp() && !carried() && !atDesk();
-const rowOn = () => (isFurniture() && furn() === 'drawer' && S.source === 'box') || propRowOn();
+const rowOn = () => (isFurniture() && (furn() === 'drawer' || furn() === 'wardrobe') && S.source === 'box') || propRowOn(); // chests and wardrobes side by side
 const rowUnits = () => (rowOn() && S.row && S.row.length ? S.row : null);
 const ROW_GAP = 50; // mm between one mockup and the next, to start with
 const rowMain = () => { const r = rowUnits(); return !r ? 0 : isProp() ? Math.max(0, r.findIndex((u) => u.n === 'A')) : S.pick || 0; }; // the one the person uses, at the product's place
 const sizeUnit = () => (rowProp() && rowUnits() && (S.pick || 0) !== rowMain() && S.row[S.pick]) || null; // a mockup beside the main one whose size the W, D, H fields show
 const stacked = () => S.source === 'box' && S.look === 'parcel' && !!rowUnits(); // parcel boxes pile up, the main one at the bottom
 const stackY = () => { const r = rowUnits(), m = rowMain(), ys = new Array(r.length).fill(0); let y = r[m].h; r.forEach((u, i) => { if (i !== m) { ys[i] = y; y += u.h; } }); return { ys, total: y }; }; // each box's bottom (mm), and the pile's height
-function rowOffsets() { // each unit's centre from the main one's, mm, left to right
+function rowOffsets() { // each unit's centre from the main one's, mm, left to right (one stacked on top: over the main one)
   const r = rowUnits(); if (!r) return [0];
   if (stacked()) return r.map(() => 0);
-  const m = rowMain(), xs = new Array(r.length).fill(0), gap = (i) => (isProp() ? r[i].gap ?? ROW_GAP : 1);
-  for (let i = m + 1; i < r.length; i++) xs[i] = xs[i - 1] + r[i - 1].w / 2 + gap(i) + r[i].w / 2;
-  for (let i = m - 1; i >= 0; i--) xs[i] = xs[i + 1] - r[i + 1].w / 2 - gap(i) - r[i].w / 2;
+  const m = rowMain(), xs = new Array(r.length).fill(0), gap = (i) => (isProp() ? r[i].gap ?? ROW_GAP : 1), side = r.map((u, i) => i).filter((i) => i === m || !r[i].top);
+  const k = side.indexOf(m);
+  for (let j = k + 1; j < side.length; j++) { const i = side[j], p = side[j - 1]; xs[i] = xs[p] + r[p].w / 2 + gap(i) + r[i].w / 2; }
+  for (let j = k - 1; j >= 0; j--) { const i = side[j], p = side[j + 1]; xs[i] = xs[p] - r[p].w / 2 - gap(i) - r[i].w / 2; }
   return xs;
 }
+/* each unit's bottom (mm): parcels piled up, or a mockup set on top of the main one (the next on top of that) */
+function unitYs() {
+  const r = rowUnits(); if (!r) return [0];
+  if (stacked()) return stackY().ys;
+  const m = rowMain(), ys = new Array(r.length).fill(0); let y = r[m].h;
+  r.forEach((u, i) => { if (i !== m && u.top) { ys[i] = y; y += u.h; } });
+  return ys;
+}
+const unitTop = () => { const r = rowUnits(); if (!r) return S.h; const ys = unitYs(); return Math.max(...r.map((u, i) => ys[i] + u.h)); }; // mm, the tallest point
 const rowSpan = () => { const r = rowUnits(); if (!r) return { left: S.w / 2, right: S.w / 2, total: S.w }; const o = rowOffsets(), left = Math.max(...r.map((u, i) => u.w / 2 - o[i])), right = Math.max(...r.map((u, i) => o[i] + u.w / 2)); return { left, right, total: Math.round(left + right) }; }; // mm
 const rowExt = () => { // the whole row at scale (m): reach left and right of the main one, its middle, width, deepest and tallest
   const P = dims(), r = rowUnits(); if (!r || r.length < 2) return { l: P.W / 2, r: P.W / 2, c: 0, w: P.W, d: P.D, h: P.H };
   const sp = rowSpan(), k = S.scale / 1000, l = sp.left * k, rr = sp.right * k;
-  return { l, r: rr, c: (rr - l) / 2, w: l + rr, d: Math.max(...r.map((u) => (roundBase() ? u.w : u.d))) * k, h: (stacked() ? stackY().total : Math.max(...r.map((u) => u.h))) * k };
+  return { l, r: rr, c: (rr - l) / 2, w: l + rr, d: Math.max(...r.map((u) => (roundBase() ? u.w : u.d))) * k, h: unitTop() * k };
 };
 const drawerBase = () => (detKind() === 'drawer' && dv('casters') ? dv('caster') / 1000 + 0.012 : 0.06); // a plinth, or casters under the carcass
 const drawerHandle = (i) => { const H = S.h / 1000, n = drawerCount(H), b = drawerBase(), fh = (H - b - 0.02) / n; return (drawerCols() ? drawerDoorY(H, b) : b + i * fh + fh * 0.72) * S.scale; }; // drawer 0 is the bottom one; side by side, all at the same height
@@ -3654,7 +3691,7 @@ function buildProduct() {
     DET_ON = true;
     try { (S.shape === 'chair' ? seatGeo : tableGeo)(holder, furn(), W, D, Hh, mats.foam);
     const r = rowUnits();
-    if (r && r.length > 1) { const off = rowOffsets(); r.forEach((u, i) => { if (i === rowMain()) return; const g = new THREE.Group(); g.position.x = off[i] / 1000; g.userData.own = true; holder.add(g); tableGeo(g, 'drawer', u.w / 1000, u.d / 1000, u.h / 1000, mats.foam); }); } } finally { DET_ON = false; }
+    if (r && r.length > 1) { const off = rowOffsets(); r.forEach((u, i) => { if (i === rowMain()) return; const g = new THREE.Group(); g.position.x = off[i] / 1000; g.userData.own = true; holder.add(g); tableGeo(g, furn(), u.w / 1000, u.d / 1000, u.h / 1000, mats.foam); }); } } finally { DET_ON = false; }
   }
   else if (S.shape === 'cup') cupGeo(holder, S.style, W, Hh);
   else if (S.shape === 'ring') ringGeo(holder, S.w, S.d, S.h, S.ringSize);
@@ -3708,7 +3745,7 @@ function buildProduct() {
   else plainSolid(holder, W, D, Hh);
   if (rowProp() && rowUnits() && S.row.length > 1) { // the other mockups beside the main one, each its own size
     const off = rowOffsets(), m = rowMain();
-    S.row.forEach((u, i) => { if (i === m) return; const g = new THREE.Group(), w = u.w / 1000, d = (roundBase() ? u.w : u.d) / 1000, h = u.h / 1000; g.position.set(off[i] / 1000, stacked() ? stackY().ys[i] / 1000 : 0, S.place === 'wall' ? (d - D) / 2 : stacked() ? (d - D) / 2 : 0); g.userData.own = true; g.userData.unit = u.n; holder.add(g); propSolid(g, w, d, h); });
+    const ys = unitYs(); S.row.forEach((u, i) => { if (i === m) return; const g = new THREE.Group(), w = u.w / 1000, d = (roundBase() ? u.w : u.d) / 1000, h = u.h / 1000; g.position.set(off[i] / 1000, ys[i] / 1000, S.place === 'wall' ? (d - D) / 2 : stacked() || u.top ? (d - D) / 2 : 0); g.userData.own = true; g.userData.unit = u.n; holder.add(g); propSolid(g, w, d, h); });
   }
   holder.scale.setScalar(S.scale);
 }
@@ -4243,7 +4280,7 @@ function layoutHuman() {
   if (carried()) { human.position.set(0, 0, 0); human.rotation.set(0, 0, 0); return; }
   if (atDesk()) { const dl = deskLayout(); human.position.set(-dl.xc, 0, -dl.zf + (A.chair === 'wheel' ? 0.22 : 0.2)); human.rotation.set(0, Math.PI, 0); return; } // at the keyboard
   if (S.mode === 'compare') {
-    const E = rowExt(), top = S.place === 'plinth' || S.place === 'air' ? 0 : S.place === 'counter' ? Math.max(1.1, E.w + 0.6) : S.place === 'table' ? Math.max(1.0, E.w + 0.6) : 0; // the counter or table it stands on
+    const E = rowExt(), pl = S.supOff ? S.supPrev : S.place, top = pl === 'plinth' || pl === 'air' ? 0 : pl === 'counter' ? Math.max(1.1, E.w + 0.6) : pl === 'table' ? Math.max(1.0, E.w + 0.6) : 0; // the counter or table it stands on (or stood on, hidden)
     const near = (rowUnits() ? Math.max((rowSpan().left / 1000) * S.scale, S.place === 'plinth' && !isFurniture() ? plinthSize().w / 2 - E.c : 0) : S.place === 'plinth' ? Math.max(P.W, plinthSize().w) / 2 : P.W / 2) + (top ? 0.12 : 0); // the product sits just in from the end nearest the person, so its size reads against them
     if (top) surface.position.x = top / 2 - near - E.c;
     let z = A.seated ? -0.12 : -0.08;
@@ -4265,9 +4302,9 @@ function layoutHuman() {
     const dr = holder.userData.drawers;
     if (st === 'drawer' && dr && !drawerCols()) z = Math.max(z, dr.pull * S.scale + Math.max(A.waistD, A.hipD) / 2 + 0.012 + A.hd.palmLen + 0.06); // far enough back that the drawer, and the hand pulling it (palm and wrist behind the handle), stop short of the body
   } else if (A.seated) {
-    const front = A.thigh + 0.14;
-    z = S.place === 'table' ? EDGE + 0.22 : S.place === 'counter' ? EDGE + front + 0.02 : 0.15 + front;
-  } else z = S.place === 'wall' ? wallDist() + toe /* stood back far enough to take it all in, or as set */ : S.place === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + 0.06 + toe : S.place === 'counter' ? EDGE - 0.02 + toe + (S.source === 'box' && S.look === 'microwave' ? 0.08 : 0) : S.place === 'table' ? EDGE + 0.03 + toe : ((S.source === 'box' && S.style === 'drawer' && !drawerCols() ? dims().D * 0.62 + 0.06 : null) ?? APPLIANCE_GAP[S.source === 'box' && S.look] ?? (dims().H > 0.6 && S.look !== 'floorlamp' ? 0.03 : 0.1)) + toe; // up to a tall thing on the floor (a plinth): toes close
+    const front = A.thigh + 0.14 + (A.chair === 'wheel' ? 0.07 : 0); // knees (a wheelchair's footrests further on)
+    z = PL() === 'table' ? EDGE + 0.22 : PL() === 'counter' ? EDGE + front + 0.02 : PL() === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + front + 0.03 : PL() === 'wall' ? wallDist() + front : 0.15 + front; // a plinth's face, or the set distance from the wall, before the knees and footrests
+  } else z = PL() === 'wall' ? wallDist() + toe /* stood back far enough to take it all in, or as set */ : PL() === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + 0.06 + toe : PL() === 'counter' ? EDGE - 0.02 + toe + (S.source === 'box' && S.look === 'microwave' ? 0.08 : 0) : PL() === 'table' ? EDGE + 0.03 + toe : ((S.source === 'box' && S.style === 'drawer' && !drawerCols() ? dims().D * 0.62 + 0.06 : null) ?? APPLIANCE_GAP[S.source === 'box' && S.look] ?? (dims().H > 0.6 && S.look !== 'floorlamp' ? 0.03 : 0.1)) + toe; // up to a tall thing on the floor (a plinth): toes close
   let x = S.source === 'box' && S.look === 'fridge' ? -dims().W * 0.22 : S.source === 'box' && S.look === 'microwave' ? dims().W * 0.38 : 0; // at a fridge: in front of the left door, clear of the right one as it swings
   if (S.source === 'box' && S.look === 'door' && holder.userData.handle) { const h = holder.userData.handle.clone().multiplyScalar(S.scale); x = h.x - (A.shJX + 0.105); z = Math.max(toe + 0.03, z + h.z - 0.004); } // a door of any size or depth: stood where its lever is just outside the right shoulder, as at a standard door
   human.position.set(x, 0, z);
@@ -4337,6 +4374,23 @@ function targetWorld() {
 }
 
 /* a fist round a bottle-like thing (tumbler, glass, bottle): where it sits in the hand and how the fingers close round it */
+/* the lowest point of a hand (palm and fingers, their thickness taken off) posed by hp at a grab goal, in the world */
+function handLowY(HD, hp, gg) {
+  const M = new THREE.Matrix4().compose(gg.W, gg.q, new V3(1, 1, 1)); human.updateMatrixWorld(true);
+  let lo = Infinity; const at = (p, r) => { const w = human.localToWorld(p.clone().applyMatrix4(M)); lo = Math.min(lo, w.y - r); };
+  for (const x of [-HD.palmT / 2, HD.palmT / 2]) for (const y of [0, HD.palmLen]) for (const z of [-HD.palmW / 2, HD.palmW / 2]) at(new V3(x, y, z), 0.004);
+  HD.fingers.forEach((g, i) => digitPts(new V3(0, g.y, g.z), UP, FAX, g.L, hp.f[i]).forEach((q, j) => at(q, g.r[Math.min(j, g.r.length - 1)])));
+  return lo;
+}
+/* a fist round something standing on a table, a counter or a plinth: round its middle, or higher up it if the hand would go into what it stands on
+   (a lipstick: the fist rides up it till the little finger clears the top). Returns the grip and its goal */
+function supportGrip(HD, P, cyl) {
+  product.updateMatrixWorld(true);
+  const top = S.place === 'hand' || (S.place === 'air' && !S.supOff) ? -Infinity : product.position.y + 0.004; // what it stands on (the floor too), a little air between
+  let g, gg;
+  for (let up = 0; up >= -1.5; up -= 0.05) { g = objectGrip(HD, P, cyl, up); gg = grabGoal(g); if (handLowY(HD, g.hp, gg) >= top) break; }
+  return { g, gg };
+}
 function objectGrip(HD, P, cyl, up) {
   const sx = Math.max(P.W, P.D), sy = Math.min(P.W, P.D), flat = !cyl && sy / sx < 0.35, by = sy / 2;
   const yc = flat ? HD.palmLen - HD.fingers[1].r[0] - by : Math.max(0.62 * HD.palmLen, by + 0.2 * HD.palmLen + HD.thumb.r[0]);
@@ -4690,7 +4744,7 @@ function planHands() {
     else if (S.look === 'cushion' && !laidFlat()) S.plan = cushionDab(HD, P); // open on the table: two fingertips touch the puff
     else if (S.look === 'pencase' && !laidFlat()) S.plan = pencaseGrab(HD, P); // lying on the table: the fist closes round it from above
     else if (S.look === 'book' && !laidFlat()) { const g = objectGrip(HD, P, false, 0); S.plan = { ...g, kind: 'grab', grab: grabGoal(g, null, [0, 4]) }; } // stood up: the right hand round its side, halfway up, thumb on the front cover, fingers round the back
-    else if (!laidFlat() && P.H >= 0.025 && Math.min(P.W, P.D) <= GRAB_MAX && S.look !== 'pump' && S.look !== 'pencase') { const g = objectGrip(HD, P, ['cyl', 'sphere', 'cone', 'parts'].includes(S.shape), 0.5); S.plan = { ...g, kind: 'grab', grab: grabGoal(g) }; } // a fist round its middle
+    else if (!laidFlat() && P.H >= 0.025 && Math.min(P.W, P.D) <= GRAB_MAX && S.look !== 'pump' && S.look !== 'pencase') { const { g, gg } = supportGrip(HD, P, ['cyl', 'sphere', 'cone', 'parts'].includes(S.shape)); S.plan = { ...g, kind: 'grab', grab: gg }; } // a fist round its middle, raised till the hand clears what it stands on
     else { const t = flatTop();
       S.pressLocal = human.worldToLocal(t); S.plan = { kind: 'flat', hp: flatPose() }; } // too big or too flat for a fist (a sheet, a plate, a ring): the palm rests on it
     return;
@@ -4760,7 +4814,7 @@ function planHands() {
     const side = (s) => { const b = hs.find((p) => Math.sign(p.x) === Math.sign(s)) || hs[0], F = handFrame(new V3(-Math.sign(b.x), 0, 0), new V3(Math.sign(b.x) * 0.15, -1, 0.2)); return { F, W: b.clone().sub(inHand(F, c)) }; };
     S.plan = { kind: 'pot2', hp, side };
     S.pressLocal = hs[0].clone().add(hs[1]).multiplyScalar(0.5);
-  } else if (S.source === 'box' && holder.userData.handle) { // a handle in a fist: upright (a fridge or oven door's edge), along x (a door lever) or toward you (a pan)
+  } else if (S.source === 'box' && holder.userData.handle && holder.userData.handle.isVector3) { // a handle in a fist: upright (a fridge or oven door's edge), along x (a door lever) or toward you (a pan)
     const k = S.scale, ax = holder.userData.handleAxis || 'y', bar = human.worldToLocal(product.localToWorld(holder.userData.handle.clone().multiplyScalar(k))), rr = (holder.userData.handleR || 0.008) * k;
     const c = new V3(HD.palmT / 2 + rr + 0.002, 0.58 * HD.palmLen, 0);
     if (ax === 'z') { // a pan's handle pointing back at you: a hammer grip, the handle lying across the palm on the slant (index end toward the pan), so the forearm comes in from the side and the wrist stays straight
@@ -5003,13 +5057,15 @@ function handGoal(plan, s, P, sh) {
         const F = handFrame(new V3(0, -1, 0), d2);
         return { F, W: p2.at.clone().sub(inHand(F, p2.tip)), pole: new V3(0.55, -1, -0.35), hp: p2.hp };
       }
-      const F = handFrame(new V3(1, 0, 0), new V3(0.25, 0, 1));
-      return S.place === 'hand' ? sip(plan, { F, W: holdWrist(A, P), pole: new V3(-0.35, -1, -0.6), hp: plan.hp }, P) : { F, W: S.cupLocal.clone().sub(inHand(F, plan.off)), pole: new V3(-0.55, -1, -0.35), hp: plan.hp };
+      let F = handFrame(new V3(1, 0, 0), new V3(0.25, 0, 1)), W = S.place === 'hand' ? holdWrist(A, P) : null;
+      if (W && waving() && anim.wave) { const a = deg(24) * anim.wave, c = Math.cos(a), sn = Math.sin(a), y = F.y.clone().multiplyScalar(c).addScaledVector(F.z, sn), z = F.z.clone().multiplyScalar(c).addScaledVector(F.y, -sn); F = { x: F.x, y, z, q: new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(F.x, y, z)) }; W = W.clone().add(new V3(0, 0.012 * Math.abs(anim.wave), 0.035 * anim.wave)); } // swung forward and back: the wrist flicks, the forearm goes with it a little
+      return S.place === 'hand' ? sip(plan, { F, W, pole: new V3(-0.35, -1, -0.6), hp: plan.hp }, P) : { F, W: S.cupLocal.clone().sub(inHand(F, plan.off)), pole: new V3(-0.55, -1, -0.35), hp: plan.hp };
     }
   }
   return null;
 }
 /* drinking: a cup or a tumbler held in the hand goes to the lips when Play runs */
+const waving = () => S.source === 'box' && S.look === 'lightstick' && S.place === 'hand'; // a light stick: waved when Play runs
 const drinkware = () => S.source === 'box' && (S.look === 'tumbler' || S.shape === 'cup');
 const drinking = () => S.place === 'hand' && drinkware() && !!S.plan && (S.plan.kind === 'grip' || S.plan.kind === 'handle');
 const mouthPoint = (P) => P.headCenter.clone().addScaledVector(P.neckDir, -0.32 * S.A.headH).addScaledVector(P.headFwd, 0.6 * S.A.headH); // on the lower lip (body frame)
@@ -5184,7 +5240,7 @@ function placeExtras(pose) {
 /* ---------- pose and ergonomic checks ---------- */
 /* the person stands (or sits) at rest until Play: then reaches, presses, types or pulls, and stays there */
 const effReach = () => (S.mode === 'use' && !carried() && !anim.played && anim.phase === 'idle' ? 0 : anim.reach);
-const anim = { played: false, reach: 1, pour: 0, fill: 0, lift: 0, open: 0, drink: 0, phase: 'idle', t: 0 };
+const anim = { played: false, reach: 1, pour: 0, fill: 0, lift: 0, open: 0, drink: 0, wave: 0, phase: 'idle', t: 0 };
 
 function isFlat(P) { return S.shape === 'box' && S.source === 'box' && Math.min(P.W, P.D) / Math.max(P.W, P.D) < 0.35; }
 const roundGrip = () => S.source === 'box' && (['cyl', 'cup', 'sphere'].includes(S.shape) || S.look === 'lightstick' || (['jar', 'pump', 'cream', 'lipstick'].includes(S.look) && dv('form') !== 'cube'));
@@ -5765,7 +5821,7 @@ function refresh(o = {}) {
   if (lookOnly() && !lookAtIt() && !carried()) { if (S.mode !== 'compare') { S.itemMode = S.mode; S.mode = 'compare'; } } else if (S.itemMode) { S.mode = S.itemMode; S.itemMode = null; } // only looked at; the mode comes back after (on the plinth it can also be looked down at)
   for (const [k, d] of [['table', 720], ['desk', 740], ['counter', 850], ['plinth', 900], ['air', 1000]]) SURF[k] = clamp((S.surf && S.surf[k]) || d, ...(SURF_LIM[k] || [0, 3000])) / 1000; // within its limits, a height kept from before included
   SURF.wall = Math.max(0, (wallMid()) / 1000 - dims().H / 2); // on the wall: its middle at the set height // the table, desk or counter it stands on, at its set height
-  { const key = [S.pkey, S.place, S.mode, S.persona, S.posture, S.source].join('|'); if (key !== anim.key) { anim.key = key; Object.assign(anim, { played: false, phase: 'idle', reach: 1, open: 0, pour: 0, fill: 0, drink: 0 }); } } // a new setup starts at rest
+  { const key = [S.pkey, S.place, S.mode, S.persona, S.posture, S.source].join('|'); if (key !== anim.key) { anim.key = key; Object.assign(anim, { played: false, phase: 'idle', reach: 1, open: 0, pour: 0, fill: 0, drink: 0, wave: 0 }); } } // a new setup starts at rest
   if (S.place !== S.pvPlace) { S.pvPlace = S.place; S.pv = null; } // a new place: the person shown as that place has it
   if (S.source === 'box' && (S.shape === 'glasses' || S.shape === 'sunglasses')) { const g = glassesSize(); S.w = Math.round(g.W * 1000); S.h = Math.round(g.H * 1000); } // set by the lenses and rims
   S.height = clamp(S.height, p.hr[0], p.hr[1]); S.bmi = clamp(S.bmi, p.br[0], p.br[1]); // within the real range for this kind of person
@@ -5911,7 +5967,7 @@ function syncUI() {
   $('variantField').hidden = !fam;
   syncExamples(); syncParts(); syncMine();
   { const slot = imgSlot(); $('imgField').hidden = !slot; if (slot) { $('imgLbl').textContent = slot === 'cap' ? L('내 이미지 · 모든 제품 공통 (자수는 PNG 추천)', 'Your image · on every product (PNG for embroidery)') : L('내 이미지 · 모든 제품 공통', 'Your image · on every product'); $('imgDel').hidden = !USER_IMG[slot]; } }
-  $('setName').textContent = prodName();
+  $('setName').textContent = prodName(); $('setName').title = prodName(); // cut short in a narrow panel: the whole name on hover
   if (fam) { FAMILIES[fam].last = S.pkey; $('variantSeg').replaceChildren(...FAMILIES[fam].sizes.map(([k, ko, en]) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.size = k; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(S.pkey === k)); return b; })); }
   segSet('shapeSeg', 'shape', S.shape); segSet('placeSeg', 'place', S.place); segSet('faceSeg', 'face', S.face); segSet('actSeg', 'act', S.action); segSet('modeSeg', 'mode', S.mode); segSet('langSeg', 'lang', LANG);
   const isModel = S.source === 'model', fixedForm = isFurniture() || ring || ['cup', 'laptop', 'headphone', 'earbud'].includes(S.shape) || S.look === 'paper' || kind() !== 'free'; // these come only from the examples
@@ -5979,15 +6035,16 @@ function syncUI() {
   for (const id of ['rH', 'pH']) $(id).disabled = detKind() === 'office' || (S.source === 'box' && (S.shape === 'glasses' || S.shape === 'sunglasses')); // a gas lift, or eyewear sized by its lenses
   if (rowOn()) {
     const r = S.row || [{ n: 'A', w: S.w, d: S.d, h: S.h }], seg = $('unitSeg');
-    seg.replaceChildren(...r.map((u, i) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.unit = i; b.textContent = `${u.n} ${u.w}`; b.setAttribute('aria-pressed', String(i === (S.pick || 0))); return b; }));
-    $('unitAddL').disabled = $('unitAddR').disabled = r.length >= 3;
+    seg.replaceChildren(...r.map((u, i) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.unit = i; b.textContent = `${u.n}${u.top ? '↑' : ''} ${u.w}`; b.setAttribute('aria-pressed', String(i === (S.pick || 0))); return b; }));
+    $('unitAddL').disabled = $('unitAddR').disabled = $('unitAddT').disabled = r.length >= 3;
     $('unitDel').disabled = r.length < 2 || r[S.pick || 0].n === 'A';
     const prop = rowProp(), pk = r[S.pick || 0], su = sizeUnit();
-    $('unitLbl').textContent = prop ? L('여러 개 놓기', 'Several side by side') : L('유닛 이어 붙이기', 'Units side by side');
+    $('unitLbl').textContent = prop ? L('여러 개 놓기', 'Several together') : L('유닛 이어 붙이기', 'Units side by side');
     $('unitSub').textContent = prop ? L('최대 3개 · A가 메인', 'up to 3 · A is the main one') : L('최대 3개 · 1mm 간격 · 크기는 고른 유닛 것', "up to 3, 1 mm apart · the size is the picked unit's");
     $('unitDel').textContent = prop ? L('고른 것 빼기', 'Remove picked') : L('고른 유닛 빼기', 'Remove picked');
-    $('gapRow').hidden = !su || stacked(); // stacked boxes have no gap
-    if (su) { const m = rowMain(), nb = r[S.pick < m ? S.pick + 1 : S.pick - 1]; $('gapLbl').textContent = L(`${su.n}↔${nb.n} 간격`, `${su.n}–${nb.n} gap`); for (const id of ['gapIn', 'gapNum']) if (document.activeElement !== $(id)) $(id).value = su.gap ?? ROW_GAP; }
+    $('gapRow').hidden = !su || stacked() || !!su.top; // stacked boxes (or one set on top) have no gap
+    $('unitAddT').hidden = !isProp();
+    if (su && !su.top && !stacked()) { const m = rowMain(), side = r.filter((u, i) => i === m || !u.top), j = side.indexOf(su), mj = side.indexOf(r[m]), nb = side[j < mj ? j + 1 : j - 1]; $('gapLbl').textContent = L(`${su.n}↔${nb.n} 간격`, `${su.n}–${nb.n} gap`); for (const id of ['gapIn', 'gapNum']) if (document.activeElement !== $(id)) $(id).value = su.gap ?? ROW_GAP; }
     $('unitHint').textContent = stacked() ? L(`쌓은 높이 ${stackY().total}mm · A가 맨 아래, 추가한 박스는 위로 쌓여요. ${su ? `지금 W·D·H는 ${su.n} 것이에요.` : 'B나 C를 누르면 W·D·H로 그 크기를 바꿔요.'}`, `${stackY().total} mm stacked · A at the bottom, the others piled on top. ${su ? `W·D·H now show ${su.n}.` : 'Pick B or C to size it.'}`) : prop
       ? L(`전체 폭 ${rowSpan().total}mm · A는 제자리에 있고 사람도 A를 써요. ${su ? `지금 W·D·H와 간격은 ${su.n} 것이에요.` : 'B나 C를 누르면 W·D·H로 그 크기를, 간격으로 옆과의 사이를 바꿔요.'} 앞면은 나란히 맞춰요.`, `Overall width ${rowSpan().total} mm · A stays put and the person uses it. ${su ? `W, D, H and the gap now set ${su.n}.` : 'Tap B or C to set its size with W, D, H and its gap to the next one.'} Fronts line up.`)
       : L(`전체 폭 ${rowSpan().total}mm · 사람은 ${pk.n} 유닛을 써요. 유닛을 누르면 그 앞으로 가고, W·D·H로 그 유닛 크기를 바꿔요. 앞면은 나란히 맞춰요.`, `Overall width ${rowSpan().total} mm · the person uses unit ${pk.n}. Tap a unit to go to it; W, D and H change its size. Fronts line up.`);
@@ -6009,7 +6066,7 @@ function syncUI() {
   fpBtn.disabled = S.place === 'head' || S.place === 'back';
   fpBtn.title = S.place === 'head' ? L('머리에 쓰는 제품은 1인칭으로 볼 수 없어요', "Worn on the head, so there's nothing to see from the eyes") : '';
   if ((S.place === 'head' || S.place === 'back') && S.view === 'first') setView('third');
-  syncGhostBtn(); syncBodyVis();
+  syncGhostBtn(); syncSupportBtn(); syncBodyVis();
   segSet('postureSeg', 'posture', A.seated ? 'sit' : 'stand');
   const st = furn(), noSit = st === 'sink' || st === 'drawer' || st === 'wardrobe';
   for (const b of $('postureSeg').children) b.disabled = !!p.seated || A.chair === 'product' || (noSit && b.dataset.posture === 'sit') || (atDesk() && b.dataset.posture === 'stand');
@@ -6170,8 +6227,9 @@ function syncBodyVis() {
 }
 const frontUse = () => S.view === 'front' && S.mode === 'use' && !carried();
 /* the person: shown, see-through or hidden — the viewer's pick, else hidden for a product floating in midair, see-through in the front view in use */
-const personVis = () => S.pv || (S.place === 'air' ? 'off' : (frontUse() && S.ghost) || S.autoGhost ? 'ghost' : 'on');
+const personVis = () => S.pv || (S.place === 'air' && !S.supOff ? 'off' : (frontUse() && S.ghost) || S.autoGhost ? 'ghost' : 'on');
 const PV_LABEL = { on: ['사람 O', 'Person'], ghost: ['사람 반투명', 'See-through'], off: ['사람 X', 'No person'] };
+function syncSupportBtn() { const b = $('btnSupport'), on = !!S.supOff; b.hidden = !on && !supportable(); const [ko, en] = on ? ['보조 X', 'No support'] : ['보조 O', 'Support']; b.dataset.ko = ko; b.dataset.en = en; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(on)); }
 function syncGhostBtn() { const v = personVis(), b = $('btnGhost'), [ko, en] = PV_LABEL[v]; b.hidden = false; b.dataset.ko = ko; b.dataset.en = en; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(v !== 'on')); }
 function setView(v) {
   S.view = v;
@@ -6405,7 +6463,7 @@ function play() {
     Object.assign(anim, { phase: 'wait', t: 0, reach: 0, pour: 0 });
     return;
   }
-  Object.assign(anim, { played: true, phase: 'reach', t: 0, reach: 0, pour: 0, fill: 0, open: 0, drink: 0 });
+  Object.assign(anim, { played: true, phase: 'reach', t: 0, reach: 0, pour: 0, fill: 0, open: 0, drink: 0, wave: 0 });
 }
 function liftMoved() { if (!reduceMotion) Object.assign(anim, { phase: 'wait', t: 0, reach: 0 }); } // the hand waits for the top to move
 function stepAnim(dt) {
@@ -6420,7 +6478,7 @@ function stepAnim(dt) {
   if (anim.phase === 'reach') {
     const k = clamp(anim.t / 0.9, 0, 1);
     anim.reach = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
-    if (k >= 1) { queueGhostCheck(2); anim.phase = flows() ? 'pour' : S.plan && S.plan.kind === 'type' ? 'type' : (S.plan && (S.plan.kind === 'pull' || (S.plan.kind === 'bar' && holder.userData.door))) || (holder.userData.door && holder.userData.door.auto) ? 'pull' : drinking() ? 'drink' : 'idle'; anim.t = 0; } // after reaching: water runs, the fingers type, the drawer comes out, or the cup goes to the lips
+    if (k >= 1) { queueGhostCheck(2); anim.phase = flows() ? 'pour' : S.plan && S.plan.kind === 'type' ? 'type' : (S.plan && (S.plan.kind === 'pull' || (S.plan.kind === 'bar' && holder.userData.door))) || (holder.userData.door && holder.userData.door.auto) ? 'pull' : drinking() ? 'drink' : waving() ? 'wave' : 'idle'; anim.t = 0; } // after reaching: water runs, the fingers type, the drawer comes out, the cup goes to the lips, or the light stick is waved
   } else if (anim.phase === 'pour') {
     anim.pour = clamp(anim.t / 0.25, 0, 1);
     if (isDispense()) anim.fill = clamp(anim.t / 1.9, 0, 1) * 0.85;
@@ -6433,6 +6491,9 @@ function stepAnim(dt) {
     const t = anim.t, e = (x) => { const k = clamp(x, 0, 1); return k * k * (3 - 2 * k); };
     anim.drink = t < 1.1 ? e(t / 1.1) : t < 2.1 ? 1 : 1 - e((t - 2.1) / 0.9);
     if (t >= 3) { anim.phase = 'idle'; anim.drink = 0; }
+  } else if (anim.phase === 'wave') { // the light stick swung forward and back, a few beats
+    const t = anim.t, T = 3.2; anim.wave = Math.sin(t * 2 * Math.PI * 1.4) * Math.min(1, t / 0.35) * Math.min(1, Math.max(0, (T - t) / 0.35));
+    if (t >= T) { anim.phase = 'idle'; anim.wave = 0; }
   } else if (anim.phase === 'type') {
     if (anim.t > 2.6) anim.phase = 'idle';
   } else if (anim.phase === 'pull') {
@@ -6514,9 +6575,13 @@ function syncDetail() {
 function segBind(id, key, fn) { for (const b of $(id).children) b.addEventListener('click', () => { if (!b.disabled) fn(b.dataset[key]); }); }
 function setPersona(k) { const p = PERSONAS[k]; S.persona = k; S.height = p.h; S.bmi = p.bmi; refresh({ refit: true }); }
 function applyPreset(k) {
-  const pr = PRESETS[k];
+  const pr = PRESETS[k], was = S.supOff ? S.supPrev : S.place, sup = !!S.supOff, supAir = S.supAir; // where the last one stood (under a hidden support too)
   Object.assign(S, { source: 'box', preset: k, pkey: k, name: pr.name, shape: pr.shape, style: pr.style || null, look: pr.look || null, noHand: !!pr.noHand, noCtrl: !!pr.noCtrl, w: pr.w, d: pr.d, h: pr.h, place: pr.place, face: pr.face, ctrl: pr.ctrl, action: pr.action, scale: 1, posture: pr.posture || 'stand', base: { w: pr.w, d: pr.d, h: pr.h }, screen: !!pr.screen, lift: 0, ringSize: pr.size || S.ringSize });
   S.mode = 'use'; S.itemMode = null; // every product starts in use
+  S.supOff = false; S.supPrev = null;
+  if (was && was !== S.place && !['floor', 'wall', 'head', 'back'].includes(pr.place) && placeOk(was) && !isFurniture() && !['head', 'back'].includes(was)) S.place = was; // somewhere it can stand too: it goes there, in place of the last one; if not, where it usually goes
+  if (sup && S.place === was && supportable()) { S.supPrev = was; S.supOff = true; S.place = 'air'; S.supAir = supAir; } // the support stays hidden
+  else if (sup && S.surf) S.surf = { ...S.surf, air: supAir }; // or back to how the air height was
   S.seatMode = 'fixed'; S.seatH = PROPS[propKind()].h; S.preDesk = null; S.row = null; S.pick = 0; S.det = {}; S.ctrlWant = null; S.parts = null; S.pbase = null; S.mineId = null; S.cup = false;
   anim.lift = 0; anim.fill = 0;
   refresh({ rebuild: true, refit: true });
@@ -6554,6 +6619,27 @@ function syncExamples() {
   if (g && vf.parentNode !== g) g.append(vf);
 }
 $('toProducts').addEventListener('click', () => $('tb-product').click());
+{ // the views and lenses along the top: when they don't all fit, a fade shows there are more, and the wheel scrolls them sideways
+  const v = $('views'), upd = () => { const o = v.scrollWidth > v.clientWidth + 1; v.classList.toggle('ovf-r', o && v.scrollLeft + v.clientWidth < v.scrollWidth - 2); v.classList.toggle('ovf-l', o && v.scrollLeft > 2); };
+  v.addEventListener('scroll', upd, { passive: true }); if (window.ResizeObserver) new ResizeObserver(upd).observe(v); window.addEventListener('resize', upd); upd();
+  v.addEventListener('wheel', (e) => { if (v.scrollWidth <= v.clientWidth + 1 || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; v.scrollLeft += e.deltaY; e.preventDefault(); }, { passive: false });
+}
+for (const [id, shut] of [['grpClose', true], ['grpOpen', false]]) $(id).addEventListener('click', () => { for (const g of $('presetChips').querySelectorAll('.pgroup')) { const gi = +g.dataset.pg; g.classList.toggle('collapsed', shut); g.querySelector('.gname').setAttribute('aria-expanded', String(!shut)); if (shut) collapsedGroups.add(gi); else collapsedGroups.delete(gi); } }); // every category shut, or every one open
+/* the products in the order they are listed (a family as one, at its usual size): the one before or after this one, on into the next category at the end of one */
+const PROD_ORDER = PRESET_GROUPS.flatMap(([, keys]) => keys.map((k) => (k.startsWith('fam:') ? { fam: k.slice(4) } : { key: k })));
+function stepProduct(d) {
+  const f = S.source === 'box' ? familyOf(S.pkey) : null, i = PROD_ORDER.findIndex((o) => (f ? o.fam === f : o.key === S.pkey)), n = PROD_ORDER.length;
+  const o = PROD_ORDER[((i < 0 ? (d > 0 ? -1 : 0) : i) + d + n) % n], F = o.fam && FAMILIES[o.fam];
+  applyPreset(F ? F.last || F.sizes[0][0] : o.key);
+}
+$('prodPrev').addEventListener('click', () => stepProduct(-1));
+$('prodNext').addEventListener('click', () => stepProduct(1));
+/* the support (table, counter, plinth…) hidden: it floats where it stood, and comes back as it was */
+$('btnSupport').addEventListener('click', () => {
+  if (S.supOff) { const back = S.supPrev; S.supOff = false; S.supPrev = null; S.surf = { ...(S.surf || {}), air: S.supAir }; S.place = back || S.place; }
+  else { if (!supportable()) return; const y = Math.round((S.place === 'wall' ? SURF.wall : SURF[S.place]) * 1000); S.supAir = S.surf ? S.surf.air : undefined; S.supPrev = S.place; S.supOff = true; S.surf = { ...(S.surf || {}), air: y }; S.place = 'air'; }
+  refresh({ rebuild: true });
+});
 buildChips();
 $('variantSeg').addEventListener('click', (e) => { const b = e.target.closest('[data-size]'); if (b) applyPreset(b.dataset.size); });
 $('hIn').addEventListener('input', (e) => { S.height = +e.target.value; refresh(); });
@@ -6582,7 +6668,7 @@ segBind('shapeSeg', 'shape', (v) => {
   if (!own) S.preset = null;
   refresh({ rebuild: true, refit: true });
 });
-segBind('placeSeg', 'place', (v) => { const was = S.place; S.place = v; if (v === 'desk') deskSeat(); else if (was === 'desk' && S.preDesk) { S.posture = S.preDesk; S.preDesk = null; } refresh({ refit: true }); }); // leaving the desk gives back the posture from before it
+segBind('placeSeg', 'place', (v) => { const was = S.place; if (S.supOff) { S.supOff = false; S.supPrev = null; if (S.surf) S.surf = { ...S.surf, air: S.supAir }; } S.place = v; if (v === 'desk') deskSeat(); else if (was === 'desk' && S.preDesk) { S.posture = S.preDesk; S.preDesk = null; } refresh({ refit: true }); }); // leaving the desk gives back the posture from before it
 /* at the desk the person sits on an office chair: a seat height left at another seat's default becomes the office chair's */
 function deskSeat() { if (!S.preDesk) S.preDesk = S.posture; S.posture = 'sit'; if (S.seatMode === 'fixed' && Object.values(PROPS).some((p) => p.h === S.seatH)) S.seatH = PROPS.office.h; }
 segBind('faceSeg', 'face', (v) => { S.face = v; refresh(); });
@@ -6629,16 +6715,17 @@ for (const t of document.querySelectorAll('[role="tab"][aria-controls]')) { // t
 $('btnGuides').addEventListener('click', () => { S.guides = !S.guides; $('btnGuides').setAttribute('aria-pressed', String(S.guides)); });
 $('btnPlay').addEventListener('click', () => (anim.played ? rest() : play()));
 /* chest-of-drawers units: add one to the left or right (named B, then C, with the picked one's width), pick one to use, remove one */
-function addUnit(left) {
+function addUnit(left, top) {
   const prop = isProp(), r0 = S.row || [{ n: 'A', w: S.w, d: S.d, h: S.h }], m = prop ? Math.max(0, r0.findIndex((u) => u.n === 'A')) : S.pick || 0;
   const r = r0.map((u, i) => (i === m ? { ...u, w: S.w, d: S.d, h: S.h } : u)); // the main one is the product's own size
   if (r.length >= 3) return;
-  const from = r[S.pick || 0] || r[m], u = { n: ['A', 'B', 'C'].find((n) => !r.some((x) => x.n === n)), w: from.w, d: from.d, h: from.h, ...(prop ? { gap: ROW_GAP } : {}) }; // a copy of the picked one
-  S.row = left ? [u, ...r] : [...r, u];
+  const from = r[S.pick || 0] || r[m], u = { n: ['A', 'B', 'C'].find((n) => !r.some((x) => x.n === n)), w: from.w, d: from.d, h: from.h, ...(prop ? { gap: ROW_GAP } : {}), ...(top ? { top: true } : {}) }; // a copy of the picked one (on top: stacked on the main one)
+  S.row = left && !top ? [u, ...r] : [...r, u];
   S.pick = prop ? (left ? 0 : S.row.length - 1) : (S.pick || 0) + (left ? 1 : 0); // a mockup: the new one is picked, to size and space it; a chest: the person stays at theirs
   refresh({ rebuild: true, refit: true });
 }
 $('unitAddL').addEventListener('click', () => addUnit(true));
+$('unitAddT').addEventListener('click', () => addUnit(false, true));
 function setSurf(v, key) { const k = key || S.place, lim = k === 'wallD' ? [200, 3000] : k === 'plinthR' ? [0, 200] : k === 'plinthW' || k === 'plinthD' ? [50, 1500] : SURF_LIM[k] || [400, 1200]; if (!['table', 'desk', 'counter', 'plinth', 'air', 'wall', 'wallD', 'plinthW', 'plinthD', 'plinthR'].includes(k) || !(v >= lim[0] && v <= lim[1])) return; S.surf = { ...(S.surf || {}), [k]: Math.round(v) }; refresh({ rebuild: true, refit: true }); }
 $('surfIn').addEventListener('input', (e) => setSurf(+e.target.value));
 for (const [id, k] of [['plForm', 'plinthForm'], ['plMat', 'plinthMat']]) $(id).addEventListener('click', (e) => { const b = e.target.closest('button[data-v]'); if (!b) return; S.surf = { ...(S.surf || {}), [k]: b.dataset.v }; refresh({ rebuild: true }); }); // the plinth: a cube or a cylinder, solid or glass
