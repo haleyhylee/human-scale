@@ -241,6 +241,13 @@ input:disabled { opacity: 0.55; }
 .checklist li:last-child { border-bottom: 0; }
 .checklist .k { font-size: 12px; font-weight: 600; color: var(--ink-2); padding-top: 1px; }
 .checklist .v { font-size: 13.5px; display: flex; gap: 8px; align-items: baseline; }
+.vbtn { display: inline-flex; align-items: center; gap: 6px; }
+.vi { width: 18px; height: 18px; flex: 0 0 auto; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; fill: currentColor; }
+.vi .f { fill: var(--accent); stroke: none; opacity: 0.85; }
+.vi .f2 { fill: var(--accent); stroke: none; opacity: 0.5; }
+.vi .f3 { fill: var(--accent); stroke: none; opacity: 0.3; }
+.vbtn[aria-pressed="true"] .vi .f, .vbtn[aria-pressed="true"] .vi .f2, .vbtn[aria-pressed="true"] .vi .f3 { fill: currentColor; }
+@media (max-width: 900px) { .vbtn .vl, .lens .ll { display: none; } .vbtn { padding: 0 8px; } .lens button { padding: 0 7px; } } /* narrow: the icons alone, the names on hover and to screen readers */
 .vsep { flex: 0 0 1px; align-self: stretch; background: var(--line); margin: 6px 2px; }
 .lens { flex: 0 0 auto; display: inline-flex; align-items: center; height: 32px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); overflow: hidden; }
 .lens > span { font-size: 12px; color: var(--ink-2); padding: 0 8px 0 10px; white-space: nowrap; }
@@ -308,17 +315,17 @@ input:disabled { opacity: 0.55; }
     </div>
     <div class="top">
       <div class="views" id="views" aria-label="보는 시점" data-en-aria="Viewpoint">
-        <button type="button" class="chip" data-view="third" aria-pressed="true" data-en="3rd person">3인칭</button>
-        <button type="button" class="chip" data-view="first" aria-pressed="false" data-en="1st person">1인칭</button>
-        <button type="button" class="chip" data-view="front" aria-pressed="false" data-en="Front">정면</button>
-        <button type="button" class="chip" data-view="side" aria-pressed="false" data-en="Side">측면</button>
-        <button type="button" class="chip" data-view="top" aria-pressed="false" data-en="Top">평면</button>
-        <button type="button" class="chip" data-view="bird" aria-pressed="false" data-en="Bird's-eye">버드뷰</button>
+        <button type="button" class="chip vbtn" data-view="third" aria-pressed="true" title="3인칭" data-en-title="3rd person" aria-label="3인칭" data-en-aria="3rd person"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="3.2"/><path d="M5.5 20c.6-4.2 3.2-6.5 6.5-6.5s5.9 2.3 6.5 6.5" fill="none"/></svg><span class="vl" data-en="3rd person">3인칭</span></button>
+        <button type="button" class="chip vbtn" data-view="first" aria-pressed="false" title="1인칭" data-en-title="1st person" aria-label="1인칭" data-en-aria="1st person"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" fill="none"/><circle cx="12" cy="12" r="3" class="f"/></svg><span class="vl" data-en="1st person">1인칭</span></button>
+        <button type="button" class="chip vbtn" data-view="front" aria-pressed="false" title="정면" data-en-title="Front" aria-label="정면" data-en-aria="Front"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M4 8h12v12H4z"/><path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/></svg><span class="vl" data-en="Front">정면</span></button>
+        <button type="button" class="chip vbtn" data-view="side" aria-pressed="false" title="측면" data-en-title="Side" aria-label="측면" data-en-aria="Side"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M16 8l4-4v12l-4 4z"/><path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/></svg><span class="vl" data-en="Side">측면</span></button>
+        <button type="button" class="chip vbtn" data-view="top" aria-pressed="false" title="평면" data-en-title="Top" aria-label="평면" data-en-aria="Top"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M4 8l4-4h12l-4 4z"/><path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/></svg><span class="vl" data-en="Top">평면</span></button>
+        <button type="button" class="chip vbtn" data-view="bird" aria-pressed="false" title="버드뷰" data-en-title="Bird's-eye" aria-label="버드뷰" data-en-aria="Bird's-eye"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M4 8l4-4h12l-4 4z"/><path class="f2" d="M4 8h12v12H4z"/><path class="f3" d="M16 8l4-4v12l-4 4z"/><path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/></svg><span class="vl" data-en="Bird's-eye">버드뷰</span></button>
         <span class="vsep" aria-hidden="true"></span>
-        <div class="lens" id="lensSeg" role="group" aria-label="렌즈 초점거리" data-en-aria="Lens focal length"><span data-en="Lens mm">렌즈 mm</span><button type="button" data-lens="20">20</button><button type="button" data-lens="35">35</button><button type="button" data-lens="50">50</button><button type="button" data-lens="85">85</button></div>
+        <div class="lens" id="lensSeg" role="group" aria-label="렌즈 초점거리" data-en-aria="Lens focal length"><span class="ll" data-en="Lens mm">렌즈 mm</span><button type="button" data-lens="20">20</button><button type="button" data-lens="35">35</button><button type="button" data-lens="50">50</button><button type="button" data-lens="85">85</button></div>
       </div>
       <span class="one"><button type="button" class="chip" id="btn11" aria-pressed="false" title="실제 크기로 보기 (화면 1:1)" data-en-title="Real size on screen (1:1)">1:1</button><button type="button" class="chip" id="oneRecal" hidden data-en="Re-measure">다시 보정</button></span>
-      <button type="button" class="chip" id="btnMeasure" aria-pressed="false" data-en="Measure">치수 재기</button>
+      <button type="button" class="chip vbtn" id="btnMeasure" aria-pressed="false" title="치수 재기" data-en-title="Measure" aria-label="치수 재기" data-en-aria="Measure"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15.5L15.5 3 21 8.5 8.5 21z" fill="none"/><path d="M7 11.5l2 2M9.5 9l1.5 1.5M12 6.5l2 2M14.5 4l1.5 1.5" fill="none"/></svg><span class="vl" data-en="Measure">치수 재기</span></button>
     </div>
     <div class="calib" id="calib" hidden role="dialog" aria-modal="true" aria-labelledby="calibT">
       <div class="calib-card">
