@@ -74,8 +74,8 @@ button { cursor: pointer; }
 .guide.target { border-top-color: var(--accent); }
 .guide.target span { left: auto; right: calc(max(12px, env(safe-area-inset-right, 0px)) + 46px); color: var(--accent-ink); } /* clear of the zoom buttons */
 .top { position: absolute; top: 12px; left: 0; right: 0; display: flex; flex-direction: row; align-items: flex-start; gap: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); pointer-events: none; }
-.views { flex: 1 1 auto; min-width: 0; display: flex; gap: 6px; overflow-x: auto; pointer-events: auto; }
-.one { flex: 0 0 auto; display: inline-flex; gap: 6px; margin-left: auto; pointer-events: auto; }
+.views { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: auto; } /* too narrow: the views and lenses go on to a second line, none hidden */
+.one { flex: 0 0 auto; display: inline-flex; flex-wrap: wrap; gap: 6px; margin-left: auto; pointer-events: auto; }
 .one + #btnMeasure { margin-left: 0; }
 .calib { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 55%, transparent); z-index: 30; }
 .calib[hidden] { display: none; }
@@ -86,12 +86,6 @@ button { cursor: pointer; }
 .calib-row { display: flex; gap: 8px; align-items: center; font-size: 13px; }
 .calib-row input { width: 96px; }
 #btnMeasure { flex: 0 0 auto; margin-left: auto; pointer-events: auto; } /* measuring stays at the right, in view on a phone too; the views beside it scroll */
-.views { scrollbar-width: thin; scrollbar-color: var(--line) transparent; padding-bottom: 4px; } /* too narrow for them all: a thin bar to scroll by (the wheel scrolls it too) */
-.views.ovf-r { mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); padding-right: 22px; } /* fades out where it scrolls on */
-.views.ovf-l { mask-image: linear-gradient(to right, transparent, #000 24px); -webkit-mask-image: linear-gradient(to right, transparent, #000 24px); }
-.views.ovf-l.ovf-r { mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 28px), transparent); }
-.views::-webkit-scrollbar { height: 4px; }
-.views::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
 .chip { flex: 0 0 auto; height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); font-size: 13px; font-weight: 500; color: var(--ink); }
 .chip:hover { border-color: var(--ink-2); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
