@@ -300,6 +300,8 @@ input:disabled { opacity: 0.55; }
 .measure circle { fill: var(--accent); }
 .mtag { position: absolute; left: 0; top: 0; z-index: 6; display: flex; flex-wrap: wrap; max-width: calc(100% - 12px); align-items: center; gap: 8px; padding: 5px 5px 5px 10px; background: var(--raise); border: 1px solid var(--accent); border-radius: 6px; font: 500 12px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--accent-ink); box-shadow: 0 2px 8px rgb(0 0 0 / 0.12); white-space: nowrap; }
 .mtag .btn { height: 28px; padding: 0 10px; font-size: 12px; }
+.mtag .mok { width: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.mtag .mok svg { width: 18px; height: 18px; }
 .stage.measuring #c { cursor: crosshair; }
 </style>
 
@@ -307,7 +309,7 @@ input:disabled { opacity: 0.55; }
   <section class="stage" id="stage" aria-label="사람과 제품 3D 뷰" data-en-aria="3D view of the person and the product">
     <canvas id="c" role="img" aria-label="사람 모형과 제품 폼 목업을 함께 보여주는 3D 뷰. 드래그해서 돌려볼 수 있어요." data-en-aria="3D view of a mannequin next to a foam mockup of the product. Drag to turn it."></canvas>
     <svg class="measure" id="measureSvg" aria-hidden="true"></svg>
-    <div class="mtag" id="measureTag" hidden><span id="measureTxt"></span><button type="button" class="btn" id="measureUnit" aria-label="단위 바꾸기" data-en-aria="Switch unit">mm</button><button type="button" class="btn accent" id="measureApply" data-en="Use as size">이 크기로</button></div>
+    <div class="mtag" id="measureTag" hidden><span id="measureTxt"></span><button type="button" class="btn" id="measureUnit" aria-label="단위 바꾸기" data-en-aria="Switch unit">mm</button><button type="button" class="btn accent mok" id="measureApply" aria-label="이 크기를 제품 크기로" title="이 크기를 제품 크기로" data-en-aria="Use as the product size" data-en-title="Use as the product size"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
     <div class="overlay" aria-hidden="true">
       <svg class="leaders" id="leaderSvg"></svg>
       <div class="guide" id="g-eye" hidden><span></span></div>
