@@ -247,12 +247,15 @@ input:disabled { opacity: 0.55; }
 .vi .f2 { fill: var(--accent); stroke: none; opacity: 0.5; }
 .vi .f3 { fill: var(--accent); stroke: none; opacity: 0.3; }
 .vbtn[aria-pressed="true"] .vi .f, .vbtn[aria-pressed="true"] .vi .f2, .vbtn[aria-pressed="true"] .vi .f3 { fill: currentColor; }
-@media (max-width: 900px) { .vbtn .vl, .lens .ll { display: none; } .vbtn { padding: 0 8px; } .lens button { padding: 0 7px; } } /* narrow: the icons alone, the names on hover and to screen readers */
+@media (max-width: 900px) { .vbtn .vl, .lens .ll { display: none; } .vbtn { padding: 0 8px; } .lens .dial { border-left: 0; } } /* narrow: the icons alone, the names on hover and to screen readers */
 .vsep { flex: 0 0 1px; align-self: stretch; background: var(--line); margin: 6px 2px; }
 .lens { flex: 0 0 auto; display: inline-flex; align-items: center; height: 32px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); overflow: hidden; }
 .lens > span { font-size: 12px; color: var(--ink-2); padding: 0 8px 0 10px; white-space: nowrap; }
-.lens button { height: 100%; padding: 0 9px; border: 0; border-left: 1px solid var(--line); background: none; font: 500 12px var(--font-mono); color: var(--ink-2); }
-.lens button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+.lens .dial { height: 100%; display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; border: 0; border-left: 1px solid var(--line); background: none; font: 600 13px var(--font-mono); color: var(--ink); cursor: ew-resize; touch-action: none; user-select: none; }
+.lens .dial b { min-width: 22px; text-align: center; font-weight: 600; }
+.lens .dial .dz { color: var(--ink-2); font-size: 14px; }
+.lens .dial.turning { background: var(--ink); color: var(--panel); }
+.lens .dial.turning .dz { color: var(--panel); }
 .lens button:disabled { opacity: 0.4; cursor: default; }
 .reset { height: 24px; padding: 0 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--raise); font-size: 11.5px; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
 .reset:hover:not(:disabled) { border-color: var(--ink-2); color: var(--ink); }
@@ -320,9 +323,8 @@ input:disabled { opacity: 0.55; }
         <button type="button" class="chip vbtn" data-view="front" aria-pressed="false" title="정면" data-en-title="Front" aria-label="정면" data-en-aria="Front"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M4 8h12v12H4z"/><path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/></svg><span class="vl" data-en="Front">정면</span></button>
         <button type="button" class="chip vbtn" data-view="side" aria-pressed="false" title="측면" data-en-title="Side" aria-label="측면" data-en-aria="Side"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M16 8l4-4v12l-4 4z"/><path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/></svg><span class="vl" data-en="Side">측면</span></button>
         <button type="button" class="chip vbtn" data-view="top" aria-pressed="false" title="평면" data-en-title="Top" aria-label="평면" data-en-aria="Top"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M4 8l4-4h12l-4 4z"/><path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/></svg><span class="vl" data-en="Top">평면</span></button>
-        <button type="button" class="chip vbtn" data-view="bird" aria-pressed="false" title="버드뷰" data-en-title="Bird's-eye" aria-label="버드뷰" data-en-aria="Bird's-eye"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M4 8l4-4h12l-4 4z"/><path class="f2" d="M4 8h12v12H4z"/><path class="f3" d="M16 8l4-4v12l-4 4z"/><path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/></svg><span class="vl" data-en="Bird's-eye">버드뷰</span></button>
         <span class="vsep" aria-hidden="true"></span>
-        <div class="lens" id="lensSeg" role="group" aria-label="렌즈 초점거리" data-en-aria="Lens focal length"><span class="ll" data-en="Lens mm">렌즈 mm</span><button type="button" data-lens="20">20</button><button type="button" data-lens="35">35</button><button type="button" data-lens="50">50</button><button type="button" data-lens="85">85</button></div>
+        <div class="lens" id="lensSeg"><span class="ll" data-en="Lens">렌즈</span><button type="button" id="lensDial" class="dial" aria-label="렌즈 초점거리 (좌우로 드래그·휠)" data-en-aria="Lens focal length (drag sideways or scroll)" title="좌우로 드래그하거나 휠로 돌려요 · 누르면 다음" data-en-title="Drag sideways or scroll to turn · click for the next"><span class="dz" aria-hidden="true">‹</span><b id="lensVal">35</b><span class="dz" aria-hidden="true">›</span></button></div>
       </div>
       <span class="one"><button type="button" class="chip" id="btn11" aria-pressed="false" title="실제 크기로 보기 (화면 1:1)" data-en-title="Real size on screen (1:1)">1:1</button><button type="button" class="chip" id="oneRecal" hidden data-en="Re-measure">다시 보정</button></span>
       <button type="button" class="chip vbtn" id="btnMeasure" aria-pressed="false" title="치수 재기" data-en-title="Measure" aria-label="치수 재기" data-en-aria="Measure"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15.5L15.5 3 21 8.5 8.5 21z" fill="none"/><path d="M7 11.5l2 2M9.5 9l1.5 1.5M12 6.5l2 2M14.5 4l1.5 1.5" fill="none"/></svg><span class="vl" data-en="Measure">치수 재기</span></button>
@@ -6192,7 +6194,7 @@ function fitView() {
     else { ww = s.x; hh = s.z; up = new V3(0, 0, -1); }
     const half = Math.max(hh / (2 * f), ww / (2 * aspect)) * 1.12 + 0.03;
     const cc = c.clone().addScaledVector(up, off * 2 * half);
-    const pos = S.view === 'front' ? new V3(cc.x, cc.y, S.place === 'back' && kind() === 'pack' ? box3.min.z - 5 : box3.max.z + 5) /* worn on the back: its own front, from behind */ : S.view === 'side' ? new V3(box3.max.x + 5, cc.y, cc.z) : new V3(cc.x, box3.max.y + 5, cc.z);
+    const back = (S.place === 'back' && kind() === 'pack') !== !!S.viewFlip, pos = S.view === 'front' ? new V3(cc.x, cc.y, back ? box3.min.z - 5 : box3.max.z + 5) /* worn on the back: its own front, from behind; or turned round to the back */ : S.view === 'side' ? new V3(S.viewFlip ? box3.min.x - 5 : box3.max.x + 5, cc.y, cc.z) : new V3(cc.x, box3.max.y + 5, cc.z);
     Object.assign(orthoCam, { left: -half * aspect, right: half * aspect, top: half, bottom: -half, zoom: 1 });
     orthoCam.up.copy(up); orthoCam.position.copy(pos); orthoCam.lookAt(cc);
     orthoCam.updateProjectionMatrix();
@@ -6259,10 +6261,32 @@ const personVis = () => S.pv || (S.place === 'air' && !S.supOff ? 'off' : (front
 const PV_LABEL = { on: ['사람 O', 'Person'], ghost: ['사람 반투명', 'See-through'], off: ['사람 X', 'No person'] };
 function syncSupportBtn() { const b = $('btnSupport'), on = !!S.supOff; b.hidden = !on && !supportable(); const [ko, en] = on ? ['보조 X', 'No support'] : ['보조 O', 'Support']; b.dataset.ko = ko; b.dataset.en = en; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(on)); }
 function syncGhostBtn() { const v = personVis(), b = $('btnGhost'), [ko, en] = PV_LABEL[v]; b.hidden = false; b.dataset.ko = ko; b.dataset.en = en; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(v !== 'on')); }
-function setView(v) {
+/* the view buttons: pressed again, 3rd person goes up to the bird's-eye view, front turns to the back, side to the other side */
+const CUBE = '<path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/>', VIEW_ALT = {
+  third: [['3인칭', '3rd person', '<circle cx="12" cy="7" r="3.2"/><path d="M5.5 20c.6-4.2 3.2-6.5 6.5-6.5s5.9 2.3 6.5 6.5" fill="none"/>'], ['버드뷰', "Bird's-eye", '<path class="f" d="M4 8l4-4h12l-4 4z"/><path class="f2" d="M4 8h12v12H4z"/><path class="f3" d="M16 8l4-4v12l-4 4z"/>' + CUBE]],
+  front: [['정면', 'Front', '<path class="f" d="M4 8h12v12H4z"/>' + CUBE], ['뒷면', 'Back', '<path class="f" d="M8 4h12v12H8z"/>' + CUBE]],
+  side: [['측면', 'Side', '<path class="f" d="M16 8l4-4v12l-4 4z"/>' + CUBE], ['반대 측면', 'Other side', '<path class="f" d="M4 8l4-4v12l-4 4z"/>' + CUBE]],
+};
+function syncViewBtns() {
+  for (const b of $('views').querySelectorAll('[data-view]')) {
+    const k = b.dataset.view, on = k === S.view || (k === 'third' && S.view === 'bird'), A = VIEW_ALT[k];
+    b.setAttribute('aria-pressed', String(on));
+    if (!A) continue;
+    const alt = (k === 'third' && S.view === 'bird') || (on && k !== 'third' && S.viewFlip), [ko, en, svg] = A[alt ? 1 : 0], l = b.querySelector('.vl'), ic = b.querySelector('.vi');
+    if (ic.dataset.k !== String(alt)) { ic.innerHTML = svg; ic.dataset.k = String(alt); }
+    l.dataset.ko = ko; l.dataset.en = en; l.textContent = L(ko, en); b.title = L(ko, en) + L(' · 한 번 더 누르면 바뀌어요', ' · press again to turn'); b.setAttribute('aria-label', L(ko, en));
+  }
+}
+function pressView(k) { // the same button again: its other view
+  if (k === 'third' && (S.view === 'third' || S.view === 'bird')) return setView(S.view === 'third' ? 'bird' : 'third');
+  if ((k === 'front' || k === 'side') && S.view === k) { S.viewFlip = !S.viewFlip; return setView(k, true); }
+  setView(k);
+}
+function setView(v, keepFlip) {
+  if (!keepFlip) S.viewFlip = false;
   S.view = v;
   syncGhostBtn();
-  for (const b of $('views').querySelectorAll('[data-view]')) b.setAttribute('aria-pressed', String(b.dataset.view === v));
+  syncViewBtns();
   if (meas.on && !isOrtho()) setMeasure(false); // the ruler works on the flat views
   if (ONE.on && !isOrtho()) { ONE.on = false; syncOne(); } // 1:1 is for the flat views
   syncBodyVis();
@@ -6272,7 +6296,7 @@ function setView(v) {
 }
 function syncLens() {
   const lens = S.view === 'first' ? S.lensFP : S.lens;
-  for (const b of $('lensSeg').querySelectorAll('button')) { b.setAttribute('aria-pressed', String(+b.dataset.lens === lens)); b.disabled = isOrtho(); }
+  $('lensVal').textContent = lens; $('lensDial').disabled = isOrtho(); $('lensSeg').style.opacity = isOrtho() ? 0.45 : '';
   $('vhint').hidden = S.view !== 'first' && !meas.on;
   if (meas.on) $('vhint').textContent = L('드래그: 상자 크기 · 두 번 클릭: 거리', 'Drag: box size · two clicks: distance');
   else if (S.E) $('vhint').textContent = L(`눈높이 ${cmi(S.E.land.eyeY)}cm 시야 · 드래그해서 둘러보기`, `Eye height ${cmi(S.E.land.eyeY)} cm · drag to look around`);
@@ -6738,7 +6762,7 @@ const setMsg = (id, text) => { const el = $(id); el.textContent = text; el.datas
 segBind('actSeg', 'act', (v) => { S.action = v; refresh(); });
 segBind('ctrlOnSeg', 'on', (v) => { S.noCtrl = v === '0'; refresh({ refit: true }); }); // off: no control point, the person simply stands beside it
 segBind('modeSeg', 'mode', (v) => { S.mode = v; if (S.source === 'box' && S.look === 'parcel') { S.place = v === 'compare' ? 'floor' : 'hand'; refresh({ rebuild: true, refit: true }); return; } refresh({ refit: true }); }); // a parcel box: carried in use, set on the floor beside the person side by side
-for (const b of $('views').querySelectorAll('[data-view]')) b.addEventListener('click', () => { if (!b.disabled) setView(b.dataset.view); });
+for (const b of $('views').querySelectorAll('[data-view]')) b.addEventListener('click', () => { if (!b.disabled) pressView(b.dataset.view); });
 for (const t of document.querySelectorAll('[role="tab"][aria-controls]')) { // the panel tabs (the example tabs have their own)
   t.addEventListener('click', () => {
     for (const u of document.querySelectorAll('[role="tab"][aria-controls]')) {
@@ -7172,12 +7196,19 @@ for (const [id, key] of [['rW', 'w'], ['rD', 'd'], ['rH', 'h']]) $(id).addEventL
 $('dimReset').addEventListener('click', () => { if (!S.base) return; if (sizeUnit()) { S.row = S.row.map((u, i) => (i === S.pick ? { ...u, w: S.base.w, d: roundBase() ? S.base.w : S.base.d, h: S.base.h } : u)); refresh({ rebuild: true }); return; } Object.assign(S, S.base); if (roundBase()) S.d = S.w; S.ctrl = Math.min(S.ctrlWant ?? S.ctrl, S.h); S.ctrlWant = null; refresh({ rebuild: true }); });
 
 /* ---------- lens, posture, history, resets, 1-person look ---------- */
-for (const b of $('lensSeg').querySelectorAll('button')) b.addEventListener('click', () => {
-  if (b.disabled) return;
-  const v = +b.dataset.lens;
-  if (S.view === 'first') S.lensFP = v; else S.lens = v;
-  syncLens(); perspCam.fov = lensFov(v); perspCam.updateProjectionMatrix();
-});
+{ // the lens as a dial: drag sideways or scroll to turn it through 20 · 35 · 50 · 85; a click alone steps on
+  const STOPS = [20, 35, 50, 85], d = $('lensDial'), cur = () => (S.view === 'first' ? S.lensFP : S.lens);
+  const set = (v) => { if (S.view === 'first') S.lensFP = v; else S.lens = v; syncLens(); perspCam.fov = lensFov(v); perspCam.updateProjectionMatrix(); };
+  const step = (n) => { const i = STOPS.indexOf(cur()), j = clamp((i < 0 ? 1 : i) + n, 0, STOPS.length - 1); if (STOPS[j] !== cur()) set(STOPS[j]); };
+  let x0 = null, moved = false, acc = 0;
+  d.addEventListener('pointerdown', (e) => { if (d.disabled) return; x0 = e.clientX; moved = false; acc = 0; d.setPointerCapture(e.pointerId); d.classList.add('turning'); });
+  d.addEventListener('pointermove', (e) => { if (x0 == null) return; acc += e.clientX - x0; x0 = e.clientX; while (Math.abs(acc) >= 28) { step(Math.sign(acc)); acc -= 28 * Math.sign(acc); moved = true; } });
+  const up = () => { x0 = null; d.classList.remove('turning'); };
+  d.addEventListener('pointerup', up); d.addEventListener('pointercancel', up);
+  d.addEventListener('click', () => { if (d.disabled) return; if (!moved) { const i = STOPS.indexOf(cur()); set(STOPS[(i + 1) % STOPS.length]); } moved = false; });
+  d.addEventListener('wheel', (e) => { if (d.disabled) return; e.preventDefault(); e.stopPropagation(); step((Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) > 0 ? 1 : -1); }, { passive: false });
+  d.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { step(1); e.preventDefault(); } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { step(-1); e.preventDefault(); } });
+}
 $('zoomIn').addEventListener('click', () => zoomView(0.8));
 $('zoomOut').addEventListener('click', () => zoomView(1.25));
 $('viewReset').addEventListener('click', resetView);
