@@ -187,6 +187,8 @@ button { cursor: pointer; }
 #placeSeg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); } /* the places in two rows */
 #placeSeg button { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 34px; }
 #placeSeg button[hidden] { display: none; }
+#ceilStd { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 8px; } /* the ceiling heights in one table, like the places */
+#ceilStd button { min-height: 34px; padding: 4px 6px; line-height: 1.25; text-align: center; }
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); position: sticky; top: -14px; margin-top: -2px; background: var(--panel); z-index: 2; }
 .tabs button { flex: 1 1 0; height: 42px; border: 0; background: none; font-size: 14px; font-weight: 600; color: var(--ink-2); border-bottom: 2px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
@@ -600,8 +602,8 @@ input:disabled { opacity: 0.55; }
         <div class="label"><span data-en="Ceiling">천장</span> <span class="muted" data-en="separate from where it stands">놓는 곳과 별개</span></div>
         <div class="seg full" id="ceilOn"><button type="button" data-v="off" data-en="Off">없음</button><button type="button" data-v="on" data-en="On">있음</button></div>
         <div id="ceilRows" hidden>
-          <div class="chips" id="ceilStd"></div>
-          <div class="dimrow surfrow"><label for="ceilH" data-en="Height">높이</label><input type="range" id="ceilH" min="2000" max="4500" step="10"><input type="number" id="ceilHn" inputmode="decimal" min="2000" max="4500" step="1"></div>
+          <div class="seg full" id="ceilStd"></div>
+          <div class="dimrow surfrow"><label for="ceilH" data-en="Height">높이</label><input type="range" id="ceilH" min="2000" max="8000" step="10"><input type="number" id="ceilHn" inputmode="decimal" min="2000" max="8000" step="1"></div>
           <div class="dimrow surfrow"><label for="ceilW" data-en="Width">가로</label><input type="range" id="ceilW" min="1000" max="12000" step="100"><input type="number" id="ceilWn" inputmode="decimal" min="1000" max="12000" step="10"></div>
           <div class="dimrow surfrow"><label for="ceilD" data-en="Depth">세로</label><input type="range" id="ceilD" min="1000" max="12000" step="100"><input type="number" id="ceilDn" inputmode="decimal" min="1000" max="12000" step="10"></div>
         </div>
@@ -679,7 +681,7 @@ let STD = (() => { try { const v = localStorage.getItem('hs.std'); if (STDS[v]) 
 const applyStd = () => { for (const [k, [h, bmi]] of Object.entries(STDS[STD])) { PERSONAS[k].h = h; PERSONAS[k].bmi = bmi; } };
 applyStd();
 /* ceiling heights by the kind of home (mm): finished floor to finished ceiling */
-const CEIL_STDS = { ko: [2300, '한국 아파트', 'Korean apartment'], koNew: [2400, '한국 신축 아파트', 'Korean new apartment'], us: [2440, '미국 주택 (8ft)', 'US house (8 ft)'], usNew: [2740, '미국 신축 (9ft)', 'US new build (9 ft)'], eu: [2500, '유럽 아파트', 'European apartment'], office: [2700, '사무실', 'Office'] };
+const CEIL_STDS = { ko: [2300, '한국 아파트', 'Korean apartment'], koNew: [2400, '한국 신축 아파트', 'Korean new apartment'], us: [2440, '미국 주택 (8ft)', 'US house (8 ft)'], usNew: [2740, '미국 신축 (9ft)', 'US new build (9 ft)'], eu: [2500, '유럽 아파트', 'European apartment'], office: [2700, '사무실', 'Office'], gallery: [3800, '갤러리 (소)', 'Gallery, small'], galleryL: [5300, '갤러리 (대)', 'Gallery, large'] }; // galleries: a small one about 3.8 m, a big one about 5.3 m, as hire specs list them
 const ORDER = ['adultF', 'adultM', 'teen', 'child', 'elderF', 'elderM', 'wheel'];
 const pLabel = (p) => L(p.label, p.en);
 /* furniture: shape 'desk' = anything with a top (H = top height), 'chair' = anything you sit on (H = seat height) */
@@ -6163,6 +6165,7 @@ function furnitureChecks(out, add, push, b0) {
 /* ---------- update pipeline ---------- */
 let builtRow = '';
 function refresh(o = {}) {
+  if (S.ceil.on && S.source === 'box' && S.look === 'pendant' && S.h !== S.ceil.h) { S.h = S.ceil.h; o = { ...o, rebuild: true }; } // a pendant hangs from the ceiling that is there
   const p = PERSONAS[S.persona], k = kind(); // an example keeps a place and a use that make sense for it, whatever was clicked or restored
   if (PLACE_OK[k] && !placeOk(S.place) && !isFurniture()) S.place = PLACE_OK[k][0];
   if (S.action === 'dispense' && !canDispense()) S.action = 'press';
@@ -6294,7 +6297,7 @@ function syncUI() {
   const p = PERSONAS[S.persona], A = S.A, ring = S.shape === 'ring' && S.source === 'box';
   for (const b of $('personaChips').children) b.setAttribute('aria-pressed', String(b.dataset.persona === S.persona));
   { const c = S.ceil; for (const b of $('ceilOn').children) b.setAttribute('aria-pressed', String((b.dataset.v === 'on') === !!c.on)); $('ceilRows').hidden = !c.on;
-    if (!$('ceilStd').children.length) $('ceilStd').replaceChildren(...Object.keys(CEIL_STDS).map((k) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.dataset.std = k; return b; }));
+    if (!$('ceilStd').children.length) $('ceilStd').replaceChildren(...Object.keys(CEIL_STDS).map((k) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.std = k; return b; }));
     for (const b of $('ceilStd').children) { const [mm, ko, en] = CEIL_STDS[b.dataset.std]; b.textContent = `${L(ko, en)} ${mm / 10}`; b.setAttribute('aria-pressed', String(c.std === b.dataset.std && c.h === mm)); }
     for (const [id, k] of [['ceilH', 'h'], ['ceilW', 'w'], ['ceilD', 'd']]) for (const e of [$(id), $(id + 'n')]) if (document.activeElement !== e) e.value = c[k]; }
   for (const b of $('stdSeg').children) b.setAttribute('aria-pressed', String(b.dataset.std === STD));
@@ -7145,7 +7148,7 @@ function applyLang() {
 }
 for (const b of $('ceilOn').children) b.addEventListener('click', () => { S.ceil = { ...S.ceil, on: b.dataset.v === 'on' }; refresh({ rebuild: S.place === 'wall' }); });
 $('ceilStd').addEventListener('click', (e) => { const b = e.target.closest('[data-std]'); if (!b) return; S.ceil = { ...S.ceil, std: b.dataset.std, h: CEIL_STDS[b.dataset.std][0] }; refresh({ rebuild: S.place === 'wall' }); });
-for (const [id, k, lo, hi] of [['ceilH', 'h', 2000, 4500], ['ceilW', 'w', 1000, 12000], ['ceilD', 'd', 1000, 12000]]) { const set = (v) => { if (!(v >= lo && v <= hi)) return; S.ceil = { ...S.ceil, [k]: Math.round(v) }; refresh({ rebuild: k === 'h' && S.place === 'wall' }); }; $(id).addEventListener('input', (e) => set(+e.target.value)); $(id + 'n').addEventListener('change', (e) => set(+e.target.value)); }
+for (const [id, k, lo, hi] of [['ceilH', 'h', 2000, 8000], ['ceilW', 'w', 1000, 12000], ['ceilD', 'd', 1000, 12000]]) { const set = (v) => { if (!(v >= lo && v <= hi)) return; S.ceil = { ...S.ceil, [k]: Math.round(v) }; refresh({ rebuild: k === 'h' && S.place === 'wall' }); }; $(id).addEventListener('input', (e) => set(+e.target.value)); $(id + 'n').addEventListener('change', (e) => set(+e.target.value)); }
 function setStd(k, keep) { if (!STDS[k]) return; STD = k; if (!keep) { try { localStorage.setItem('hs.std', k); } catch {} } applyStd(); const p = PERSONAS[S.persona]; S.height = p.h; S.bmi = p.bmi; refresh({ refit: true }); } // whose body data: every person takes that average
 for (const b of $('stdSeg').children) b.addEventListener('click', () => setStd(b.dataset.std));
 function setLang(v) {
@@ -7585,7 +7588,8 @@ $('btnAI').addEventListener('click', async () => {
 function setDimRaw(key, v) {
   const su = sizeUnit();
   if (su) { const o = roundBase() && (key === 'w' || key === 'd') ? { w: v, d: v } : { [key]: v }; S.row = S.row.map((u, i) => (i === S.pick ? { ...u, ...o } : u)); return; } // a mockup beside the main one: its own size
-  if (key === 'h' && FURN_H[furn()]) v = clamp(v, ...FURN_H[furn()]); // a desk or table no lower or higher than one can be
+  if (key === 'h' && FURN_H[furn()]) v = clamp(v, ...FURN_H[furn()]);
+  if (key === 'h' && S.ceil.on && S.source === 'box' && S.look === 'pendant') S.ceil = { ...S.ceil, h: clamp(Math.round(v), 2000, 8000) }; // a pendant's H is the ceiling: moving one moves the other // a desk or table no lower or higher than one can be
   S[key] = v;
   if (roundBase() && (key === 'w' || key === 'd')) { S.w = v; S.d = v; }
   if (key === 'h' && S.shape !== 'ring') { if (S.ctrlWant == null) S.ctrlWant = S.ctrl; S.ctrl = Math.min(S.ctrlWant, v); } // a lower product pulls its control down with it; taller again, the control goes back up to where it was
