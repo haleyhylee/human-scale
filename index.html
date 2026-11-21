@@ -75,8 +75,13 @@ button { cursor: pointer; }
 .guide.target span { left: auto; right: calc(max(12px, env(safe-area-inset-right, 0px)) + 46px); color: var(--accent-ink); } /* clear of the zoom buttons */
 .top { position: absolute; top: 12px; left: 0; right: 0; display: flex; flex-direction: row; align-items: flex-start; gap: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); pointer-events: none; }
 .views { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: auto; } /* too narrow: the views and lenses go on to a second line, none hidden */
-.one { flex: 0 0 auto; display: inline-flex; flex-wrap: wrap; gap: 6px; margin-left: auto; pointer-events: auto; }
-.one + #btnMeasure { margin-left: 0; }
+.rcol { flex: 0 0 auto; margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: auto; } /* 1:1 on top, measuring under it */
+.one { display: inline-flex; gap: 4px; }
+.onebtn { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; display: inline-flex; gap: 6px; align-items: center; font-weight: 600; }
+.onebtn[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--accent); }
+.gear { padding: 0 7px; display: inline-flex; align-items: center; }
+.one-badge { position: absolute; top: 58px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; font-size: 12px; padding: 4px 10px; border-radius: 999px; pointer-events: none; z-index: 5; white-space: nowrap; }
+.calib-say { color: var(--accent); font-size: 13px; font-weight: 600; margin: 0 0 -6px; }
 .calib { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 55%, transparent); z-index: 30; }
 .calib[hidden] { display: none; }
 .calib-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; max-width: min(520px, 92%); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12); }
@@ -85,7 +90,7 @@ button { cursor: pointer; }
 .calib-bar::after { content: ''; position: absolute; left: 0; right: 0; top: 6px; border-top: 2px solid var(--accent); }
 .calib-row { display: flex; gap: 8px; align-items: center; font-size: 13px; }
 .calib-row input { width: 96px; }
-#btnMeasure { flex: 0 0 auto; margin-left: auto; pointer-events: auto; } /* measuring stays at the right, in view on a phone too; the views beside it scroll */
+#btnMeasure { flex: 0 0 auto; pointer-events: auto; } /* measuring stays at the right, in view on a phone too; the views beside it scroll */
 .chip { flex: 0 0 auto; height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); font-size: 13px; font-weight: 500; color: var(--ink); }
 .chip:hover { border-color: var(--ink-2); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
@@ -318,21 +323,25 @@ input:disabled { opacity: 0.55; }
     </div>
     <div class="top">
       <div class="views" id="views" aria-label="보는 시점" data-en-aria="Viewpoint">
-        <button type="button" class="chip vbtn" data-view="third" aria-pressed="true" title="3인칭" data-en-title="3rd person" aria-label="3인칭" data-en-aria="3rd person"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="3.2"/><path d="M5.5 20c.6-4.2 3.2-6.5 6.5-6.5s5.9 2.3 6.5 6.5" fill="none"/></svg><span class="vl" data-en="3rd person">3인칭</span></button>
-        <button type="button" class="chip vbtn" data-view="first" aria-pressed="false" title="1인칭" data-en-title="1st person" aria-label="1인칭" data-en-aria="1st person"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" fill="none"/><circle cx="12" cy="12" r="3" class="f"/></svg><span class="vl" data-en="1st person">1인칭</span></button>
+        <button type="button" class="chip vbtn" data-view="third" aria-pressed="true" title="3인칭" data-en-title="3rd person" aria-label="3인칭" data-en-aria="3rd person"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="3.2" fill="none"/><path d="M5.5 20c.6-4.2 3.2-6.5 6.5-6.5s5.9 2.3 6.5 6.5" fill="none"/></svg><span class="vl" data-en="3rd person">3인칭</span></button>
+        <button type="button" class="chip vbtn" data-view="first" aria-pressed="false" title="1인칭" data-en-title="1st person" aria-label="1인칭" data-en-aria="1st person"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13.5C5.5 8.6 8.5 6.5 12 6.5s6.5 2.1 9 7" fill="none"/><circle cx="12" cy="14.2" r="3.6" fill="none"/></svg><span class="vl" data-en="1st person">1인칭</span></button>
         <button type="button" class="chip vbtn" data-view="front" aria-pressed="false" title="정면" data-en-title="Front" aria-label="정면" data-en-aria="Front"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M4 8h12v12H4z"/><path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/></svg><span class="vl" data-en="Front">정면</span></button>
         <button type="button" class="chip vbtn" data-view="side" aria-pressed="false" title="측면" data-en-title="Side" aria-label="측면" data-en-aria="Side"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M16 8l4-4v12l-4 4z"/><path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/></svg><span class="vl" data-en="Side">측면</span></button>
         <button type="button" class="chip vbtn" data-view="top" aria-pressed="false" title="평면" data-en-title="Top" aria-label="평면" data-en-aria="Top"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M4 8l4-4h12l-4 4z"/><path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/></svg><span class="vl" data-en="Top">평면</span></button>
         <span class="vsep" aria-hidden="true"></span>
         <div class="lens" id="lensSeg"><span class="ll" data-en="Lens">렌즈</span><button type="button" id="lensDial" class="dial" aria-label="렌즈 초점거리 (좌우로 드래그·휠)" data-en-aria="Lens focal length (drag sideways or scroll)" title="좌우로 드래그하거나 휠로 돌려요 · 누르면 다음" data-en-title="Drag sideways or scroll to turn · click for the next"><span class="dz" aria-hidden="true">‹</span><b id="lensVal">35</b><span class="dz" aria-hidden="true">›</span></button></div>
       </div>
-      <span class="one"><button type="button" class="chip" id="btn11" aria-pressed="false" title="실제 크기로 보기 (화면 1:1)" data-en-title="Real size on screen (1:1)">1:1</button><button type="button" class="chip" id="oneRecal" hidden data-en="Re-measure">다시 보정</button></span>
-      <button type="button" class="chip vbtn" id="btnMeasure" aria-pressed="false" title="치수 재기" data-en-title="Measure" aria-label="치수 재기" data-en-aria="Measure"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15.5L15.5 3 21 8.5 8.5 21z" fill="none"/><path d="M7 11.5l2 2M9.5 9l1.5 1.5M12 6.5l2 2M14.5 4l1.5 1.5" fill="none"/></svg><span class="vl" data-en="Measure">치수 재기</span></button>
+      <div class="rcol">
+        <span class="one"><button type="button" class="chip onebtn" id="btn11" aria-pressed="false" title="실제 크기로 보기 (화면 1:1)" data-en-title="Real size on screen (1:1)"><b>1:1</b><span data-en="Real size">실제크기</span></button><button type="button" class="chip gear" id="oneRecal" aria-label="1:1 다시 보정" data-en-aria="Calibrate 1:1 again" title="1:1 다시 보정" data-en-title="Calibrate 1:1 again"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" fill="none"/><circle cx="12" cy="12" r="6.5" fill="none"/></svg></button></span>
+        <button type="button" class="chip vbtn" id="btnMeasure" aria-pressed="false" title="치수 재기" data-en-title="Measure" aria-label="치수 재기" data-en-aria="Measure"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15.5L15.5 3 21 8.5 8.5 21z" fill="none"/><path d="M7 11.5l2 2M9.5 9l1.5 1.5M12 6.5l2 2M14.5 4l1.5 1.5" fill="none"/></svg><span class="vl" data-en="Measure">치수 재기</span></button>
+      </div>
     </div>
+    <div class="one-badge" id="oneBadge" hidden data-en="Real size 1:1 · drag to move around">실제 크기 1:1 · 드래그로 이동</div>
     <div class="calib" id="calib" hidden role="dialog" aria-modal="true" aria-labelledby="calibT">
       <div class="calib-card">
         <b id="calibT" data-en="1:1 on screen: measure once">화면 1:1 보정 (한 번만)</b>
         <p data-en="Hold a ruler to the screen and measure the bar below, end to end, then type its length. After that the front, side and top views can show things at their real size.">자를 화면에 대고 아래 막대의 양 끝 사이를 재서 길이를 넣어 주세요. 그다음부터 정면·측면·평면 뷰에서 실제 크기로 볼 수 있어요.</p>
+        <p class="calib-say" data-en="Measure this orange line with a real ruler and type its length below.">실제 자로 잰 라인의 길이 값을 아래에 입력해주세요.</p>
         <div class="calib-bar" id="calibBar"></div>
         <div class="calib-row"><input type="number" id="calibMm" min="10" max="2000" step="0.5" inputmode="decimal" aria-label="막대 길이 (mm)" data-en-aria="Bar length (mm)"> mm <button type="button" class="btn accent" id="calibOk" data-en="Apply">적용</button><button type="button" class="btn" id="calibNo" data-en="Cancel">취소</button></div>
         <p class="hint" data-en="Kept in this browser. Measure again if you change the browser zoom or the display.">이 브라우저에 저장돼요. 브라우저 확대나 모니터를 바꾸면 다시 보정해 주세요.</p>
@@ -2940,7 +2949,8 @@ function purifierGeo(group, W, D, H) {
 }
 /* coffee machine: the body, a clear water tank at the back with water in it, two buttons and a steel cup-warmer plate on top;
    the head over the cup and the drip tray are the outlet and tray (setSpoutLook, setTray) */
-const topCtrlZ = (D) => (S.look === 'coffee' ? Math.min(0.032, D * 0.12) : Math.min(0.08, D * 0.25)); // a control on top: how far back from the front (a coffee machine's buttons sit at its front edge)
+const topCtrlZ0 = (D) => (S.look === 'coffee' ? Math.min(0.032, D * 0.12) : Math.min(0.08, D * 0.25));
+const topCtrlZ = (D) => (S.ctrlTop != null ? clamp((S.ctrlTop / 1000) * S.scale, 0.004, Math.max(0.004, D - 0.004)) : topCtrlZ0(D)); // set by hand: how far back from the front edge // a control on top: how far back from the front (a coffee machine's buttons sit at its front edge)
 function coffeeGeo(group, W, D, H) {
   const own = meshIn(group), tD = Math.min(0.1, D * 0.24), r = Math.min(0.022, W * 0.1), bev = Math.min(0.01, W * 0.05, H * 0.04), front = D - tD;
   own(plateGeo(W, front, H, r, bev).applyMatrix4(ON_DECK), mats.foam);
@@ -6078,13 +6088,13 @@ function syncUI() {
   }
   segSet('liftSeg', 'lift', S.lift);
   const disp = S.action === 'dispense';
-  $('ctrlHRow').hidden = S.face === 'top' && !disp;
-  $('cLbl').textContent = disp ? L('출수구 높이 (제품 밑면에서)', 'Outlet height (from the base)') : L('조작부 높이 (제품 밑면에서)', 'Control height (from the base)');
+  $('ctrlHRow').hidden = false;
+  $('cLbl').textContent = disp ? L('출수구 높이 (제품 밑면에서)', 'Outlet height (from the base)') : topCtrl() ? L('조작부 위치 (윗면 앞 모서리에서 안쪽으로)', 'Control position (back from the top front edge)') : L('조작부 높이 (제품 밑면에서)', 'Control height (from the base)');
   $('ctrlHint').hidden = !disp;
   $('ctrlHint').textContent = coffeeLook() && S.face === 'front' ? L('컵은 받침에 두고 앞면 버튼을 눌러요. 높이는 버튼 위치예요.', 'The cup sits on the drip tray and you press the buttons on the front, at the height set.') : S.face === 'top' ? L('컵은 받침에 두고 윗면 버튼을 눌러요 (커피머신처럼).', 'The cup sits on the drip tray and you press the top button, like a coffee machine.') : L('컵을 손에 들고 출수구 아래에서 받아요 (정수기처럼).', 'You hold the cup under the outlet, like a water purifier.');
-  $('cIn').max = Math.round(isModel ? S.model.h : S.h);
-  $('cIn').value = S.ctrl;
-  $('cOut').textContent = `${mmi(ctrlM())}mm`;
+  if (topCtrl()) { const D = dims().D; $('cIn').max = Math.round((D / S.scale) * 1000); $('cIn').value = Math.round((topCtrlZ(D) / S.scale) * 1000); }
+  else { $('cIn').max = Math.round(isModel ? S.model.h : S.h); $('cIn').value = S.ctrl; }
+  $('cOut').textContent = topCtrl() ? `${Math.round((topCtrlZ(dims().D) / S.scale) * 1000)}mm` : `${mmi(ctrlM())}mm`;
   for (const b of $('modeSeg').children) b.disabled = (carried() && !(S.source === 'box' && S.look === 'parcel')) || (lookOnly() && !lookAtIt() && !(S.source === 'box' && S.look === 'parcel')); // a ring, a sheet, a phone laid on the desk or a mug set down is only looked at
   $('modelOpts').hidden = !isModel; $('backToBox').hidden = !isModel;
   syncPlay();
@@ -6113,7 +6123,7 @@ function syncUI() {
   $('hReset').disabled = Math.abs(S.height - p.h) < 0.05;
   $('wReset').disabled = Math.abs(S.bmi - p.bmi) < 0.05;
   $('sReset').disabled = S.scale === 1;
-  $('cReset').disabled = S.ctrl === ctrlDefault();
+  $('cReset').disabled = topCtrl() ? S.ctrlTop == null : S.ctrl === ctrlDefault();
   syncHist();
   syncLens();
 }
@@ -6196,7 +6206,7 @@ function fitView() {
     Object.assign(orthoCam, { left: -half * aspect, right: half * aspect, top: half, bottom: -half, zoom: 1 });
     orthoCam.up.copy(up); orthoCam.position.copy(pos); orthoCam.lookAt(cc);
     orthoCam.updateProjectionMatrix();
-    controlsO.target.copy(cc); controlsO.update();
+    ONE.zoom = null; controlsO.target.copy(cc); controlsO.update(); // (not taken for the wheel leaving 1:1)
     applyOne();
   } else {
     cam = perspCam; controlsO.enabled = false; controlsP.enabled = S.view !== 'first';
@@ -6262,7 +6272,7 @@ function syncSupportBtn() { const b = $('btnSupport'), on = !!S.supOff; b.hidden
    with its normals (and depth), then a full-screen pass draws ink where depth jumps or the surface turns sharply ---------- */
 const PEN = { on: false, rt: null, nm: new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }) };
 PEN.mat = new THREE.ShaderMaterial({
-  uniforms: { tN: { value: null }, tD: { value: null }, res: { value: new THREE.Vector2(1, 1) }, near: { value: 0.1 }, far: { value: 100 }, ortho: { value: 0 }, px: { value: 1 }, paper: { value: new THREE.Color(0xffffff) }, bg: { value: new THREE.Color(0xf3f3f1) }, ink: { value: new THREE.Color(0x1c1c1e) } },
+  uniforms: { tN: { value: null }, tD: { value: null }, res: { value: new THREE.Vector2(1, 1) }, near: { value: 0.1 }, far: { value: 100 }, ortho: { value: 0 }, px: { value: 1 }, paper: { value: new THREE.Color(0xffffff) }, bg: { value: new THREE.Color(0xf3f3f1) }, ink: { value: new THREE.Color(0x56585d) } },
   vertexShader: 'void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }',
   fragmentShader: `
     uniform sampler2D tN; uniform sampler2D tD; uniform vec2 res; uniform float near, far, ortho, px; uniform vec3 paper, bg, ink;
@@ -6272,7 +6282,7 @@ PEN.mat = new THREE.ShaderMaterial({
       bool b0 = d0 < 1.0, ba = da < 1.0, bb = db < 1.0;
       if (b0 != ba || b0 != bb) return 1.0; if (!b0) return 0.0;
       float la = lin(da), lb = lin(db), lap = abs(la + lb - 2.0 * l0), first = abs(la - l0) + abs(lb - l0);
-      float e = (lap > 0.5 * first && lap / l0 > 0.004) ? 1.0 : 0.0; // a step in depth, not the slope of one surface
+      float e = (lap > 0.6 * first && lap / l0 > 0.02) ? 1.0 : 0.0; // a step in depth, not the slope of one surface
       vec3 na = texture2D(tN, uv + o).xyz * 2.0 - 1.0, nb = texture2D(tN, uv - o).xyz * 2.0 - 1.0;
       e = max(e, smoothstep(0.35, 0.6, 1.0 - min(dot(n0, na), dot(n0, nb)))); // a sharp turn of the surface
       return e;
@@ -6280,7 +6290,7 @@ PEN.mat = new THREE.ShaderMaterial({
     void main() {
       vec2 uv = gl_FragCoord.xy / res, s = px / res;
       float d0 = texture2D(tD, uv).x, l0 = lin(d0); vec3 n0 = texture2D(tN, uv).xyz * 2.0 - 1.0;
-      float e = max(max(edgeAt(uv, vec2(s.x, 0.0), d0, l0, n0), edgeAt(uv, vec2(0.0, s.y), d0, l0, n0)), max(edgeAt(uv, s, d0, l0, n0), edgeAt(uv, vec2(s.x, -s.y), d0, l0, n0)) * 0.85);
+      float e = max(max(edgeAt(uv, vec2(s.x, 0.0), d0, l0, n0), edgeAt(uv, vec2(0.0, s.y), d0, l0, n0)), max(edgeAt(uv, s, d0, l0, n0), edgeAt(uv, vec2(s.x, -s.y), d0, l0, n0)) * 0.6);
       gl_FragColor = vec4(mix(d0 < 1.0 ? paper : bg, ink, clamp(e, 0.0, 1.0)), 1.0);
     }`,
   depthTest: false, depthWrite: false,
@@ -6290,19 +6300,20 @@ PEN.scene = new THREE.Scene(); PEN.scene.add(PEN.quad); PEN.cam = new THREE.Came
 function drawScene() {
   if (!PEN.on) { renderer.render(scene, cam); return; }
   const sz = renderer.getDrawingBufferSize(new THREE.Vector2());
-  if (!PEN.rt || PEN.rt.width !== sz.x || PEN.rt.height !== sz.y) { if (PEN.rt) { PEN.rt.depthTexture.dispose(); PEN.rt.dispose(); } PEN.rt = new THREE.WebGLRenderTarget(sz.x, sz.y, { depthTexture: new THREE.DepthTexture(sz.x, sz.y) }); }
+  if (!PEN.rt || PEN.rt.width !== sz.x || PEN.rt.height !== sz.y) { if (PEN.rt) { PEN.rt.depthTexture.dispose(); PEN.rt.dispose(); } PEN.rt = new THREE.WebGLRenderTarget(sz.x, sz.y, { depthTexture: new THREE.DepthTexture(sz.x, sz.y, THREE.UnsignedIntType) }); }
   const bg = scene.background, sh = renderer.shadowMap.enabled, fv = matMesh.visible;
   scene.background = null; scene.overrideMaterial = PEN.nm; matMesh.visible = false; // the floor is the paper
   renderer.setRenderTarget(PEN.rt); renderer.setClearColor(0x8080ff, 1); renderer.clear(); renderer.render(scene, cam);
   renderer.setRenderTarget(null); scene.overrideMaterial = null; scene.background = bg; matMesh.visible = fv; renderer.shadowMap.enabled = sh;
-  const u = PEN.mat.uniforms; u.tN.value = PEN.rt.texture; u.tD.value = PEN.rt.depthTexture; u.res.value.set(sz.x, sz.y); u.near.value = cam.near; u.far.value = cam.far; u.ortho.value = cam.isOrthographicCamera ? 1 : 0; u.px.value = Math.max(1, Math.round(renderer.getPixelRatio()));
+  const u = PEN.mat.uniforms; u.tN.value = PEN.rt.texture; u.tD.value = PEN.rt.depthTexture; u.res.value.set(sz.x, sz.y); u.near.value = cam.near; u.far.value = cam.far; u.ortho.value = cam.isOrthographicCamera ? 1 : 0; u.px.value = 1; // a 2-device-pixel line at any screen density
   renderer.render(PEN.scene, PEN.cam);
 }
+const topCtrl = () => S.face === 'top' && S.action !== 'dispense'; // a control on top: set how far back it sits, as a front one's height
 function syncPenBtn() { const b = $('btnPen'); b.setAttribute('aria-pressed', String(PEN.on)); }
 function syncGhostBtn() { const v = personVis(), b = $('btnGhost'), [ko, en] = PV_LABEL[v]; b.hidden = false; b.dataset.ko = ko; b.dataset.en = en; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(v !== 'on')); }
 /* the view buttons: pressed again, 3rd person goes up to the bird's-eye view, front turns to the back, side to the other side */
 const CUBE = '<path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/>', VIEW_ALT = {
-  third: [['3인칭', '3rd person', '<circle cx="12" cy="7" r="3.2"/><path d="M5.5 20c.6-4.2 3.2-6.5 6.5-6.5s5.9 2.3 6.5 6.5" fill="none"/>'], ['버드뷰', "Bird's-eye", '<path class="f" d="M4 8l4-4h12l-4 4z"/><path class="f2" d="M4 8h12v12H4z"/><path class="f3" d="M16 8l4-4v12l-4 4z"/>' + CUBE]],
+  third: [['3인칭', '3rd person', '<circle cx="12" cy="7" r="3.2" fill="none"/><path d="M5.5 20c.6-4.2 3.2-6.5 6.5-6.5s5.9 2.3 6.5 6.5" fill="none"/>'], ['버드뷰', "Bird's-eye", '<path class="f" d="M4 8l4-4h12l-4 4z"/><path class="f2" d="M4 8h12v12H4z"/><path class="f3" d="M16 8l4-4v12l-4 4z"/>' + CUBE]],
   front: [['정면', 'Front', '<path class="f" d="M4 8h12v12H4z"/>' + CUBE], ['뒷면', 'Back', '<path class="f" d="M8 4h12v12H8z"/>' + CUBE]],
   side: [['측면', 'Side', '<path class="f" d="M16 8l4-4v12l-4 4z"/>' + CUBE], ['반대 측면', 'Other side', '<path class="f" d="M4 8l4-4v12l-4 4z"/>' + CUBE]],
 };
@@ -6404,7 +6415,7 @@ function productShare() {
    from the view's height in CSS pixels). Zooming leaves it */
 const ONE = { on: false, ppmm: (() => { try { return +localStorage.getItem('hs.ppmm') || 0; } catch { return 0; } })() };
 function applyOne() { if (!ONE.on || !isOrtho() || !(ONE.ppmm > 0)) return; const h = stage.clientHeight || 1; orthoCam.zoom = (ONE.ppmm * 1000 * (orthoCam.top - orthoCam.bottom)) / h; orthoCam.updateProjectionMatrix(); ONE.zoom = orthoCam.zoom; const c = new THREE.Box3().setFromObject(holder).getCenter(new V3()), t = controlsO.target, d = orthoCam.getWorldDirection(new V3()), mv = c.sub(t); mv.addScaledVector(d, -mv.dot(d)); t.add(mv); orthoCam.position.add(mv); controlsO.update(); } // at real size, the product in the middle
-function syncOne() { $('btn11').setAttribute('aria-pressed', String(ONE.on)); $('oneRecal').hidden = !ONE.on; }
+function syncOne() { $('btn11').setAttribute('aria-pressed', String(ONE.on)); $('oneBadge').hidden = !ONE.on; }
 function setOne(on) { ONE.on = !!on && ONE.ppmm > 0; syncOne(); if (ONE.on && !isOrtho()) setView('front'); else fitView(); }
 function zoomView(f) {
   queueGhostCheck();
@@ -6681,7 +6692,7 @@ function applyPreset(k) {
   if (was && was !== S.place && !['floor', 'wall', 'head', 'back'].includes(pr.place) && placeOk(was) && !isFurniture() && !['head', 'back'].includes(was)) S.place = was; // somewhere it can stand too: it goes there, in place of the last one; if not, where it usually goes
   if (sup && S.place === was && supportable()) { S.supPrev = was; S.supOff = true; S.place = 'air'; S.supAir = supAir; } // the support stays hidden
   else if (sup && S.surf) S.surf = { ...S.surf, air: supAir }; // or back to how the air height was
-  S.seatMode = 'fixed'; S.seatH = PROPS[propKind()].h; S.preDesk = null; S.row = null; S.pick = 0; S.det = {}; S.ctrlWant = null; S.parts = null; S.pbase = null; S.mineId = null; S.cup = false;
+  S.seatMode = 'fixed'; S.seatH = PROPS[propKind()].h; S.preDesk = null; S.row = null; S.pick = 0; S.det = {}; S.ctrlWant = null; S.ctrlTop = null; S.parts = null; S.pbase = null; S.mineId = null; S.cup = false;
   anim.lift = 0; anim.fill = 0;
   refresh({ rebuild: true, refit: true });
 }
@@ -6756,7 +6767,7 @@ for (const [id, key] of [['pW', 'w'], ['pD', 'd'], ['pH', 'h']]) {
   });
 }
 $('sIn').addEventListener('input', (e) => { S.scale = +e.target.value / 100; refresh({ rebuild: true }); });
-$('cIn').addEventListener('input', (e) => { S.ctrl = +e.target.value; S.ctrlWant = null; refresh({ rebuild: S.source === 'box' && ['standac', 'washer'].includes(S.look) }); }); // a display or dial drawn at the control's height moves with it
+$('cIn').addEventListener('input', (e) => { if (topCtrl()) { S.ctrlTop = +e.target.value; refresh({ rebuild: true }); return; } S.ctrl = +e.target.value; S.ctrlWant = null; refresh({ rebuild: S.source === 'box' && ['standac', 'washer'].includes(S.look) }); }); // a display or dial drawn at the control's height moves with it
 $('ringIn').addEventListener('input', (e) => { S.ringSize = +e.target.value; refresh({ rebuild: true }); });
 /* 형태 changes only the form of a plain mockup (box, cylinder, sphere); furniture, cups and rings come from the examples */
 segBind('shapeSeg', 'shape', (v) => {
@@ -7257,7 +7268,7 @@ segBind('postureSeg', 'posture', (v) => { S.posture = v; refresh({ refit: true }
 $('hReset').addEventListener('click', () => { S.height = PERSONAS[S.persona].h; refresh(); });
 $('wReset').addEventListener('click', () => { S.bmi = PERSONAS[S.persona].bmi; refresh(); });
 $('sReset').addEventListener('click', () => { S.scale = 1; refresh({ rebuild: true }); });
-$('cReset').addEventListener('click', () => { S.ctrl = ctrlDefault(); S.ctrlWant = null; refresh(); });
+$('cReset').addEventListener('click', () => { if (topCtrl()) { S.ctrlTop = null; refresh({ rebuild: true }); return; } S.ctrl = ctrlDefault(); S.ctrlWant = null; refresh(); });
 
 const HKEYS = ['surf', 'det', 'row', 'pick', 'persona', 'height', 'bmi', 'posture', 'source', 'preset', 'pkey', 'name', 'shape', 'style', 'look', 'noHand', 'noCtrl', 'parts', 'pbase', 'cup', 'w', 'd', 'h', 'scale', 'place', 'face', 'ctrl', 'action', 'mode', 'base', 'screen', 'seatMode', 'seatH', 'lift', 'ringSize'];
 const hist = { list: [], i: -1, timer: 0 };
