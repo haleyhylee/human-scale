@@ -76,12 +76,12 @@ button { cursor: pointer; }
 .top { position: absolute; top: 12px; left: 0; right: 0; display: flex; flex-direction: row; align-items: flex-start; gap: 8px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); pointer-events: none; }
 .views { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: auto; } /* too narrow: the views and lenses go on to a second line, none hidden */
 .rcol { flex: 0 0 auto; margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: auto; } /* 1:1 on top, measuring under it */
-.one { display: inline-flex; gap: 4px; }
-.onebtn { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; display: inline-flex; gap: 6px; align-items: center; font-weight: 600; }
-.onebtn[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--accent); }
-.gear { padding: 0 7px; display: inline-flex; align-items: center; }
-.one-badge { position: absolute; top: 58px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #fff; font-size: 12px; padding: 4px 10px; border-radius: 999px; pointer-events: none; z-index: 5; white-space: nowrap; }
-.calib-say { color: var(--accent); font-size: 13px; font-weight: 600; margin: 0 0 -6px; }
+.one { display: inline-flex; align-items: stretch; height: 32px; border-radius: 6px; background: var(--accent); flex: 0 0 auto; overflow: hidden; }
+.one:has(.onebtn[aria-pressed="true"]) { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--accent); }
+.one .chip { height: 100%; border: 0 !important; border-radius: 0; background: transparent !important; color: #fff !important; }
+.onebtn { display: inline-flex; align-items: center; font-weight: 600; padding: 0 12px; -webkit-touch-callout: none; user-select: none; touch-action: manipulation; }
+.one .chip:hover { background: rgba(255, 255, 255, 0.12) !important; }
+.calib-card .calib-say { color: var(--accent); font-size: 13px; font-weight: 600; margin: 0 0 -6px; }
 .calib { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 55%, transparent); z-index: 30; }
 .calib[hidden] { display: none; }
 .calib-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; max-width: min(520px, 92%); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12); }
@@ -332,7 +332,7 @@ input:disabled { opacity: 0.55; }
         <div class="lens" id="lensSeg"><span class="ll" data-en="Lens">렌즈</span><button type="button" id="lensDial" class="dial" aria-label="렌즈 초점거리 (좌우로 드래그·휠)" data-en-aria="Lens focal length (drag sideways or scroll)" title="좌우로 드래그하거나 휠로 돌려요 · 누르면 다음" data-en-title="Drag sideways or scroll to turn · click for the next"><span class="dz" aria-hidden="true">‹</span><b id="lensVal">35</b><span class="dz" aria-hidden="true">›</span></button></div>
       </div>
       <div class="rcol">
-        <span class="one"><button type="button" class="chip onebtn" id="btn11" aria-pressed="false" title="실제 크기로 보기 (화면 1:1)" data-en-title="Real size on screen (1:1)"><b>1:1</b><span data-en="Real size">실제크기</span></button><button type="button" class="chip gear" id="oneRecal" aria-label="1:1 다시 보정" data-en-aria="Calibrate 1:1 again" title="1:1 다시 보정" data-en-title="Calibrate 1:1 again"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" fill="none"/><circle cx="12" cy="12" r="6.5" fill="none"/></svg></button></span>
+        <span class="one"><button type="button" class="chip onebtn" id="btn11" aria-pressed="false" title="실제 크기로 보기 (화면 1:1) · 길게 누르면 다시 보정" data-en-title="Real size on screen (1:1) · press and hold to calibrate again">1:1 Size</button></span>
         <button type="button" class="chip vbtn" id="btnMeasure" aria-pressed="false" title="치수 재기" data-en-title="Measure" aria-label="치수 재기" data-en-aria="Measure"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15.5L15.5 3 21 8.5 8.5 21z" fill="none"/><path d="M7 11.5l2 2M9.5 9l1.5 1.5M12 6.5l2 2M14.5 4l1.5 1.5" fill="none"/></svg><span class="vl" data-en="Measure">치수 재기</span></button>
       </div>
     </div>
@@ -6272,25 +6272,24 @@ function syncSupportBtn() { const b = $('btnSupport'), on = !!S.supOff; b.hidden
    with its normals (and depth), then a full-screen pass draws ink where depth jumps or the surface turns sharply ---------- */
 const PEN = { on: false, rt: null, nm: new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }) };
 PEN.mat = new THREE.ShaderMaterial({
-  uniforms: { tN: { value: null }, tD: { value: null }, res: { value: new THREE.Vector2(1, 1) }, near: { value: 0.1 }, far: { value: 100 }, ortho: { value: 0 }, px: { value: 1 }, paper: { value: new THREE.Color(0xffffff) }, bg: { value: new THREE.Color(0xf3f3f1) }, ink: { value: new THREE.Color(0x56585d) } },
+  uniforms: { tN: { value: null }, tD: { value: null }, res: { value: new THREE.Vector2(1, 1) }, near: { value: 0.1 }, far: { value: 100 }, ortho: { value: 0 }, px: { value: 1 }, paper: { value: new THREE.Color(0xffffff) }, bg: { value: new THREE.Color(0xf3f3f1) }, ink: { value: new THREE.Color(0x7c7f85) } },
   vertexShader: 'void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }',
   fragmentShader: `
     uniform sampler2D tN; uniform sampler2D tD; uniform vec2 res; uniform float near, far, ortho, px; uniform vec3 paper, bg, ink;
     float lin(float d) { if (ortho > 0.5) return near + d * (far - near); float z = d * 2.0 - 1.0; return 2.0 * near * far / (far + near - z * (far - near)); }
-    float edgeAt(vec2 uv, vec2 o, float d0, float l0, vec3 n0) {
+    float edgeAt(vec2 uv, vec2 o, float d0, float l0, vec3 n0, float crease) {
       float da = texture2D(tD, uv + o).x, db = texture2D(tD, uv - o).x;
-      bool b0 = d0 < 1.0, ba = da < 1.0, bb = db < 1.0;
-      if (b0 != ba || b0 != bb) return 1.0; if (!b0) return 0.0;
-      float la = lin(da), lb = lin(db), lap = abs(la + lb - 2.0 * l0), first = abs(la - l0) + abs(lb - l0);
-      float e = (lap > 0.6 * first && lap / l0 > 0.02) ? 1.0 : 0.0; // a step in depth, not the slope of one surface
-      vec3 na = texture2D(tN, uv + o).xyz * 2.0 - 1.0, nb = texture2D(tN, uv - o).xyz * 2.0 - 1.0;
-      e = max(e, smoothstep(0.35, 0.6, 1.0 - min(dot(n0, na), dot(n0, nb)))); // a sharp turn of the surface
+      if (!(da < 1.0)) return 1.0; // the outline sits on the object's own edge pixel
+      float la = lin(da), st = la - l0, back = db < 1.0 ? abs(l0 - lin(db)) : 0.0;
+      float e = (st > 4.0 * back + 0.03 * l0) ? 1.0 : 0.0; // the near side of a real jump in depth: one pixel, never the slope of a surface
+      if (crease > 0.5) { vec3 na = texture2D(tN, uv + o).xyz * 2.0 - 1.0; e = max(e, smoothstep(0.5, 0.62, 1.0 - dot(n0, na))); } // a sharp turn of the surface, drawn on one side only
       return e;
     }
     void main() {
       vec2 uv = gl_FragCoord.xy / res, s = px / res;
       float d0 = texture2D(tD, uv).x, l0 = lin(d0); vec3 n0 = texture2D(tN, uv).xyz * 2.0 - 1.0;
-      float e = max(max(edgeAt(uv, vec2(s.x, 0.0), d0, l0, n0), edgeAt(uv, vec2(0.0, s.y), d0, l0, n0)), max(edgeAt(uv, s, d0, l0, n0), edgeAt(uv, vec2(s.x, -s.y), d0, l0, n0)) * 0.6);
+      float e = 0.0;
+      if (d0 < 1.0) e = max(max(edgeAt(uv, vec2(s.x, 0.0), d0, l0, n0, 1.0), edgeAt(uv, vec2(-s.x, 0.0), d0, l0, n0, 0.0)), max(edgeAt(uv, vec2(0.0, s.y), d0, l0, n0, 1.0), edgeAt(uv, vec2(0.0, -s.y), d0, l0, n0, 0.0)));
       gl_FragColor = vec4(mix(d0 < 1.0 ? paper : bg, ink, clamp(e, 0.0, 1.0)), 1.0);
     }`,
   depthTest: false, depthWrite: false,
@@ -6305,7 +6304,7 @@ function drawScene() {
   scene.background = null; scene.overrideMaterial = PEN.nm; matMesh.visible = false; // the floor is the paper
   renderer.setRenderTarget(PEN.rt); renderer.setClearColor(0x8080ff, 1); renderer.clear(); renderer.render(scene, cam);
   renderer.setRenderTarget(null); scene.overrideMaterial = null; scene.background = bg; matMesh.visible = fv; renderer.shadowMap.enabled = sh;
-  const u = PEN.mat.uniforms; u.tN.value = PEN.rt.texture; u.tD.value = PEN.rt.depthTexture; u.res.value.set(sz.x, sz.y); u.near.value = cam.near; u.far.value = cam.far; u.ortho.value = cam.isOrthographicCamera ? 1 : 0; u.px.value = 1; // a 2-device-pixel line at any screen density
+  const u = PEN.mat.uniforms; u.tN.value = PEN.rt.texture; u.tD.value = PEN.rt.depthTexture; u.res.value.set(sz.x, sz.y); u.near.value = cam.near; u.far.value = cam.far; u.ortho.value = cam.isOrthographicCamera ? 1 : 0; u.px.value = 1; // a 1-device-pixel line at any screen density
   renderer.render(PEN.scene, PEN.cam);
 }
 const topCtrl = () => S.face === 'top' && S.action !== 'dispense'; // a control on top: set how far back it sits, as a front one's height
@@ -6541,7 +6540,7 @@ function updateOverlay(pose) {
   }
   if (meas.on) drawMeasure();
   const sb = $('scalebar');
-  if (isOrtho()) {
+  if (isOrtho() && !ONE.on) { // at 1:1 the screen itself is the scale
     const ppm = (h * orthoCam.zoom) / (orthoCam.top - orthoCam.bottom);
     let len = 0.05;
     for (const o of [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2]) if (o * ppm <= 140) len = o;
@@ -7321,8 +7320,12 @@ $('btnMeasure').addEventListener('click', () => setMeasure(!meas.on));
 { // 1:1: measured once, then on and off
   const open = () => { const w = Math.round(Math.min(320, (stage.clientWidth || 600) - 120)); $('calibBar').style.width = `${w}px`; $('calibBar').dataset.px = w; $('calibMm').value = ''; $('calib').hidden = false; setTimeout(() => $('calibMm').focus(), 30); };
   const close = () => { $('calib').hidden = true; };
-  $('btn11').addEventListener('click', () => { if (ONE.on) setOne(false); else if (ONE.ppmm > 0) setOne(true); else open(); });
-  $('oneRecal').addEventListener('click', open);
+  let holdT = 0, held = false; // press and hold: calibrate again
+  const b11 = $('btn11'), endHold = () => clearTimeout(holdT);
+  b11.addEventListener('pointerdown', () => { held = false; clearTimeout(holdT); holdT = setTimeout(() => { held = true; open(); }, 600); });
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b11.addEventListener(ev, endHold);
+  b11.addEventListener('contextmenu', (e) => e.preventDefault());
+  b11.addEventListener('click', () => { if (held) { held = false; return; } if (ONE.on) setOne(false); else if (ONE.ppmm > 0) setOne(true); else open(); });
   $('calibNo').addEventListener('click', close);
   const ok = () => { const mm = +$('calibMm').value, px = +$('calibBar').dataset.px; if (!(mm >= 10 && mm <= 2000) || !(px > 0)) { $('calibMm').focus(); return; } ONE.ppmm = px / mm; try { localStorage.setItem('hs.ppmm', String(ONE.ppmm)); } catch {} close(); setOne(true); };
   $('calibOk').addEventListener('click', ok);
