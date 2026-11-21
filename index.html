@@ -298,7 +298,7 @@ input:disabled { opacity: 0.55; }
 .measure rect { fill: color-mix(in srgb, var(--accent) 10%, transparent); stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 6 4; }
 .measure line { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 6 4; }
 .measure circle { fill: var(--accent); }
-.mtag { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 8px; padding: 5px 5px 5px 10px; background: var(--raise); border: 1px solid var(--accent); border-radius: 6px; font: 500 12px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--accent-ink); box-shadow: 0 2px 8px rgb(0 0 0 / 0.12); white-space: nowrap; }
+.mtag { position: absolute; left: 0; top: 0; z-index: 6; display: flex; flex-wrap: wrap; max-width: calc(100% - 12px); align-items: center; gap: 8px; padding: 5px 5px 5px 10px; background: var(--raise); border: 1px solid var(--accent); border-radius: 6px; font: 500 12px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--accent-ink); box-shadow: 0 2px 8px rgb(0 0 0 / 0.12); white-space: nowrap; }
 .mtag .btn { height: 28px; padding: 0 10px; font-size: 12px; }
 .stage.measuring #c { cursor: crosshair; }
 </style>
@@ -6538,7 +6538,7 @@ function drawMeasure() {
   if (meas.on && isOrtho() && meas.a && meas.b) {
     const [x0, y0] = scr(meas.a), [x1, y1] = scr(meas.b), du = Math.abs(meas.b[u] - meas.a[u]), dv = Math.abs(meas.b[v] - meas.a[v]);
     html = `<rect x="${Math.min(x0, x1)}" y="${Math.min(y0, y1)}" width="${Math.abs(x1 - x0)}" height="${Math.abs(y1 - y0)}"/>`;
-    txt = `${nm[u]} ${mLen(du)} × ${nm[v]} ${mLen(dv)}`; at = [Math.max(x0, x1) + 8, Math.min(y0, y1)]; meas.box = { [u]: du, [v]: dv };
+    txt = `${nm[u]} ${mLen(du)} × ${nm[v]} ${mLen(dv)}`; at = [Math.min(x0, x1), Math.min(y0, y1), Math.max(x0, x1), Math.max(y0, y1)]; meas.box = { [u]: du, [v]: dv };
   } else if (meas.on && isOrtho() && meas.pts.length) {
     const p = meas.pts.map(scr);
     html = p.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.5"/>`).join('');
@@ -6546,12 +6546,21 @@ function drawMeasure() {
       html += `<line x1="${p[0][0]}" y1="${p[0][1]}" x2="${p[1][0]}" y2="${p[1][1]}"/>`;
       const dd = Math.hypot(meas.pts[1][u] - meas.pts[0][u], meas.pts[1][v] - meas.pts[0][v]);
       txt = L(`거리 ${mLen(dd)}`, `Distance ${mLen(dd)}`);
-      at = [Math.max(p[0][0], p[1][0]) + 8, Math.min(p[0][1], p[1][1])];
+      at = [Math.min(p[0][0], p[1][0]), Math.min(p[0][1], p[1][1]), Math.max(p[0][0], p[1][0]), Math.max(p[0][1], p[1][1])];
     }
   }
   svg.innerHTML = html;
   tag.hidden = !txt;
-  if (txt) { $('measureTxt').textContent = txt; $('measureUnit').textContent = meas.unit === 'cm' ? 'cm' : 'mm'; $('measureApply').hidden = !meas.box || S.source !== 'box'; tag.style.transform = `translate(${clamp(at[0], 8, Math.max(8, w - 250)).toFixed(0)}px, ${clamp(at[1], 8, h - 48).toFixed(0)}px)`; }
+  if (txt) { $('measureTxt').textContent = txt; $('measureUnit').textContent = meas.unit === 'cm' ? 'cm' : 'mm'; $('measureApply').hidden = !meas.box || S.source !== 'box';
+    const tw = tag.offsetWidth, th = tag.offsetHeight, [l, t, r, b] = at, g = 10, sr = stage.getBoundingClientRect();
+    const ui = [...stage.querySelectorAll('.zoom, .rcol, .views, .lens')].filter((e) => e.offsetParent).map((e) => { const q = e.getBoundingClientRect(); return [q.left - sr.left, q.top - sr.top, q.right - sr.left, q.bottom - sr.top]; }); // the buttons on the stage
+    const ov = (x, y, [a0, b0, a1, b1]) => Math.max(0, Math.min(x + tw, a1) - Math.max(x, a0)) * Math.max(0, Math.min(y + th, b1) - Math.max(y, b0));
+    const over = (x, y) => ov(x, y, at) * 4 + ui.reduce((m, q) => m + ov(x, y, q), 0); // the box it measures above all, then the buttons
+    const fits = (x, y) => x >= 6 && y >= 6 && x + tw <= w - 6 && y + th <= h - 6 && over(x, y) === 0;
+    const cx = clamp(l, 6, Math.max(6, w - tw - 6)), xs = [cx, r - tw, (l + r - tw) / 2, 6], cands = [[r + g, t], [l - g - tw, t], ...xs.map((x) => [x, t - g - th]), ...xs.map((x) => [x, b + g]), [r + g, b - th], [l - g - tw, b - th]]; // beside it, then above, then below: never on it
+    let best = cands.find(([x, y]) => fits(x, y));
+    if (!best) best = cands.map(([x, y]) => [clamp(x, 6, Math.max(6, w - tw - 6)), clamp(y, 6, Math.max(6, h - th - 6))]).sort((p, q) => over(...p) - over(...q))[0]; // no room clear of it: where it covers least
+    tag.style.transform = `translate(${best[0].toFixed(0)}px, ${best[1].toFixed(0)}px)`; }
 }
 /* 1-person view: only your own forearms and hands, seen from the eyes; sitting on a seat being checked, your legs too (your lap, knees and feet) */
 function syncBodyVis() {
