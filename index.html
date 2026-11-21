@@ -364,6 +364,7 @@ input:disabled { opacity: 0.55; }
         <button type="button" class="btn tipbtn" id="btnTip" aria-pressed="true" data-en="Tips">팁</button>
         <button type="button" class="btn" id="btnGhost" aria-pressed="false" data-en="See-through">사람 반투명</button>
         <button type="button" class="btn" id="btnSupport" aria-pressed="false" data-en="Support" hidden>보조 O</button>
+        <button type="button" class="btn" id="btnPen" aria-pressed="false" title="하얀 면에 검은 선으로 (제품 시트처럼)" data-en-title="White with black outlines, like a product sheet" data-en="Line drawing">선화</button>
         <button type="button" class="btn" id="btnGuides" aria-pressed="true" data-en="Dimensions">치수 표시</button>
         <button type="button" class="btn" id="btnPlay" data-en="Play">동작 보기</button>
         <button type="button" class="btn accent" id="btnAI" hidden>AI 제안</button>
@@ -1297,9 +1298,10 @@ function makeMatTexture() {
   tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
   return tex;
 }
-const matMesh = new THREE.Mesh(new THREE.PlaneGeometry(MAT_SIZE, MAT_SIZE), mats.mat);
+const floorShadow = new THREE.ShadowMaterial({ opacity: 0.16 }); // no grid: a floor that only takes the shadows, the background showing through
+const matMesh = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), floorShadow);
 matMesh.rotation.x = -Math.PI / 2;
-matMesh.position.set(-0.2, 0, 0.1);
+matMesh.position.set(0, 0, 0);
 matMesh.receiveShadow = true;
 scene.add(matMesh);
 
@@ -1315,10 +1317,6 @@ function applyTheme() {
   mats.frame.color.set(tok('--ink-2'));
   mats.tire.color.set(tok('--tire')); mats.seat.color.set(tok('--tire')); mats.seatFrame.color.set(tok('--ink-2'));
   mats.marker.color.set(tok('--accent'));
-  const old = mats.mat.map;
-  mats.mat.map = makeMatTexture();
-  mats.mat.needsUpdate = true;
-  if (old) old.dispose();
 }
 
 /* ---------- geometry helpers ---------- */
@@ -6260,6 +6258,47 @@ const frontUse = () => S.view === 'front' && S.mode === 'use' && !carried();
 const personVis = () => S.pv || (S.place === 'air' && !S.supOff ? 'off' : (frontUse() && S.ghost) || S.autoGhost ? 'ghost' : 'on');
 const PV_LABEL = { on: ['사람 O', 'Person'], ghost: ['사람 반투명', 'See-through'], off: ['사람 X', 'No person'] };
 function syncSupportBtn() { const b = $('btnSupport'), on = !!S.supOff; b.hidden = !on && !supportable(); const [ko, en] = on ? ['보조 X', 'No support'] : ['보조 O', 'Support']; b.dataset.ko = ko; b.dataset.en = en; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(on)); }
+/* ---------- line drawing ("pen") mode: everything white, its outlines and creases in ink, like a product sheet. The scene is drawn once
+   with its normals (and depth), then a full-screen pass draws ink where depth jumps or the surface turns sharply ---------- */
+const PEN = { on: false, rt: null, nm: new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }) };
+PEN.mat = new THREE.ShaderMaterial({
+  uniforms: { tN: { value: null }, tD: { value: null }, res: { value: new THREE.Vector2(1, 1) }, near: { value: 0.1 }, far: { value: 100 }, ortho: { value: 0 }, px: { value: 1 }, paper: { value: new THREE.Color(0xffffff) }, bg: { value: new THREE.Color(0xf3f3f1) }, ink: { value: new THREE.Color(0x1c1c1e) } },
+  vertexShader: 'void main() { gl_Position = vec4(position.xy, 0.0, 1.0); }',
+  fragmentShader: `
+    uniform sampler2D tN; uniform sampler2D tD; uniform vec2 res; uniform float near, far, ortho, px; uniform vec3 paper, bg, ink;
+    float lin(float d) { if (ortho > 0.5) return near + d * (far - near); float z = d * 2.0 - 1.0; return 2.0 * near * far / (far + near - z * (far - near)); }
+    float edgeAt(vec2 uv, vec2 o, float d0, float l0, vec3 n0) {
+      float da = texture2D(tD, uv + o).x, db = texture2D(tD, uv - o).x;
+      bool b0 = d0 < 1.0, ba = da < 1.0, bb = db < 1.0;
+      if (b0 != ba || b0 != bb) return 1.0; if (!b0) return 0.0;
+      float la = lin(da), lb = lin(db), lap = abs(la + lb - 2.0 * l0), first = abs(la - l0) + abs(lb - l0);
+      float e = (lap > 0.5 * first && lap / l0 > 0.004) ? 1.0 : 0.0; // a step in depth, not the slope of one surface
+      vec3 na = texture2D(tN, uv + o).xyz * 2.0 - 1.0, nb = texture2D(tN, uv - o).xyz * 2.0 - 1.0;
+      e = max(e, smoothstep(0.35, 0.6, 1.0 - min(dot(n0, na), dot(n0, nb)))); // a sharp turn of the surface
+      return e;
+    }
+    void main() {
+      vec2 uv = gl_FragCoord.xy / res, s = px / res;
+      float d0 = texture2D(tD, uv).x, l0 = lin(d0); vec3 n0 = texture2D(tN, uv).xyz * 2.0 - 1.0;
+      float e = max(max(edgeAt(uv, vec2(s.x, 0.0), d0, l0, n0), edgeAt(uv, vec2(0.0, s.y), d0, l0, n0)), max(edgeAt(uv, s, d0, l0, n0), edgeAt(uv, vec2(s.x, -s.y), d0, l0, n0)) * 0.85);
+      gl_FragColor = vec4(mix(d0 < 1.0 ? paper : bg, ink, clamp(e, 0.0, 1.0)), 1.0);
+    }`,
+  depthTest: false, depthWrite: false,
+});
+PEN.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), PEN.mat); PEN.quad.frustumCulled = false;
+PEN.scene = new THREE.Scene(); PEN.scene.add(PEN.quad); PEN.cam = new THREE.Camera();
+function drawScene() {
+  if (!PEN.on) { renderer.render(scene, cam); return; }
+  const sz = renderer.getDrawingBufferSize(new THREE.Vector2());
+  if (!PEN.rt || PEN.rt.width !== sz.x || PEN.rt.height !== sz.y) { if (PEN.rt) { PEN.rt.depthTexture.dispose(); PEN.rt.dispose(); } PEN.rt = new THREE.WebGLRenderTarget(sz.x, sz.y, { depthTexture: new THREE.DepthTexture(sz.x, sz.y) }); }
+  const bg = scene.background, sh = renderer.shadowMap.enabled, fv = matMesh.visible;
+  scene.background = null; scene.overrideMaterial = PEN.nm; matMesh.visible = false; // the floor is the paper
+  renderer.setRenderTarget(PEN.rt); renderer.setClearColor(0x8080ff, 1); renderer.clear(); renderer.render(scene, cam);
+  renderer.setRenderTarget(null); scene.overrideMaterial = null; scene.background = bg; matMesh.visible = fv; renderer.shadowMap.enabled = sh;
+  const u = PEN.mat.uniforms; u.tN.value = PEN.rt.texture; u.tD.value = PEN.rt.depthTexture; u.res.value.set(sz.x, sz.y); u.near.value = cam.near; u.far.value = cam.far; u.ortho.value = cam.isOrthographicCamera ? 1 : 0; u.px.value = Math.max(1, Math.round(renderer.getPixelRatio()));
+  renderer.render(PEN.scene, PEN.cam);
+}
+function syncPenBtn() { const b = $('btnPen'); b.setAttribute('aria-pressed', String(PEN.on)); }
 function syncGhostBtn() { const v = personVis(), b = $('btnGhost'), [ko, en] = PV_LABEL[v]; b.hidden = false; b.dataset.ko = ko; b.dataset.en = en; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(v !== 'on')); }
 /* the view buttons: pressed again, 3rd person goes up to the bird's-eye view, front turns to the back, side to the other side */
 const CUBE = '<path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/>', VIEW_ALT = {
@@ -6584,7 +6623,7 @@ function tick() {
   placeExtras(pose);
   if (S.view === 'first') firstPerson(pose);
   else (isOrtho() ? controlsO : controlsP).update();
-  renderer.render(scene, cam);
+  drawScene();
   updateOverlay(pose);
   if (ghostWait && anim.phase !== 'reach' && !--ghostWait) S.autoGhost = hiddenByPerson(); // not while the hands are on their way: judged where they end up
 }
@@ -6695,6 +6734,7 @@ function stepProduct(d) {
 $('prodPrev').addEventListener('click', () => stepProduct(-1));
 $('prodNext').addEventListener('click', () => stepProduct(1));
 /* the support (table, counter, plinth…) hidden: it floats where it stood, and comes back as it was */
+$('btnPen').addEventListener('click', () => { PEN.on = !PEN.on; syncPenBtn(); });
 $('btnSupport').addEventListener('click', () => {
   if (S.supOff) { const back = S.supPrev; S.supOff = false; S.supPrev = null; S.surf = { ...(S.surf || {}), air: S.supAir }; S.place = back || S.place; }
   else { if (!supportable()) return; const y = Math.round((S.place === 'wall' ? SURF.wall : SURF[S.place]) * 1000); S.supAir = S.surf ? S.surf.air : undefined; S.supPrev = S.place; S.supOff = true; S.surf = { ...(S.surf || {}), air: y }; S.place = 'air'; }
@@ -7616,7 +7656,7 @@ async function snapPNG() {
   const btn = $('btnSnap'); if (btn.disabled) return; btn.disabled = true;
   const pr = renderer.getPixelRatio(), size = renderer.getSize(new THREE.Vector2()), k = Math.min(2 * pr, 4096 / Math.max(size.x, size.y)), mk = marker.visible;
   try {
-    marker.visible = false; renderer.setPixelRatio(k); renderer.setSize(size.x, size.y, false); renderer.render(scene, cam);
+    marker.visible = false; renderer.setPixelRatio(k); renderer.setSize(size.x, size.y, false); drawScene();
     const blob = await new Promise((res) => renderer.domElement.toBlob(res, 'image/png'));
     if (!blob) throw new Error('no image');
     const key = String((S.source === 'model' ? 'model' : S.pkey) || 'custom').replace(/[^a-z0-9_-]+/gi, '') || 'view', d = new Date(), stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}-${String(d.getHours()).padStart(2, '0')}${String(d.getMinutes()).padStart(2, '0')}${String(d.getSeconds()).padStart(2, '0')}`;
