@@ -131,10 +131,10 @@ button { cursor: pointer; }
 .det .dimrow.opt .seg:not(.wrap) button { height: 28px; font-size: 12.5px; }
 .det .seg.wrap { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
 .det .seg { grid-column: 1 / -1; }
-.det .seg:not(.wrap), .plopt .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; } /* a few choices: equal widths */
+.det .seg:not(.wrap), .plopt .seg { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(max-content, 1fr); } /* a few choices: equal widths */
 .plopt .seg { grid-column: 2 / -1; }
 .det .seg.wrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(98px, 1fr)); gap: 4px; border: 0; background: none; overflow: visible; }
-.det .seg.wrap button { height: 28px; padding: 0 4px; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); }
+.det .seg.wrap button { height: 28px; padding: 0 4px; font-size: 12.5px; white-space: normal; line-height: 1.15; height: auto; min-height: 28px; padding: 4px 6px; word-break: keep-all; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); }
 .det .seg.wrap button + button { border-left: 1px solid var(--line); }
 .det .seg.wrap button[aria-pressed="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
 .tag.unit { font-weight: 600; }
@@ -268,7 +268,10 @@ span.br { display: block; }
 .seg .ox svg { width: 15px; height: 15px; }
 .seg button:disabled { opacity: 0.4; cursor: default; }
 .seg.full { display: flex; }
-.seg.full button { flex: 1 1 0; padding: 0 4px; }
+.seg.full button { flex: 1 0 auto; padding: 0 8px; }
+.seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; } .seg::-webkit-scrollbar { display: none; } .seg:not(.wrap):not(.matsw) > button { flex-shrink: 0; white-space: nowrap; } /* never a word cut off: too many choices scroll sideways */
+.seg.wrap > button { white-space: normal; line-height: 1.15; height: auto !important; min-height: 28px; padding: 4px 6px; word-break: keep-all; } /* a long choice in the grid: two lines, not cut */
+.dimrow > label { white-space: normal; line-height: 1.15; word-break: keep-all; }
 #shapeSeg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 #placeSeg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); } /* the places in a 3-wide table, ruled by the gaps between them */
 #placeSeg button, #placeSeg button + button { border: 0; background: var(--raise); }
@@ -276,7 +279,7 @@ span.br { display: block; }
 #placeSeg button:disabled { opacity: 1; color: color-mix(in srgb, var(--ink-2) 42%, transparent); } /* faded words, never faded rules */
 #placeSeg button { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 34px; }
 #placeSeg button[hidden] { display: none; }
-#variantSeg { display: grid; gap: 1px; background: var(--line); } #variantSeg button, #variantSeg button + button { border: 0; background: var(--raise); padding: 0 4px; white-space: nowrap; } #variantSeg button[aria-pressed="true"] { background: var(--ink); } #variantSeg.odd::after { content: ""; background: var(--raise); } /* the last cell of an odd count filled, not grey */
+#variantSeg { display: grid; gap: 1px; background: var(--line); } #variantSeg button, #variantSeg button + button { border: 0; background: var(--raise); padding: 4px; white-space: normal; line-height: 1.15; height: auto; min-height: 32px; word-break: keep-all; } #variantSeg button[aria-pressed="true"] { background: var(--ink); } #variantSeg.odd::after { content: ""; background: var(--raise); } /* the last cell of an odd count filled, not grey */
 #ceilStd { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 8px; } /* the ceiling heights in one table, like the places */
 #ceilStd button { min-height: 34px; padding: 4px 6px; line-height: 1.25; text-align: center; }
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); position: sticky; top: -14px; margin-top: -2px; background: var(--panel); z-index: 2; }
@@ -6822,7 +6825,7 @@ function syncUI() {
   { const slot = imgSlot(); $('imgField').hidden = !slot; if (slot) { $('imgLbl').textContent = slot === 'cap' ? L('내 이미지 · 모든 제품 공통 (자수는 PNG 추천)', 'Your image · on every product (PNG for embroidery)') : L('내 이미지 · 모든 제품 공통', 'Your image · on every product'); $('imgDel').hidden = !USER_IMG[slot]; } }
   $('setName').textContent = prodName(); $('setName').title = prodName(); // cut short in a narrow panel: the whole name on hover
   if (fam) { FAMILIES[fam].last = S.pkey; $('variantSeg').replaceChildren(...FAMILIES[fam].sizes.map(([k, ko, en]) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.size = k; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(S.pkey === k)); return b; })); }
-  { const vs = $('variantSeg'), n = vs.children.length; vs.style.gridTemplateColumns = `repeat(${n > 5 ? Math.ceil(n / 2) : Math.max(n, 1)}, minmax(0, 1fr))`; vs.classList.toggle('odd', n > 5 && n % 2 === 1); } // many sizes (the TVs): two rows
+  { const vs = $('variantSeg'), n = vs.children.length; vs.style.gridTemplateColumns = `repeat(${n > 4 ? Math.ceil(n / 2) : Math.max(n, 1)}, minmax(0, 1fr))`; vs.classList.toggle("odd", n > 4 && n % 2 === 1); } // many sizes (the TVs): two rows
   segSet('langSeg', 'lang', LANG); segSet('shapeSeg', 'shape', S.shape); segSet('placeSeg', 'place', S.place); segSet('faceSeg', 'face', S.face); { const t = $('faceSeg').querySelector('[data-face="top"]'); t.disabled = S.source === 'box' && S.look === 'fridge'; if (t.disabled && S.face === 'top') S.face = 'front'; } // a fridge: its controls are on the door segSet('actSeg', 'act', S.action); segSet('modeSeg', 'mode', S.mode); segSet('langSeg', 'lang', LANG);
   const isModel = S.source === 'model', fixedForm = isFurniture() || ring || ['cup', 'laptop', 'headphone', 'earbud'].includes(S.shape) || S.look === 'paper' || kind() !== 'free'; // these come only from the examples
   // the forms an example comes in (the cube: solid or frame; the object: sphere or cone); the plain box mockup, all of them
@@ -6838,7 +6841,7 @@ function syncUI() {
   if (!isModel) {
     const V = sizeUnit() || S, big = Math.max(V.w, roundBase() ? V.w : V.d, V.h), key = S.name + '|' + S.shape; // V: the mockup picked beside the main one, else the product
     if (!dimR || big > dimR.max || dimR.key !== key) dimR = { ...dimScale(big), key }; // kept steady while a slider is dragged
-    const labels = ring ? [L('밴드 폭', 'Band'), L('두께', 'Thick'), L('보석', 'Stone')] : [L('W 폭', 'W width'), L('D 깊이', 'D depth'), L('H 높이', 'H height')];
+    const labels = ring ? [L('밴드 폭', 'Band'), L('두께', 'Thick'), L('보석', 'Stone')] : [L('W 폭', 'Width'), L('D 깊이', 'Depth'), L('H 높이', 'Height')];
     for (const [i, id, rid, k, v] of [[0, 'pW', 'rW', 'w', V.w], [1, 'pD', 'rD', 'd', roundBase() ? V.w : V.d], [2, 'pH', 'rH', 'h', V.h]]) {
       setNum(id, v);
       const r = $(rid), rg = ring ? RING_DIMS[k] : dimR;
