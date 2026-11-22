@@ -58,11 +58,12 @@ button { cursor: pointer; }
 .panel { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; background: var(--panel); border-top: 1px solid var(--line); padding-block: 14px 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 14px; }
 .stage-tap, .stage-back { display: none; }
 @media (max-width: 859px) { /* phones: the view a third of the screen, the settings two thirds; a tap on the view fills the screen with it */
-  .app:not(.full) .stage { flex: 0 0 34%; min-height: 200px; }
+  .app:not(.full) .stage { flex: 0 0 26%; min-height: 170px; }
   .app:not(.full) .stage > :not(canvas):not(.stage-tap) { display: none !important; }
   .app:not(.full) .stage-tap { display: flex; position: absolute; inset: 0; z-index: 20; align-items: flex-end; justify-content: center; padding: 0 0 10px; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .stage-tap span { padding: 5px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.86); border: 1px solid var(--line); font-size: 12px; color: var(--ink-2); }
   .app.full .stage { flex: 1 1 auto; }
+  .top { flex-wrap: wrap; row-gap: 6px; } .top .rcol { margin-left: auto; } /* a long 'Actual Size' drops under the views rather than over them */
   .app.full .panel { display: none; }
   .app.full .stage-back { display: flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 6px; height: 44px; padding-bottom: env(safe-area-inset-bottom, 0px); border: 0; border-top: 1px solid var(--line); background: var(--panel); color: var(--ink); font: 500 13px var(--font-body); cursor: pointer; }
 }
@@ -7013,6 +7014,7 @@ function sceneBox() {
 /* space the floating controls cover at the top and bottom of the stage */
 function overlayInsets() {
   const sr = stage.getBoundingClientRect(), h = sr.height || 1;
+  if ($('stageTap').offsetParent) return { h, top: 6, bot: 34 }; // the phone preview: no bars over it, only the 'tap' pill at the bottom
   const top = $('views').getBoundingClientRect().bottom - sr.top;
   let hudTop = Math.min($('pill').getBoundingClientRect().top, $('btnPlay').getBoundingClientRect().top);
   $('tipdock').style.bottom = `${Math.max(8, sr.bottom - hudTop + 6)}px`; // the tip rides just above the bottom bar
@@ -7425,11 +7427,11 @@ function updateOverlay(pose) {
   }
   const handTag = S.place === 'hand', wr = pose.arms[0].wr, el0 = pose.arms[0].el, armS = (() => { const a = proj(human.localToWorld(wr.clone())), b = proj(human.localToWorld(el0.clone())); return { ax: a.x, ay: a.y, bx: b.x, by: b.y, r: 22 }; })();
   callout($('t-tg'), handTag ? hands[0].g.localToWorld(new V3(0, 0, 0)) : controlWorld(), S.guides && S.view !== 'top' && S.view !== 'first' && S.place !== 'back' && !lookOnly() && (handTag || S.mode === 'use'), handTag ? ['down', 'left', 'right', 'up'] : ['right', 'left', 'up', 'down'], handTag ? prodR : uni(prodR, scrBox(new THREE.Box3().setFromObject(hands[0].g))), handTag ? [armS] : [], 'tg');
-  { const pl = S.place, on = ['table', 'desk', 'counter', 'vanity', 'plinth'].includes(pl) && !S.supOff && S.guides && S.view !== 'top' && S.view !== 'first' && !atDesk(); // what it stands on: its height, at its front corner
+  { const pl = S.place, on = ['table', 'desk', 'counter', 'vanity', 'plinth'].includes(pl) && !S.supOff && S.guides && S.view !== 'top' && S.view !== 'first' && !atDesk(); // what it stands on: its height, written on its front just under the top (no leader to cross anything)
     let at = new V3();
-    if (on) { const h = pl === 'plinth' ? plinthSize().h : SURF[pl], fz = pl === 'plinth' ? Math.max(0, plinthSize().d / 2 - P.D / 2) : EDGE, hx = pl === 'plinth' ? plinthSize().w / 2 : 0.3; at = product.parent.localToWorld(new V3(product.position.x - hx, h, product.position.z + fz));
+    if (on) { const h = pl === 'plinth' ? plinthSize().h : SURF[pl], fz = pl === 'plinth' ? Math.max(0, plinthSize().d / 2 - P.D / 2) : EDGE; at = product.parent.localToWorld(new V3(product.position.x, h - 0.03, product.position.z + fz));
       $('t-sup').textContent = L(`${SURF_NAME[pl] ? SURF_NAME[pl][0] : pl === 'vanity' ? '젠다이' : ''} 높이 ${mmi(h)}`, `${SURF_NAME[pl] ? SURF_NAME[pl][1][0].toUpperCase() + SURF_NAME[pl][1].slice(1) : 'Ledge'} ${mmi(h)} mm high`); }
-    callout($('t-sup'), at, on, ['left', 'down', 'right'], prodR); }
+    put($('t-sup'), at, on, 'translate(-50%, 0)'); }
   callout($('t-human'), headTop, S.guides && S.view !== 'first' && personVis() !== 'off', ['up', 'left', 'right'], uni(scrBox(new THREE.Box3().setFromObject(R.head)), S.place === 'head' ? prodR : null));
   $('leaderSvg').innerHTML = leaders.join('');
   const lines = S.guides && (S.view === 'front' || S.view === 'side');
