@@ -247,7 +247,7 @@ span.br { display: block; }
 .psearch svg { width: 18px; height: 18px; }
 .pgroup.nohit { display: none; }
 .presets .chip.nohit { display: none; }
-.brandrow { flex: 1 1 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 12px; row-gap: 4px; } .brandrow .brand, .brandrow .phr { display: contents; } .brandrow .wm { grid-column: 1; grid-row: 1; min-width: 0; overflow: hidden; } .brandrow .hist { grid-column: 2; grid-row: 1; justify-self: stretch; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; } .brandrow .hist .btn { width: auto; } /* the two as wide as the credit under them */ .brandrow .sub { grid-column: 1; grid-row: 2; } .brandrow .credit { grid-column: 2; grid-row: 2; justify-self: end; } /* the wordmark level with undo and redo, the line under it level with the credit */
+.brandrow { flex: 1 1 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 12px; row-gap: 4px; } .brandrow .brand, .brandrow .phr { display: contents; } .brandrow .wm { grid-column: 1; grid-row: 1; min-width: 0; overflow: hidden; cursor: pointer; } .brandrow .hist { grid-column: 2; grid-row: 1; justify-self: stretch; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; } .brandrow .hist .btn { width: auto; } /* the two as wide as the credit under them */ .brandrow .sub { grid-column: 1; grid-row: 2; } .brandrow .credit { grid-column: 2; grid-row: 2; justify-self: end; } /* the wordmark level with undo and redo, the line under it level with the credit */
 
 .phr { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; } /* undo and redo, then the credit under them */
 .credit { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-2); font-weight: 350; text-decoration: none; line-height: 1.2; text-align: right; }
@@ -503,7 +503,7 @@ input:disabled { opacity: 0.55; }
     <header class="ph">
       <div class="brandrow">
         <div class="brand">
-          <span class="wm">HUMAN<i aria-hidden="true"></i>SCALE</span>
+          <span class="wm" role="button" tabindex="0" title="처음 화면으로" data-en-title="Back to the start">HUMAN<i aria-hidden="true"></i>SCALE</span>
           <span class="sub" data-en="Check product size against people">사람을 기준으로 제품 크기를 확인하기</span>
         </div>
         <div class="phr">
@@ -8399,6 +8399,8 @@ document.addEventListener('keydown', (e) => { const el = e.target; if (!e.shiftK
 /* iPhone and iPad: no pinching or double-tapping the page itself bigger (the 3D view keeps its own zoom) */
 for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
 document.addEventListener('touchmove', (e) => { if (e.touches.length > 1 && !e.target.closest('canvas')) e.preventDefault(); }, { passive: false });
+
+{ const wm = document.querySelector('.wm'); wm.addEventListener('click', () => location.reload()); wm.addEventListener('keydown', (e) => { if (e.key === 'Enter') location.reload(); }); } // the wordmark: back to the start, as a fresh visit
 
 /* ---------- model files: the product as drawn, at its size now, in millimetres ----------
    One zip with a Rhino file (.3dm), an OBJ and an STL. The .3dm is written here (openNURBS layout: what rhino3dm writes for a mesh, the tables
