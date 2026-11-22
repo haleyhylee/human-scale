@@ -81,7 +81,7 @@ button { cursor: pointer; }
 .one .chip { height: 100%; border: 0 !important; border-radius: 0; background: transparent !important; color: #fff !important; }
 .onebtn { display: inline-flex; align-items: center; font-weight: 600; padding: 0 12px; -webkit-touch-callout: none; user-select: none; touch-action: manipulation; }
 .one .chip:hover { background: rgba(255, 255, 255, 0.12) !important; }
-.calib-card .calib-say { color: var(--accent); font-size: 13px; font-weight: 600; margin: 0 0 -6px; }
+.calib-card .calib-say { color: var(--accent); font-size: 13px; font-weight: 600; margin: 0 0 -6px; text-align: center; text-wrap: balance; word-break: keep-all; max-width: 100%; } /* centred over the line, as wide as it */
 .calib { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 55%, transparent); z-index: 30; }
 .calib[hidden] { display: none; }
 .calib-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; max-width: min(520px, 92%); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12); }
@@ -294,7 +294,7 @@ input:disabled { opacity: 0.55; }
 .vi .f2 { fill: var(--accent); stroke: none; opacity: 0.5; }
 .vi .f3 { fill: var(--accent); stroke: none; opacity: 0.3; }
 .vbtn[aria-pressed="true"] .vi .f, .vbtn[aria-pressed="true"] .vi .f2, .vbtn[aria-pressed="true"] .vi .f3 { fill: currentColor; }
-@media (max-width: 900px) { .vbtn .vl { display: none; } .vbtn { padding: 0 8px; }  } /* narrow: the icons alone, the names on hover and to screen readers */
+.vbtn .vl { display: none; } .vbtn { padding: 0 9px; } /* the icons alone, the names on hover and to screen readers */
 .vseg { display: inline-flex; flex: 0 0 auto; height: 32px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--raise); } /* the viewpoints in one bubble: the one in use goes black */
 .vseg .vbtn { height: 100%; border: 0; border-radius: 0; background: none; }
 .vseg .vbtn + .vbtn { border-left: 1px solid var(--line); }
@@ -8097,7 +8097,7 @@ function setMeasure(on) {
 }
 $('btnMeasure').addEventListener('click', () => setMeasure(!meas.on));
 { // 1:1: measured once, then on and off
-  const open = () => { const w = Math.round(Math.min(320, (stage.clientWidth || 600) - 120)); $('calibBar').style.width = `${w}px`; $('calibBar').dataset.px = w; $('calibMm').value = ''; $('calib').hidden = false; setTimeout(() => $('calibMm').focus(), 30); };
+  const open = () => { const w = Math.round(Math.min(320, (stage.clientWidth || 600) - 120)); $('calibBar').style.width = `${w}px`; document.querySelector('.calib-say').style.width = `${w}px`; $('calibBar').dataset.px = w; $('calibMm').value = ''; $('calib').hidden = false; setTimeout(() => $('calibMm').focus(), 30); };
   const close = () => { $('calib').hidden = true; };
   let holdT = 0, held = false; // press and hold: calibrate again
   const b11 = $('btn11'), endHold = () => clearTimeout(holdT);
