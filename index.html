@@ -6548,7 +6548,7 @@ function renderChecks() {
     const rows = [[L('제품', 'Product'), `${prodName()} · ${mmi(P.W)}×${mmi(P.D)}×${mmi(P.H)}mm`], [L('사람', 'Person'), `${pLabel(p)} · ${L('키', 'height')} ${S.height}cm · ${S.A.seated ? L('앉음', 'seated') : L('서 있음', 'standing')}`],
       [L('놓는 곳', 'Placed'), isFurniture() ? L('바닥 (가구)', 'floor (furniture)') : `${placeLabel(pl) || '-'}${on}${S.supOff ? L(' · 보조 숨김', ' · support hidden') : ''}`], [L('보기', 'Mode'), `${S.mode === 'use' ? L('사용하기', 'In use') : L('나란히', 'Compare')} · ${L({ ko: '한국', intl: '국제', us: '미국', eu: '유럽' }[STD] + ' 신체 기준', { ko: 'Korean', intl: 'International', us: 'US', eu: 'European' }[STD] + ' body data')}${S.ceil.on ? L(` · 천장 ${S.ceil.h / 10}cm`, ` · ceiling ${S.ceil.h / 10} cm`) : ''}`]];
     const box = $('checkSum'); box.replaceChildren(...rows.map(([k, v]) => { const r = document.createElement('div'); r.className = 'row'; const a = document.createElement('b'); a.textContent = k; const b = document.createElement('span'); b.textContent = v; r.append(a, b); return r; }));
-    const all = document.createElement('div'); all.className = 'all'; const pill = document.createElement('span'); setLv(pill, E.verdict); const t = document.createElement('span'); t.textContent = E.summary; all.append(pill, t); box.append(all);
+    // the overall result is not repeated here: the same line heads the list below
   }
 }
 
