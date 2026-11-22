@@ -1256,8 +1256,11 @@ function bodySideAt(A, P, s, y, pr, z) {
 /* seated, the hand at rest: on top of the thigh halfway to the knee, the palm down on it and the fingers along it (so they follow it down
    toward the knee, under a table's edge), turned in a little. Returns the wrist and the hand's frame */
 function seatedRest(A, P, s) {
-  const l = P.legs[s < 0 ? 0 : 1], d = l.knee.clone().sub(l.hip).normalize(), up = new V3(0, 1, 0).addScaledVector(d, -d.y).normalize(), t = 0.5, r = profAt(limbProfiles(A, PERSONAS[S.persona]).leg[0], t);
-  return { W: l.hip.clone().lerp(l.knee, t).addScaledVector(up, r + A.hd.palmT / 2 + 0.004), F: handFrame(up.clone().negate(), d.clone().add(new V3(-s * 0.15, 0, 0))) };
+  const l = P.legs[s < 0 ? 0 : 1], d = l.knee.clone().sub(l.hip).normalize(), up = new V3(0, 1, 0).addScaledVector(d, -d.y).normalize(), pr = limbProfiles(A, PERSONAS[S.persona]).leg[0];
+  const at = (t) => l.hip.clone().lerp(l.knee, t).addScaledVector(up, profAt(pr, t) + A.hd.palmT / 2 + 0.004);
+  const clear = (W) => { for (let y = W.y - 0.02; y <= W.y + 0.041; y += 0.015) for (const u of [-0.04, 0, 0.04]) if (W.z - 0.02 < torsoFrontAt(A, P, y, W.x + u)) return false; return true; };
+  let t = 0.5; while (t < 0.8 && !clear(at(t))) t += 0.025; /* a heavy belly over the lap: the hand further down the thigh, clear of it */
+  return { W: at(t), F: handFrame(up.clone().negate(), d.clone().add(new V3(-s * 0.15, 0, 0))) };
 }
 const holdWrist = (A, P) => new V3(P.shR.x + 0.044 * A.H, P.shR.y - 0.5 * A.upperArm, P.shR.z + 0.9 * A.forearm);
 
@@ -5063,7 +5066,7 @@ function layoutHuman() {
     if (A.seated) z = A.chair === 'wheel' ? (st === 'sink' || st === 'coffee' ? A.thigh + 0.16 : st === 'drawer' || st === 'wardrobe' ? A.thigh + 0.3 : 0.22) : { desk: 0.2, standing: 0.2, dining: 0.2, bar: 0.26, coffee: 0.38 + A.seatEdge }[st] ?? 0.2;
     else z = { desk: 0.05 + toe, standing: 0.05 + toe, dining: 0.05 + toe, bar: 0.04 + toe, coffee: 0.28 + toe, sink: toe - 0.03, drawer: 0.16 + toe, wardrobe: 0.3 + toe }[st] ?? 0.05 + toe;
     const dr = holder.userData.drawers;
-    if (st === 'drawer' && dr && !drawerCols()) z = Math.max(z, dr.pull * S.scale + Math.max(A.waistD, A.hipD) / 2 + 0.012 + A.hd.palmLen + 0.06); // far enough back that the drawer, and the hand pulling it (palm and wrist behind the handle), stop short of the body
+    if (st === 'drawer' && dr && !drawerCols()) { const hy = product.localToWorld(new V3(0, drawerHandle(drawerCount(S.h / 1000) - 1), 0)).y, P0 = basePose(A, PP(), 0); let f = Math.max(A.waistD, A.hipD) / 2; for (let y = hy - 0.12; y <= hy + 0.061; y += 0.02) for (const u of [-0.1, 0, 0.1, 0.2]) f = Math.max(f, torsoFrontAt(A, P0, y, u) || 0); z = Math.max(z, dr.pull * S.scale + f + 0.012 + A.hd.palmLen + 0.06); } // far enough back that the drawer, and the hand pulling it (palm and wrist behind the handle), stop short of the body
   } else if (A.seated) {
     const front = A.thigh + 0.14 + (A.chair === 'wheel' ? 0.07 : 0); // knees (a wheelchair's footrests further on)
     z = PL() === 'table' ? EDGE + 0.22 : PL() === 'counter' ? EDGE + front + 0.02 : PL() === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + front + 0.03 : PL() === 'wall' ? wallDist() + front : 0.15 + front; // a plinth's face, or the set distance from the wall, before the knees and footrests
