@@ -239,8 +239,8 @@ span.br { display: block; }
 .brandrow { flex: 1 1 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 12px; row-gap: 4px; } .brandrow .brand, .brandrow .phr { display: contents; } .brandrow .wm { grid-column: 1; grid-row: 1; } .brandrow .hist { grid-column: 2; grid-row: 1; justify-self: stretch; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; } .brandrow .hist .btn { width: auto; } /* the two as wide as the credit under them */ .brandrow .sub { grid-column: 1; grid-row: 2; } .brandrow .credit { grid-column: 2; grid-row: 2; justify-self: end; } /* the wordmark level with undo and redo, the line under it level with the credit */
 
 .phr { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; } /* undo and redo, then the credit under them */
-.credit { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-2); text-decoration: none; line-height: 1.2; text-align: right; }
-.credit .who { display: inline-flex; align-items: center; gap: 3px; color: inherit; font-weight: 400; }
+.credit { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-2); font-weight: 350; text-decoration: none; line-height: 1.2; text-align: right; }
+.credit .who { display: inline-flex; align-items: center; gap: 3px; color: inherit; font-weight: inherit; } /* Latin letters read darker than Hangul at the same weight: a touch lighter, so it matches the line beside it */
 .credit svg { width: 11px; height: 11px; color: inherit; }
 .credit:hover .who { text-decoration: underline; }
 .wm { font-family: var(--font-display); font-stretch: 62%; font-weight: 800; font-size: min(37px, 9.4vw); letter-spacing: 0.02em; line-height: 1; white-space: nowrap; } /* its capitals as tall as the buttons beside it */
@@ -542,7 +542,7 @@ input:disabled { opacity: 0.55; }
       </div>
       <div class="field">
         <div class="label" data-en="Body data">신체 기준</div>
-        <div class="seg" id="stdSeg"><button type="button" data-std="ko" data-en="Korea">한국</button><button type="button" data-std="intl" data-en="International">국제</button><button type="button" data-std="us" data-en="US">미국</button><button type="button" data-std="eu" data-en="Europe">유럽</button><button type="button" data-std="cn" data-en="China">중국</button></div>
+        <div class="seg" id="stdSeg"><button type="button" data-std="ko" data-en="Korea">한국</button><button type="button" data-std="intl" data-en="International">국제</button><button type="button" data-std="us" data-en="US">미국</button><button type="button" data-std="eu" data-en="Europe">유럽</button><button type="button" data-std="cn" data-en="China">중국</button><button type="button" data-std="jp" data-en="Japan">일본</button></div>
         <p class="hint" id="stdSrc"></p>
       </div>
     </section>
@@ -809,9 +809,10 @@ const STDS = {
   intl: { adultF: [159.5, 25], adultM: [171, 24.5], teen: [161, 20.5], child: [121, 16.2], elderF: [154, 25.5], elderM: [166, 25], wheel: [165, 24.5] },
   us: { adultF: [161.7, 29.6], adultM: [175.4, 29.1], teen: [166, 23], child: [124, 17], elderF: [158.5, 29.5], elderM: [173, 29.5], wheel: [168, 29] },
   cn: { adultF: [158.0, 23.6], adultM: [169.7, 24.2], teen: [161, 20.5], child: [121, 16.2], elderF: [151, 24], elderM: [164, 24], wheel: [164, 24] }, // adults: China's 2020 nutrition report (18-44 height, 18+ weight); the rest estimated as for the others
+  jp: { adultF: [157.9, 21.7], adultM: [171.5, 23.8], teen: [158, 19.5], child: [124, 16], elderF: [149.4, 22.9], elderM: [163.1, 23.5], wheel: [168, 23.5] }, // MHLW National Health and Nutrition Survey 2019: adults 20-49, the elderly 70+, child 7-8, teen 13-14
   eu: { adultF: [165, 25.4], adultM: [178, 26.6], teen: [167, 21], child: [126, 16.5], elderF: [160, 27], elderM: [173, 27.5], wheel: [170, 26.5] },
 };
-const STD_SRC = { ko: ['Size Korea 8차(2021) 평균', 'Size Korea 8th survey (2021) averages'], intl: ['NCD-RisC 세계 평균', 'NCD-RisC world averages'], us: ['CDC NHANES 2015–2018 평균', 'CDC NHANES 2015–2018 averages'], eu: ['NCD-RisC 유럽 평균', 'NCD-RisC European averages'], cn: ['중국 국가위생건강위원회 《중국 주민 영양·만성질환 보고서(2020)》 성인 평균', 'China NHC Report on Nutrition and Chronic Diseases (2020), adult averages'] };
+const STD_SRC = { ko: ['Size Korea 8차(2021) 평균', 'Size Korea 8th survey (2021) averages'], intl: ['NCD-RisC 세계 평균', 'NCD-RisC world averages'], us: ['CDC NHANES 2015–2018 평균', 'CDC NHANES 2015–2018 averages'], eu: ['NCD-RisC 유럽 평균', 'NCD-RisC European averages'], jp: ['일본 후생노동성 국민건강·영양조사(2019) 평균', 'MHLW National Health and Nutrition Survey (2019) averages'], cn: ['중국 국가위생건강위원회 《중국 주민 영양·만성질환 보고서(2020)》 성인 평균', 'China NHC Report on Nutrition and Chronic Diseases (2020), adult averages'] };
 let STD = (() => { try { const v = localStorage.getItem('hs.std'); if (STDS[v]) return v; } catch {} return LANG === 'ko' ? 'ko' : 'intl'; })(); // Korean in Korean, the international average otherwise, until one is picked
 const applyStd = () => { for (const [k, [h, bmi]] of Object.entries(STDS[STD])) { PERSONAS[k].h = h; PERSONAS[k].bmi = bmi; } };
 applyStd();
@@ -6680,7 +6681,7 @@ function renderChecks() {
   { // what is being checked, at a glance, then the overall result
     const p = PERSONAS[S.persona], P = dims(), pl = S.supOff ? S.supPrev : S.place, on = pl && SURF[pl] != null && !['hand', 'head', 'back', 'floor'].includes(pl) ? ` ${Math.round((pl === 'wall' ? (winLook() ? winSill() : wallMid()) : SURF[pl] * 1000) / 10)}cm` : '';
     const rows = [[L('제품', 'Product'), `${prodName()} · ${mmi(P.W)}×${mmi(P.D)}×${mmi(P.H)}mm`], [L('사람', 'Person'), `${pLabel(p)} · ${L('키', 'height')} ${S.height}cm · ${S.A.seated ? L('앉음', 'seated') : L('서 있음', 'standing')}`],
-      [L('놓는 곳', 'Placed'), isFurniture() ? L('바닥 (가구)', 'floor (furniture)') : `${placeLabel(pl) || '-'}${on}${S.supOff ? L(' · 보조 숨김', ' · support hidden') : ''}`], [L('보기', 'Mode'), `${S.mode === 'use' ? L('사용하기', 'In use') : L('나란히', 'Compare')} · ${L({ ko: '한국', intl: '국제', us: '미국', eu: '유럽', cn: '중국' }[STD] + ' 신체 기준', { ko: 'Korean', intl: 'International', us: 'US', eu: 'European', cn: 'Chinese' }[STD] + ' body data')}${S.ceil.on ? L(` · 천장 ${S.ceil.h / 10}cm`, ` · ceiling ${S.ceil.h / 10} cm`) : ''}`]];
+      [L('놓는 곳', 'Placed'), isFurniture() ? L('바닥 (가구)', 'floor (furniture)') : `${placeLabel(pl) || '-'}${on}${S.supOff ? L(' · 보조 숨김', ' · support hidden') : ''}`], [L('보기', 'Mode'), `${S.mode === 'use' ? L('사용하기', 'In use') : L('나란히', 'Compare')} · ${L({ ko: '한국', intl: '국제', us: '미국', eu: '유럽', cn: '중국', jp: '일본' }[STD] + ' 신체 기준', { ko: 'Korean', intl: 'International', us: 'US', eu: 'European', cn: 'Chinese', jp: 'Japanese' }[STD] + ' body data')}${S.ceil.on ? L(` · 천장 ${S.ceil.h / 10}cm`, ` · ceiling ${S.ceil.h / 10} cm`) : ''}`]];
     const box = $('checkSum'); box.replaceChildren(...rows.map(([k, v]) => { const r = document.createElement('div'); r.className = 'row'; const a = document.createElement('b'); a.textContent = k; const b = document.createElement('span'); b.textContent = v; r.append(a, b); return r; }));
     // the overall result is not repeated here: the same line heads the list below
   }
