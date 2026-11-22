@@ -7458,15 +7458,15 @@ $('toProducts').addEventListener('click', () => $('tb-product').click());
 function anyOpen() { return [...$('presetChips').querySelectorAll('.pgroup')].some((g) => !g.classList.contains('collapsed')); }
 function syncGrpToggle() { const o = anyOpen(); $('grpToggle').textContent = o ? L('전체 접기', 'Collapse all') : L('전체 펼치기', 'Expand all'); }
 $('grpToggle').addEventListener('click', () => { const shut = anyOpen(); for (const g of $('presetChips').querySelectorAll('.pgroup')) { const gi = +g.dataset.pg; g.classList.toggle('collapsed', shut); g.querySelector('.gname').setAttribute('aria-expanded', String(!shut)); if (shut) collapsedGroups.add(gi); else collapsedGroups.delete(gi); } syncGrpToggle(); }); // one button: every category shut, or every one open
-/* product search: by name in either language, the size names too; the matching chips stay, their groups open while searching */
+/* product search: by name in either language, the size names too, or a category's name for all of it; the matching chips stay, their groups open while searching */
 function presetSearch() {
   const q = $('presetQ').value.trim().toLowerCase().replace(/\s+/g, ''), norm = (t) => String(t || '').toLowerCase().replace(/\s+/g, '');
   let hits = 0;
   for (const g of $('presetChips').querySelectorAll('.pgroup')) {
-    let n = 0;
+    let n = 0; const gn = PRESET_GROUPS[+g.dataset.pg][0], inGroup = !!q && gn.some((t) => norm(t).includes(q)); // the category's own name: everything in it
     for (const b of g.querySelectorAll('.chips > .chip')) {
       const keys = b.dataset.family ? [FAMILIES[b.dataset.family].ko, FAMILIES[b.dataset.family].en, ...FAMILIES[b.dataset.family].sizes.flatMap(([k, ko, en]) => [ko, en, PRESETS[k].name, PRESETS[k].en])] : [PRESETS[b.dataset.preset].name, PRESETS[b.dataset.preset].en];
-      const ok = !q || keys.some((t) => norm(t).includes(q)); b.classList.toggle('nohit', !ok); if (ok) n++;
+      const ok = !q || inGroup || keys.some((t) => norm(t).includes(q)); b.classList.toggle('nohit', !ok); if (ok) n++;
     }
     g.classList.toggle('nohit', !!q && !n); if (q && n) g.classList.remove('collapsed'); else if (!q) g.classList.toggle('collapsed', collapsedGroups.has(+g.dataset.pg)); hits += n;
   }
