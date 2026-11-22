@@ -5180,7 +5180,7 @@ function cardHold(P) {
   }
   // 2. for a facing: the index finger's curl and the pinch. The card's back rests on whatever stands out most behind it (near the pinch on
   // the index finger), the thumb's tip lies on its face there, and nothing else of the hand comes through it
-  const fist = (W > H ? [[8, 6, 3], [6, 5, 2], [4, 3, 2]] : [[70, 95, 55], [75, 98, 58], [78, 100, 60]]).map((a) => a.map(deg)); // held on its side: the other fingers open straight behind it; upright: a loose fist below
+  const fist = [[70, 95, 55], [75, 98, 58], [78, 100, 60]].map((a) => a.map(deg)); // the other fingers in a loose fist below, the card upright or on its side alike
   const fit = (wy, curls) => {
     const { nf, Xc, Yc } = wy, cx = (p) => Xc.dot(p), cy = (p) => Yc.dot(p);
     let top = null;
