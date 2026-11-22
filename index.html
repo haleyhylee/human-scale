@@ -98,13 +98,14 @@ button { cursor: pointer; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .unit-acts { margin-top: 8px; }
 .tipdock { position: absolute; left: 0; right: 0; bottom: 64px; display: flex; justify-content: center; padding-inline: max(16px, env(safe-area-inset-left, 0px)); pointer-events: none; z-index: 2; } /* the tip sits just above the bottom bar */
-.surfrow { margin-top: 8px; grid-template-columns: 64px minmax(0, 1fr) 76px; }
+.surfrow { margin-top: 8px; grid-template-columns: 76px minmax(0, 1fr) 76px; }
+.surfrow label { white-space: normal; line-height: 1.25; overflow-wrap: anywhere; } /* a long name wraps onto two lines instead of running under the slider */
 .lrow .big { margin-left: auto; white-space: nowrap; display: inline-flex; align-items: baseline; }
 .lrow input.bignum[type="number"] { width: 3.4em; height: auto; font: inherit; color: inherit; text-align: right; background: transparent; border: 0; border-bottom: 1px dashed var(--ink-2); border-radius: 0; padding: 0 1px; -moz-appearance: textfield; } .bignum::-webkit-inner-spin-button, .bignum::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; } .lrow input.bignum:focus { outline: none; border-bottom: 1px solid var(--accent, #e0561c); }
 .surfrow input[type=number] { box-sizing: border-box; width: 100%; }
 .det summary { cursor: pointer; list-style: revert; }
 .det .dimrows { margin-top: 4px; gap: 0; }
-.det .dimrow { grid-template-columns: minmax(0, 1fr) 76px; row-gap: 9px; padding: 14px 0 15px; border-top: 1px solid var(--line); }
+.det .dimrow { grid-template-columns: minmax(0, 1fr) 76px; row-gap: 7px; padding: 8px 0; border-top: 0; } /* the parts of one product: no lines between them */
 .det .dimrow:first-child { border-top: 0; padding-top: 6px; }
 .det summary .reset { margin-left: auto; }
 .det .dimrow label { grid-column: 1 / -1; font-size: 12px; color: var(--ink-2); line-height: 1.3; }
@@ -132,18 +133,21 @@ button { cursor: pointer; }
 .lv.bad { color: var(--bad); background: var(--bad-bg); }
 .lv.info { color: var(--ink-2); background: var(--bg); }
 .tipbtn { position: relative; }
+.verdict .tipbtn { flex: 0 0 auto; }
 .tipbtn[data-new]::after { content: ""; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); } /* a tip waiting while they are hidden */
 .lv.ico { display: inline-flex; align-items: center; justify-content: center; padding: 3px 5px; vertical-align: -3px; }
 .lv.ico svg { width: 14px; height: 14px; display: block; }
 .hud { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding-block: 18px 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: linear-gradient(to top, color-mix(in srgb, var(--viewport) 94%, transparent) 55%, transparent); }
-.verdict { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 150px; }
+.verdict { display: flex; align-items: center; gap: 8px; min-width: min(100%, 240px); flex: 1 1 240px; }
 .verdict .txt { font-size: 13px; line-height: 1.35; min-width: 0; }
-.hud-acts { display: flex; gap: 6px; align-items: center; margin-left: auto; max-width: 100%; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.hud-acts { display: flex; gap: 6px; align-items: center; margin-left: auto; max-width: 100%; min-width: 0; flex: 0 1 auto; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .hud-acts::-webkit-scrollbar { display: none; }
+.btn.ico { width: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; position: relative; }
+.btn.ico svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 .hud-acts > .btn { flex: 0 0 auto; }
 .hud-acts.more { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); } /* more buttons off to the right: scroll */
-.vtxt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.verdict .scalebar { margin-left: auto; flex: 0 0 auto; }
+.vtxt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.vtxt .scalebar { margin: 2px 0 0; align-self: flex-start; }
 .scalebar { display: inline-flex; align-items: center; gap: 6px; font: 500 11px var(--font-mono); color: var(--ink-2); margin-right: 4px; }
 .scalebar i { display: block; height: 6px; border: 1.5px solid var(--ink); border-top: 0; }
 .btn { height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); font-size: 13px; font-weight: 600; white-space: nowrap; }
@@ -169,8 +173,19 @@ button { cursor: pointer; }
 }
 .ph { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; }
 .brand { display: flex; flex-direction: column; gap: 3px; }
-.wm { font-family: var(--font-display); font-stretch: 72%; font-weight: 800; font-size: 21px; letter-spacing: 0.05em; line-height: 1; }
-.wm i { display: inline-block; width: 7px; height: 7px; background: var(--accent); margin: 0 6px 3px; vertical-align: middle; }
+.psearch { display: flex; gap: 6px; margin: 2px 0 10px; }
+.psearch input { flex: 1 1 auto; min-width: 0; height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); font: inherit; font-size: 13px; color: var(--ink); }
+.psearch .btn { width: 38px; height: 34px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+.psearch svg { width: 18px; height: 18px; }
+.pgroup.nohit { display: none; }
+.presets .chip.nohit { display: none; }
+.brandrow { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex: 1 1 100%; }
+.credit { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; font-size: 12px; color: var(--ink-2); text-decoration: none; line-height: 1.2; }
+.credit .who { display: inline-flex; align-items: center; gap: 4px; color: var(--ink); font-weight: 600; }
+.credit svg { width: 15px; height: 15px; color: #111; }
+.credit:hover .who { text-decoration: underline; }
+.wm { font-family: var(--font-display); font-stretch: 72%; font-weight: 800; font-size: 26px; letter-spacing: 0.05em; line-height: 1; }
+.wm i { display: inline-block; width: 8px; height: 8px; background: var(--accent); margin: 0 6px 3px; vertical-align: middle; }
 .sub { font-size: 12px; color: var(--ink-2); }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--raise); }
 .seg button { height: 32px; padding: 0 12px; border: 0; background: none; font-size: 13px; font-weight: 500; color: var(--ink-2); }
@@ -184,7 +199,7 @@ button { cursor: pointer; }
 .seg.full { display: flex; }
 .seg.full button { flex: 1 1 0; padding: 0 4px; }
 #shapeSeg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-#placeSeg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); } /* the places in two rows */
+#placeSeg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); } /* the places in a 3-wide table */
 #placeSeg button { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 34px; }
 #placeSeg button[hidden] { display: none; }
 #ceilStd { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 8px; } /* the ceiling heights in one table, like the places */
@@ -248,6 +263,13 @@ input:disabled { opacity: 0.55; }
 .prow .pm { height: 32px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); font-size: 12px; color: var(--ink-2); }
 .prow .pm[aria-pressed="true"] { background: var(--ink-2); color: var(--panel); border-color: var(--ink-2); }
 .ai-row input { flex: 1 1 auto; }
+.explist { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 4px; font-size: 12px; color: var(--ink-2); line-height: 1.4; }
+.explist li { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 8px; }
+.explist b { font-weight: 600; color: var(--ink); }
+.csum { border: 1px solid var(--line); border-radius: 6px; background: var(--raise); padding: 10px 12px; margin-bottom: 10px; display: grid; gap: 5px; font-size: 13px; }
+.csum .row { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 8px; }
+.csum .row b { font-weight: 500; color: var(--ink-2); }
+.csum .all { display: flex; gap: 8px; align-items: flex-start; padding-top: 7px; margin-top: 3px; border-top: 1px solid var(--line); line-height: 1.4; }
 .checklist { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); }
 .checklist li { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); align-items: start; }
 .checklist li:last-child { border-bottom: 0; }
@@ -259,13 +281,15 @@ input:disabled { opacity: 0.55; }
 .vi .f2 { fill: var(--accent); stroke: none; opacity: 0.5; }
 .vi .f3 { fill: var(--accent); stroke: none; opacity: 0.3; }
 .vbtn[aria-pressed="true"] .vi .f, .vbtn[aria-pressed="true"] .vi .f2, .vbtn[aria-pressed="true"] .vi .f3 { fill: currentColor; }
-@media (max-width: 900px) { .vbtn .vl, .lens .ll { display: none; } .vbtn { padding: 0 8px; } .lens .dial { border-left: 0; } } /* narrow: the icons alone, the names on hover and to screen readers */
+@media (max-width: 900px) { .vbtn[data-side]::after { content: attr(data-side); font: 700 9px var(--font-mono); margin-left: 1px; align-self: flex-end; } .vbtn .vl, .lens .ll { display: none; } .vbtn { padding: 0 8px; } .lens .dial { border-left: 0; } } /* narrow: the icons alone, the names on hover and to screen readers */
 .vsep { flex: 0 0 1px; align-self: stretch; background: var(--line); margin: 6px 2px; }
 .lens { flex: 0 0 auto; display: inline-flex; align-items: center; height: 32px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); overflow: hidden; }
 .lens > span { font-size: 12px; color: var(--ink-2); padding: 0 8px 0 10px; white-space: nowrap; }
 .lens .dial { height: 100%; display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; border: 0; border-left: 1px solid var(--line); background: none; font: 600 13px var(--font-mono); color: var(--ink); cursor: ew-resize; touch-action: none; user-select: none; }
 .lens .dial b { min-width: 22px; text-align: center; font-weight: 600; }
-.lens .dial .dz { color: var(--ink-2); font-size: 14px; }
+.lens .dial .dz { color: var(--ink-2); font-size: 14px; padding: 6px 4px; cursor: pointer; }
+.lens .dial b { cursor: pointer; }
+#btnMeasure[aria-pressed="true"] { background: var(--raise); color: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); } /* measuring: an orange outline, not a black fill */
 .lens .dial.turning { background: var(--ink); color: var(--panel); }
 .lens .dial.turning .dz { color: var(--panel); }
 .lens button:disabled { opacity: 0.4; cursor: default; }
@@ -338,7 +362,7 @@ input:disabled { opacity: 0.55; }
         <button type="button" class="chip vbtn" data-view="side" aria-pressed="false" title="측면" data-en-title="Side" aria-label="측면" data-en-aria="Side"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M16 8l4-4v12l-4 4z"/><path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/></svg><span class="vl" data-en="Side">측면</span></button>
         <button type="button" class="chip vbtn" data-view="top" aria-pressed="false" title="평면" data-en-title="Top" aria-label="평면" data-en-aria="Top"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M4 8l4-4h12l-4 4z"/><path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/></svg><span class="vl" data-en="Top">평면</span></button>
         <span class="vsep" aria-hidden="true"></span>
-        <div class="lens" id="lensSeg"><span class="ll" data-en="Lens">렌즈</span><button type="button" id="lensDial" class="dial" aria-label="렌즈 초점거리 (좌우로 드래그·휠)" data-en-aria="Lens focal length (drag sideways or scroll)" title="좌우로 드래그하거나 휠로 돌려요 · 누르면 다음" data-en-title="Drag sideways or scroll to turn · click for the next"><span class="dz" aria-hidden="true">‹</span><b id="lensVal">35</b><span class="dz" aria-hidden="true">›</span></button></div>
+        <div class="lens" id="lensSeg"><span class="ll" data-en="Lens">렌즈</span><button type="button" id="lensDial" class="dial" aria-label="렌즈 초점거리 (좌우로 드래그·휠)" data-en-aria="Lens focal length (drag sideways or scroll)" title="좌우로 드래그하거나 휠로 돌려요 · ‹ › 한 칸씩 · 숫자를 누르면 기본값" data-en-title="Drag sideways or scroll to turn · ‹ › one step · tap the number for the default"><span class="dz" aria-hidden="true">‹</span><b id="lensVal">35</b><span class="dz" aria-hidden="true">›</span></button></div>
       </div>
       <div class="rcol">
         <span class="one"><button type="button" class="chip onebtn" id="btn11" aria-pressed="false" title="실제 크기로 보기 (화면 1:1) · 길게 누르면 다시 보정" data-en-title="Real size on screen (1:1) · press and hold to calibrate again">1:1 Size</button></span>
@@ -360,7 +384,7 @@ input:disabled { opacity: 0.55; }
       <button type="button" class="btn" id="btnSnap" aria-label="이미지로 저장" title="이미지로 저장 (PNG)" data-en-aria="Save as image" data-en-title="Save as image (PNG)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></button>
       <button type="button" class="btn" id="zoomIn" aria-label="확대" title="확대" data-en-aria="Zoom in" data-en-title="Zoom in">+</button>
       <button type="button" class="btn" id="zoomOut" aria-label="축소" title="축소" data-en-aria="Zoom out" data-en-title="Zoom out">−</button>
-      <button type="button" class="btn txt" id="viewReset" aria-label="기본 시점으로" title="기본 시점으로 (더블클릭)" data-en-aria="Reset view" data-en-title="Reset view (double-click)" data-en="Reset">기본</button>
+      <button type="button" class="btn" id="viewReset" aria-label="기본 시점으로" title="기본 시점으로 (더블클릭)" data-en-aria="Reset view" data-en-title="Reset view (double-click)"><svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 3.5v4.2h4.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <div class="tipdock" id="tipdock">
       <div class="toast" id="toast" role="status" hidden>
@@ -375,14 +399,13 @@ input:disabled { opacity: 0.55; }
       </div>
     </div>
     <div class="hud">
-      <div class="verdict"><span class="lv info" id="pill">준비</span><span class="vtxt"><span class="txt" id="hudText">3D 뷰를 불러오는 중이에요.</span><span class="vhint" id="vhint" hidden></span></span><span class="scalebar" id="scalebar" hidden><i id="scalebarI"></i><span id="scalebarT"></span></span></div>
+      <div class="verdict"><button type="button" class="btn tipbtn ico" id="btnTip" aria-pressed="true"></button><span class="lv info" id="pill">준비</span><span class="vtxt"><span class="txt" id="hudText">3D 뷰를 불러오는 중이에요.</span><span class="vhint" id="vhint" hidden></span><span class="scalebar" id="scalebar" hidden><i id="scalebarI"></i><span id="scalebarT"></span></span></span></div>
       <div class="hud-acts">
-        <button type="button" class="btn tipbtn" id="btnTip" aria-pressed="true" data-en="Tips">팁</button>
-        <button type="button" class="btn" id="btnGhost" aria-pressed="false" data-en="See-through">사람 반투명</button>
-        <button type="button" class="btn" id="btnSupport" aria-pressed="false" data-en="Support" hidden>보조 O</button>
-        <button type="button" class="btn" id="btnPen" aria-pressed="false" title="하얀 면에 검은 선으로 (제품 시트처럼)" data-en-title="White with black outlines, like a product sheet" data-en="Line drawing">선화</button>
-        <button type="button" class="btn" id="btnGuides" aria-pressed="true" data-en="Dimensions">치수 표시</button>
-        <button type="button" class="btn" id="btnPlay" data-en="Play">동작 보기</button>
+        <button type="button" class="btn ico" id="btnGhost" aria-pressed="false"></button>
+        <button type="button" class="btn ico" id="btnSupport" aria-pressed="false" hidden></button>
+        <button type="button" class="btn ico" id="btnPen" aria-pressed="false"></button>
+        <button type="button" class="btn ico" id="btnGuides" aria-pressed="true"></button>
+        <button type="button" class="btn ico" id="btnPlay"></button>
         <button type="button" class="btn accent" id="btnAI" hidden>AI 제안</button>
       </div>
     </div>
@@ -390,9 +413,12 @@ input:disabled { opacity: 0.55; }
 
   <aside class="panel" aria-label="설정" data-en-aria="Settings">
     <header class="ph">
-      <div class="brand">
-        <span class="wm">HUMAN<i aria-hidden="true"></i>SCALE</span>
-        <span class="sub" data-en="Check product size against people">사람 기준으로 제품 크기 확인하기</span>
+      <div class="brandrow">
+        <div class="brand">
+          <span class="wm">HUMAN<i aria-hidden="true"></i>SCALE</span>
+          <span class="sub" data-en="Check product size against people">사람 기준으로 제품 크기 확인하기</span>
+        </div>
+        <a class="credit" href="https://instagram.com/hyeym" target="_blank" rel="noopener" aria-label="made by hyeym · Instagram"><span>made by</span><span class="who">hyeym<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.3" cy="6.7" r="1.2" fill="currentColor"/></svg></span></a>
       </div>
       <div class="ph-r">
         <div class="seg lang" id="langSeg" role="group" aria-label="언어 · Language"><button type="button" data-lang="ko" lang="ko">한국어</button><button type="button" data-lang="en" lang="en">EN</button></div>
@@ -402,7 +428,7 @@ input:disabled { opacity: 0.55; }
         </div>
         <div class="seg" id="modeSeg" aria-label="배치" data-en-aria="Layout">
           <button type="button" data-mode="use" aria-pressed="true" data-en="In use">사용하기</button>
-          <button type="button" data-mode="compare" aria-pressed="false" data-en="Side by side">나란히</button>
+          <button type="button" data-mode="compare" aria-pressed="false" data-en="Compare">나란히</button>
         </div>
       </div>
     </header>
@@ -454,7 +480,9 @@ input:disabled { opacity: 0.55; }
 
     <section class="tabpanel" id="tab-product" role="tabpanel" aria-labelledby="tb-product" hidden>
       <div class="field">
-        <div class="label"><span data-en="Examples">예시 제품</span> <span class="muted" data-en="pick one, then fine-tune it in Settings">고른 뒤 설정 탭에서 다듬어요</span><span class="gall"><button type="button" class="reset" id="grpClose" data-en="Collapse all">전체 접기</button><button type="button" class="reset" id="grpOpen" data-en="Expand all">전체 펼치기</button></span></div>
+        <div class="label"><span data-en="Examples">예시 제품</span> <span class="muted"><span id="presetCount"></span> · <span data-en="pick one, then fine-tune it in Settings">고른 뒤 설정 탭에서 다듬어요</span></span><span class="gall"><button type="button" class="reset" id="grpToggle">전체 접기</button></span></div>
+        <div class="psearch"><input type="search" id="presetQ" placeholder="제품 검색" data-en-ph="Search products" aria-label="제품 검색" data-en-aria="Search products" autocomplete="off"><button type="button" class="btn" id="presetQBtn" aria-label="검색" data-en-aria="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 15l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
+        <p class="hint" id="presetNone" hidden data-en="Nothing matches. Try another word.">맞는 제품이 없어요. 다른 단어로 찾아보세요.</p>
         <div class="presets" id="presetChips"></div>
         <div class="field-sub" id="variantField" hidden><div class="label" data-en="Size">크기</div><div class="seg full" id="variantSeg"></div></div>
       </div>
@@ -513,6 +541,7 @@ input:disabled { opacity: 0.55; }
           <button type="button" data-shape="plate" aria-pressed="false" data-en="Plate">판</button>
         </div>
       </div>
+      <div class="field det" id="formField" hidden><div class="dimrows" id="formRows"></div></div>
       <div class="field" id="sizeField">
         <div class="label"><span data-en="Size">크기</span> <span class="muted" data-en="mm, at 100% scale">mm, 배율 100% 기준</span><button type="button" class="reset" id="dimReset" data-en="Reset size">기본 크기</button></div>
         <div class="dimrows">
@@ -533,7 +562,8 @@ input:disabled { opacity: 0.55; }
           <label class="file"><input type="file" id="imgIn" accept="image/*"><span data-en="Choose image">이미지 선택</span></label>
           <button type="button" class="btn" id="imgDel" hidden data-en="Remove">빼기</button>
         </div>
-        <p class="hint" id="imgHint" data-en="It fills the face edge to edge, cropped to fit. Kept until you close the page.">면을 꽉 채우게 맞추고 넘치는 부분은 잘라요. 페이지를 닫기 전까지 유지돼요.</p>
+        <div class="seg full" id="imgFitSeg"><button type="button" data-v="fill" data-en="Fill">채우기</button><button type="button" data-v="fit" data-en="Fit whole image">이미지 전체 맞춤</button></div>
+        <p class="hint" id="imgHint" data-en="Fill: edge to edge, the overflow cropped. Fit: the whole image, the rest left white. Kept until you close the page.">채우기: 면을 꽉 채우고 넘치는 부분은 잘라요. 맞춤: 이미지 전체가 보이고 남는 곳은 흰색이에요. 페이지를 닫기 전까지 유지돼요.</p>
       </div>
       <div class="field" id="partsField" hidden>
         <div class="label"><span data-en="Parts">부품별 치수</span> <span class="muted" data-en="mm · W D H">mm · 폭 깊이 높이</span></div>
@@ -578,15 +608,15 @@ input:disabled { opacity: 0.55; }
       <div class="field" id="placeField">
         <div class="label"><span data-en="Placed on">놓는 곳</span><button type="button" class="reset" id="surfReset" hidden data-en="Default">기본값</button></div>
         <div class="seg full" id="placeSeg">
-          <button type="button" data-place="plinth" data-en="Plinth 90">단상 90</button>
+          <button type="button" data-place="hand" data-en="In hand">손에 들기</button>
           <button type="button" data-place="table" data-en="Table 72">테이블 72</button>
           <button type="button" data-place="desk" data-en="Desk 74">책상 74</button>
           <button type="button" data-place="counter" data-en="Counter 85">조리대 85</button>
-          <button type="button" data-place="hand" data-en="In hand">손에 들기</button>
-          <button type="button" data-place="back" data-en="On the back" hidden>등에 메기</button>
-          <button type="button" data-place="wall" data-en="Wall">벽</button>
+          <button type="button" data-place="plinth" data-en="Plinth 90">단상 90</button>
           <button type="button" data-place="air" data-en="Midair 100">공중 100</button>
+          <button type="button" data-place="wall" data-en="Wall">벽</button>
           <button type="button" data-place="floor" data-en="Floor">바닥</button>
+          <button type="button" data-place="back" data-en="On the back" hidden>등에 메기</button>
         </div>
         <div class="dimrow surfrow" id="surfRow" hidden><label for="surfIn" id="surfLab">높이</label><input type="range" id="surfIn" min="400" max="1200" step="5" aria-label="놓는 곳 높이" data-en-aria="Surface height"><input type="number" id="surfNum" inputmode="decimal" min="400" max="1200" step="1"></div>
         <div class="dimrow surfrow" id="wallRow" hidden><label for="wallD" data-en="From wall">벽과 거리</label><input type="range" id="wallD" min="200" max="3000" step="10"><input type="number" id="wallDn" inputmode="decimal" min="200" max="3000" step="1"></div>
@@ -612,13 +642,20 @@ input:disabled { opacity: 0.55; }
         <div class="label"><span data-en="Model files">모델 파일 내보내기</span> <span class="muted" data-en="as drawn, at this size, mm">지금 크기 그대로 · mm</span></div>
         <label class="check"><input type="checkbox" id="expPerson"> <span data-en="With the person">사람도 함께</span></label>
         <label class="check" id="expSurfRow"><input type="checkbox" id="expSurf"> <span id="expSurfT">단상도 함께</span></label>
-        <button type="button" class="btn wide" id="btnExport" data-en="Download 3DM (Rhino 7+) · OBJ · STL (zip)">3DM 라이노(7 이상) · OBJ · STL 받기 (zip)</button>
+        <button type="button" class="btn wide" id="btnExport" data-en="Download 3DM · OBJ · STL (zip)">3DM · OBJ · STL 받기 (zip)</button>
         <p class="hint" id="expMsg" aria-live="polite" hidden></p>
-        <p class="hint" data-en="The product alone, unless you tick the person or the plinth: then the scene as drawn (floor at 0). Rhino 7 or later: open the .3dm; layers Product (its parts under it) / Person / Scene. OBJ and STL are Z up like Rhino, the floor at 0. SOLIDWORKS can't be written directly: open the .stl or .obj there and pick 'Solid Body' in Options. They are meshes: in Rhino, MeshToNURB or QuadRemesh turns them into surfaces.">기본은 제품만 담겨요. 사람·단상을 체크하면 화면 그대로의 장면(바닥이 0)으로 담겨요. 라이노 7 이상에서 .3dm을 열면 레이어가 Product(그 아래 부품별) / Person / Scene으로 나뉘어 있어요. OBJ·STL도 라이노처럼 위쪽이 Z, 바닥이 0이에요. SOLIDWORKS 전용 파일은 만들 수 없어서, .stl이나 .obj를 열고 옵션에서 ‘솔리드 바디’로 가져와요. 모두 메시라서 라이노에선 MeshToNURB나 QuadRemesh로 면을 만들 수 있어요.</p>
+        <ul class="explist">
+          <li><b data-en="Contents">담기는 것</b><span data-en="The product alone. Tick the person or the plinth for the whole scene (floor at 0).">제품만. 사람·단상을 체크하면 화면 그대로의 장면 (바닥 0)</span></li>
+          <li><b>3DM</b><span data-en="Rhino 7 or later. Layers: Product (parts under it) / Person / Scene">라이노 7 이상. 레이어: Product(부품별) / Person / Scene</span></li>
+          <li><b>OBJ · STL</b><span data-en="Z up, floor at 0, like Rhino">라이노처럼 위가 Z, 바닥이 0</span></li>
+          <li><b>SOLIDWORKS</b><span data-en="Open the .stl or .obj, Options → Solid Body">.stl·.obj 열기 → 옵션에서 '솔리드 바디'</span></li>
+          <li><b data-en="Surfaces">면으로</b><span data-en="All meshes: MeshToNURB or QuadRemesh in Rhino">모두 메시예요. 라이노에서 MeshToNURB·QuadRemesh</span></li>
+        </ul>
       </div>
     </section>
 
     <section class="tabpanel" id="tab-check" role="tabpanel" aria-labelledby="tb-check" hidden>
+      <div class="csum" id="checkSum"></div>
       <ul class="checklist" id="checks"></ul>
       <p class="foot" data-en="A comfortable control height is between elbow and shoulder. The lean angle is how far the body bends until the hand reaches. These are simple rules, so use them to set direction.">편한 조작 높이는 팔꿈치~어깨 사이로 봐요. 허리 숙임은 손이 닿을 때까지 몸을 굽힌 각도예요. 단순한 규칙이라 방향을 잡는 용도로 쓰세요.</p>
     </section>
@@ -652,7 +689,7 @@ const LENSES = [20, 35, 50, 85];
 const lensFov = (mm) => (2 * Math.atan(12 / mm) * 180) / Math.PI; // vertical angle of view, full-frame
 
 /* ---------- language: Korean or English, remembered per viewer ---------- */
-let LANG = (() => { try { const v = localStorage.getItem('hs-lang'); if (v === 'ko' || v === 'en') return v; } catch {} return /^ko/i.test(navigator.language || '') ? 'ko' : 'en'; })();
+let LANG = (() => { try { const v = localStorage.getItem('hs-lang'); if (v === 'ko' || v === 'en') return v; } catch {} let tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch {} return /^ko/i.test(navigator.language || '') || tz === 'Asia/Seoul' ? 'ko' : 'en'; })(); // Korean if the browser speaks it or the clock is on Korean time (a location guess without asking anyone's IP)
 const L = (ko, en) => (LANG === 'en' ? en : ko);
 
 /* ---------- people and products ---------- */
@@ -698,6 +735,7 @@ const PRESETS = {
   flip: { name: '플립폰', en: 'Flip phone', shape: 'box', w: 75, d: 14, h: 86, place: 'hand', face: 'front', ctrl: 40, action: 'press', screen: true, fold: 'flip' }, // folded size; open about 75 x 167 mm
   galaxy: { name: '대화면 스마트폰 6.9인치', en: 'Large smartphone 6.9"', shape: 'box', w: 78, d: 8, h: 163, place: 'hand', face: 'front', ctrl: 75, action: 'press', screen: true },
   ipadmini: { name: '태블릿 8.3인치', en: 'Tablet 8.3"', shape: 'box', w: 135, d: 6, h: 195, place: 'hand', face: 'front', ctrl: 100, action: 'press', screen: true },
+  ipad13: { name: '태블릿 13인치', en: 'Tablet 13"', shape: 'box', w: 215, d: 5, h: 282, place: 'hand', face: 'front', ctrl: 140, action: 'press', screen: true }, // a 13-inch pro tablet
   ipadair: { name: '태블릿 11인치', en: 'Tablet 11"', shape: 'box', w: 179, d: 6, h: 248, place: 'hand', face: 'front', ctrl: 120, action: 'press', screen: true },
   macbook: { name: '노트북 13인치', en: 'Laptop 13"', shape: 'laptop', w: 304, d: 215, h: 11, place: 'table', face: 'top', ctrl: 11, action: 'press', posture: 'sit', noHand: true }, // opens on the table
   macbook15: { name: '노트북 15인치', en: 'Laptop 15"', shape: 'laptop', w: 340, d: 237, h: 13, place: 'table', face: 'top', ctrl: 11, action: 'press', posture: 'sit', noHand: true }, // opens on the table
@@ -794,13 +832,13 @@ const PRESETS = {
   lightstick: { name: '응원봉', en: 'Light stick', shape: 'box', look: 'lightstick', w: 95, d: 95, h: 250, place: 'hand', face: 'front', ctrl: 120, action: 'press', noCtrl: true }, // a globe on a handle: lights up when used
   banner: { name: '배너', en: 'Banner stand', shape: 'box', look: 'banner', w: 600, d: 400, h: 1800, place: 'floor', face: 'front', ctrl: 900, action: 'press', noCtrl: true, noHand: true }, // your image on a tall stand
   aboard: { name: '입간판', en: 'A-board', shape: 'box', look: 'aboard', w: 600, d: 550, h: 1000, place: 'floor', face: 'front', ctrl: 500, action: 'press', noCtrl: true, noHand: true }, // an A-frame sign, your image on its face
-  bookShin: { name: '책 신국판', en: 'Book (152×225)', shape: 'box', look: 'book', w: 152, d: 22, h: 225, place: 'hand', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // the common Korean trade book; held up to read
-  book: { name: '책 국판 A5', en: 'Book A5', shape: 'box', look: 'book', w: 148, d: 22, h: 210, place: 'hand', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // stood up: cover, spine and the block of pages
-  bookA6: { name: '책 문고판 A6', en: 'Book A6 (pocket)', shape: 'box', look: 'book', w: 105, d: 16, h: 148, place: 'hand', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true },
-  bookB5: { name: '책 4×6배판 B5', en: 'Book B5', shape: 'box', look: 'book', w: 188, d: 18, h: 257, place: 'hand', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // workbooks, magazines, comics
-  bookA4: { name: '책 국배판 A4', en: 'Book A4', shape: 'box', look: 'book', w: 210, d: 16, h: 297, place: 'hand', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // textbooks, manuals, picture books
+  bookShin: { name: '책 신국판', en: 'Book 152×225', shape: 'box', look: 'book', w: 152, d: 22, h: 225, place: 'hand', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // the common Korean trade book; held up to read
+  book: { name: '책 A5', en: 'Book A5', shape: 'box', look: 'book', w: 148, d: 22, h: 210, place: 'hand', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // stood up: cover, spine and the block of pages
+  bookA6: { name: '책 A6', en: 'Book A6', shape: 'box', look: 'book', w: 105, d: 16, h: 148, place: 'hand', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true },
+  bookB5: { name: '책 B5', en: 'Book B5', shape: 'box', look: 'book', w: 188, d: 18, h: 257, place: 'hand', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // workbooks, magazines, comics
+  bookA4: { name: '책 A4', en: 'Book A4', shape: 'box', look: 'book', w: 210, d: 16, h: 297, place: 'hand', face: 'front', ctrl: 100, action: 'press', prop: true, noCtrl: true }, // textbooks, manuals, picture books
   sphere: { name: '구', en: 'Sphere', shape: 'sphere', w: 100, d: 100, h: 100, place: 'plinth', face: 'front', ctrl: 50, action: 'press', prop: true, noCtrl: true },
-  cone: { name: '원뿔', en: 'Cone', shape: 'cone', w: 100, d: 100, h: 150, place: 'plinth', face: 'front', ctrl: 75, action: 'press', prop: true, noCtrl: true },
+  cone: { name: '원뿔', en: 'Cone', shape: 'cone', w: 100, d: 100, h: 100, place: 'plinth', face: 'front', ctrl: 75, action: 'press', prop: true, noCtrl: true },
   ring: { name: '반지', en: 'Ring', shape: 'ring', w: 3, d: 1.6, h: 5.2, size: 11, place: 'hand', face: 'front', ctrl: 0, action: 'press' }, // band width, band thickness, stone (mm); worn on the ring finger
   desk: FURN({ name: '컴퓨터 책상', en: 'Computer desk', shape: 'desk', style: 'desk', w: 1200, d: 600, h: 740, posture: 'sit' }),
   standing: FURN({ name: '스탠딩 책상', en: 'Standing desk', shape: 'desk', style: 'standing', w: 1200, d: 700, h: 1000, posture: 'stand' }), // electric legs, 62–127 cm
@@ -830,21 +868,22 @@ const FAMILIES = {
   mouse: { ko: '마우스', en: 'Mouse', sizes: [['mouseG', '게이밍', 'Gaming'], ['mouseV', '버티컬', 'Vertical']] },
   monitor: { ko: '모니터', en: 'Monitor', last: 'mon27', sizes: [['mon24', '24인치', '24"'], ['mon27', '27인치', '27"'], ['mon32', '32인치', '32"'], ['mon27c', '커브드 27인치', 'Curved 27"'], ['mon32c', '커브드 32인치', 'Curved 32"']] },
   speaker: { ko: '블루투스 스피커', en: 'Bluetooth speaker', sizes: [['speaker', '원통', 'Round'], ['speakerbox', '큐브', 'Cube']] },
-  book: { ko: '책', en: 'Book', last: 'bookShin', sizes: [['bookA6', '문고판 A6', 'A6 pocket'], ['book', '국판 A5', 'A5'], ['bookShin', '신국판', '152×225'], ['bookB5', '4×6배판 B5', 'B5'], ['bookA4', '국배판 A4', 'A4']] },
+  book: { ko: '책', en: 'Book', last: 'bookShin', sizes: [['bookA6', 'A6', 'A6'], ['book', 'A5', 'A5'], ['bookShin', '신국판', '152×225'], ['bookB5', 'B5', 'B5'], ['bookA4', 'A4', 'A4']] },
   fold: { ko: '폴더블폰', en: 'Foldable phone', last: 'foldxl', sizes: [['foldxl', '와이드 7.6인치', 'Wide 7.6"'], ['fold', '8인치', '8"']] }, // the wide one first, and the default
   phone: { ko: '스마트폰', en: 'Smartphone', last: 'galaxy', sizes: [['phonemini', '5.4인치 미니', '5.4" mini'], ['phone', '6.3인치', '6.3"'], ['galaxy', '6.9인치', '6.9"']] },
-  tablet: { ko: '태블릿', en: 'Tablet', sizes: [['ipadmini', '8.3인치 미니', '8.3" mini'], ['ipadair', '11인치', '11"']] },
+  tablet: { ko: '태블릿', en: 'Tablet', sizes: [['ipadmini', '8.3인치 미니', '8.3" mini'], ['ipadair', '11인치', '11"'], ['ipad13', '13인치', '13"']] },
   sofa: { ko: '소파', en: 'Sofa', sizes: [['armchair', '1인', '1-seat'], ['sofa2', '2인', '2-seat'], ['sofa', '3인', '3-seat'], ['sofa4', '4인', '4-seat']] },
   paper: { ko: '종이', en: 'Paper', sizes: [['a4', 'A4', 'A4'], ['a3', 'A3 포스터', 'A3 poster'], ['a2', 'A2 포스터', 'A2 poster'], ['a1', 'A1 포스터', 'A1 poster']] },
   pouch: { ko: '노트북 파우치', en: 'Laptop sleeve', sizes: [['pouch13', '13인치', '13"'], ['pouch16', '16인치', '16"']] },
   luggage: { ko: '캐리어', en: 'Suitcase', sizes: [['lug20', '20인치', '20"'], ['lug24', '24인치', '24"'], ['lug26', '26인치', '26"'], ['lug28', '28인치', '28"'], ['lug30', '30인치', '30"']] },
 };
+const groupOf = (k) => { const f = Object.keys(FAMILIES).find((n) => FAMILIES[n].sizes.some((x) => x[0] === k)); return PRESET_GROUPS.findIndex(([, keys]) => keys.includes(k) || (f && keys.includes(`fam:${f}`))); }; // the category a product sits in
 const familyOf = (k) => Object.keys(FAMILIES).find((f) => FAMILIES[f].sizes.some((x) => x[0] === k)) || null;
 /* the plain object's forms, each with its own starting size (W, D, H mm) */
 const FORMS = { box: [80, 80, 80], frame: [200, 200, 200], cyl: [80, 80, 150], sphere: [100, 100, 100], cone: [100, 100, 150], plate: [100, 100, 5] };
 const roundSeat = () => S.source === 'box' && S.shape === 'chair' && (S.style === 'stool' || (S.style === 'pstool' && ['legs', 'cyl'].includes((S.det && S.det.form) || 'legs'))); // a round stool: its seat is W across, so D follows W
 const SURF_LIM = { air: [0, 2000], wall: [300, 2200], plinth: [50, 1500], table: [400, 1100], desk: [600, 1250], counter: [750, 1100] }; // how low and high a place's height goes (mm)
-const FURN_H = { desk: [600, 900], standing: [650, 1250], dining: [650, 800], bar: [850, 1150], coffee: [250, 550] }; // a desk or table's own height: sitting desks 600-900, standing ones up to 1250
+const FURN_H = { desk: [400, 2000], standing: [400, 2000], dining: [650, 800], bar: [850, 1150], coffee: [250, 550] }; // a desk or table's own height: sitting desks 600-900, standing ones up to 1250
 const roundBase = (sh = S.shape) => sh === 'cup' || sh === 'cone' || (sh === S.shape && (S.look === 'tumbler' || S.look === 'pot' || roundSeat())); // W = D (a cylinder can be deeper: its middle stretches)
 const PRESET_GROUPS = [
   [['오브젝트', 'Objects'], ['cube', 'cyl', 'sphere', 'snowman', 'cone', 'trap', 'plate', 'disc', 'plinthp']], // the plain forms
@@ -853,7 +892,7 @@ const PRESET_GROUPS = [
   [['생활 제품', 'Appliances'], ['air', 'humidifier', 'purifier', 'coffee', 'robot', 'washer', 'fridge', 'standac', 'wallac']],
   [['주방·식기', 'Kitchen & tableware'], ['tumbler', 'mug', 'glass', 'latte', 'dish', 'bowl', 'jar', 'pan', 'pot', 'kettle', 'microwave', 'ricecooker']],
   [['조명', 'Lighting'], ['floorlamp', 'armlamp', 'tablelamp', 'mushroom', 'pendant']],
-  [['가구', 'Furniture'], ['desk', 'standing', 'dining', 'living', 'bar', 'sink', 'drawer', 'wardrobe', 'shelf', 'door', 'window', 'trolley', 'chair', 'pstool', 'office', 'stool', 'fam:sofa', 'fam:pillow', 'beanbag']],
+  [['가구', 'Furniture'], ['desk', 'standing', 'dining', 'sink', 'living', 'bar', 'drawer', 'wardrobe', 'shelf', 'door', 'window', 'trolley', 'chair', 'pstool', 'office', 'stool', 'fam:sofa', 'fam:pillow', 'beanbag']],
   [['웨어러블', 'Wearables'], ['glasses', 'sunglasses', 'cap', 'helmet', 'airbuds', 'airmax', 'ring']], // worn on the body: eyewear, a cap, a helmet, earbuds, headphones, a ring
   [['가방·캐리어', 'Bags & luggage'], ['wallet', 'fam:pouch', 'pencase', 'ecobag', 'hobo', 'backpack', 'fam:luggage', 'fam:parcel']],
 ];
@@ -1270,6 +1309,7 @@ const controlsP = new OrbitControls(perspCam, canvas);
 controlsP.enableDamping = true; controlsP.dampingFactor = 0.08;
 controlsP.maxPolarAngle = deg(89); controlsP.minDistance = 0.2; controlsP.maxDistance = 20;
 const controlsO = new OrbitControls(orthoCam, canvas);
+controlsP.zoomToCursor = true; // the wheel or a pinch closes in on what is under it, not the middle between the person and the product
 controlsO.zoomToCursor = true; controlsO.enableRotate = false; controlsO.enableDamping = true; controlsO.screenSpacePanning = true; controlsO.enabled = false;
 controlsO.mouseButtons.LEFT = THREE.MOUSE.PAN; controlsO.touches.ONE = THREE.TOUCH.PAN;
 
@@ -1370,6 +1410,8 @@ matMesh.rotation.x = -Math.PI / 2;
 matMesh.position.set(0, 0, 0);
 matMesh.receiveShadow = true;
 scene.add(matMesh);
+const groundLine = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-30, 0.0005, 0), new THREE.Vector3(30, 0.0005, 0), new THREE.Vector3(0, 0.0005, -30), new THREE.Vector3(0, 0.0005, 30)]), new THREE.LineBasicMaterial({ color: 0x4a4c50 })); // the floor's line, seen edge-on in the front, back and side views
+groundLine.visible = false; scene.add(groundLine);
 const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xe4e4e0 })); // flat, unlit (the lights are above it); seen from below only: from above it is not drawn, so it never hides the scene
 ceiling.visible = false; ceiling.userData.ceiling = true; scene.add(ceiling);
 
@@ -1994,10 +2036,11 @@ function kind() {
 }
 const PLACE_OK = { bag: ['back', 'hand', 'floor', 'plinth', 'air'], luggage: ['floor', 'plinth', 'air'], pack: ['back', 'floor', 'plinth', 'air'], lamp: ['desk', 'table', 'counter', 'plinth', 'air'], worn: ['head'], flat: ['hand', 'desk', 'plinth', 'air'], laptop: ['table', 'desk', 'plinth', 'air'], small: ['hand', 'desk', 'table', 'counter', 'plinth', 'air'], dispenser: ['counter', 'table', 'desk', 'plinth', 'air'], floor: ['floor', 'plinth', 'air'], window: [], mouse: ['desk', 'table', 'plinth', 'air'], monitor: ['desk', 'table', 'plinth', 'air'] }; // plinth: a plain cube to stand it on; air: floating at a set height
 const plateUp = () => S.source === 'box' && S.shape === 'plate' && S.place === 'wall'; // a plate hangs flat on the wall, its thickness out from it
-const wallOk = () => S.source === 'box' && (S.look === 'paper' || S.look === 'window' || S.shape === 'plate' || !!S.screen); // a sheet, a plate or a screen can hang on a wall
-const placeOk = (p) => (p === 'air' && S.supOff) || (p === 'wall' ? wallOk() : (kind() === 'free' ? !(p === 'hand' && S.noHand) && p !== 'back' : PLACE_OK[kind()].includes(p))); // with its support hidden, anything floats where it stood
+const NO_AIR = ['fridge', 'standac', 'wallac']; // big appliances never float
+const wallOk = () => S.source === 'box' && (S.look === 'paper' || S.look === 'window' || S.look === 'frame' || S.look === 'wallac' || (PRESETS[S.pkey] && PRESETS[S.pkey].place === 'wall') || S.shape === 'plate' || !!S.screen); // a sheet, a plate or a screen can hang on a wall
+const placeOk = (p) => (p === 'air' && S.source === 'box' && NO_AIR.includes(S.look) ? false : null) ?? ((p === 'air' && S.supOff) || (p === 'wall' ? wallOk() : (kind() === 'free' ? !(p === 'hand' && S.noHand) && p !== 'back' : PLACE_OK[kind()].includes(p)))); // with its support hidden, anything floats where it stood
 const PL = () => (S.supOff && S.supPrev) || S.place; // where it stands for the person's sake: under a hidden support, where it stood
-const supportable = () => ['table', 'desk', 'counter', 'plinth', 'wall'].includes(S.place) && !atDesk() && !isFurniture(); // stood on (or hung on) something that can be hidden
+const supportable = () => ['table', 'desk', 'counter', 'plinth', 'wall'].includes(S.place) && !atDesk() && !isFurniture() && !(S.source === 'box' && NO_AIR.includes(S.look)); // stood on (or hung on) something that can be hidden
 const isProp = () => S.source === 'box' && !!(PRESETS[S.pkey] && PRESETS[S.pkey].prop); // a plain mockup solid: cube, cylinder, sphere, cone, plate
 const SPHERE_CUT_DEF = () => Math.round(0.067 * Math.min(S.w, S.h)); // by default a ball is cut flat underneath to about half its width across, so it stands
 const sphereCut = () => (S.source === 'box' && S.shape === 'sphere' && S.pkey === 'sphere' ? clamp(S.det && S.det.cut != null ? +S.det.cut : SPHERE_CUT_DEF(), 0, 0.45 * S.h) : 0); // mm cut off the bottom of the sphere (its H stays the ball's own height)
@@ -2892,10 +2935,18 @@ const paperSlot = () => (S.pkey === 'card' ? 'card' : S.pkey === 'brochure' ? 'b
 const imgSlot = () => (S.source !== 'box' ? null : S.shape === 'cap' ? 'cap' : S.shape === 'cup' && S.style === 'mug' ? 'mug' : S.look === 'paper' ? paperSlot() : S.look === 'banner' || S.look === 'aboard' ? S.look : S.look === 'book' ? 'book' : S.look === 'frame' ? 'frame' : S.look === 'tote' ? 'bag' : S.look === 'pillow' ? 'pillow' : S.screen || S.shape === 'laptop' || S.look === 'monitor' ? 'screen' : null);
 function userImgMat(slot, fw, fh) {
   const u = USER_IMG[slot]; if (!u) return null;
-  const fa = fw / fh, key = `${slot}|${fa.toFixed(3)}`;
+  const fa = fw / fh, fit = S.imgFit === 'fit', key = `${slot}|${fa.toFixed(3)}|${fit ? 'fit' : 'fill'}`;
   if (IMG_MATS.has(key)) return IMG_MATS.get(key);
-  const tex = u.tex.clone(), ia = u.w / u.h; tex.needsUpdate = true;
-  if (ia > fa) { tex.repeat.set(fa / ia, 1); tex.offset.set((1 - fa / ia) / 2, 0); } else { tex.repeat.set(1, ia / fa); tex.offset.set(0, (1 - ia / fa) / 2); }
+  let tex, ia = u.w / u.h;
+  if (fit) { // the whole image inside the face, centred, the rest white
+    const c = document.createElement('canvas'), W = fa >= 1 ? 1024 : Math.round(1024 * fa), H = fa >= 1 ? Math.round(1024 / fa) : 1024; c.width = Math.max(2, W); c.height = Math.max(2, H);
+    const g = c.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+    const k = Math.min(c.width / u.w, c.height / u.h), dw = u.w * k, dh = u.h * k; g.drawImage(u.tex.image, (c.width - dw) / 2, (c.height - dh) / 2, dw, dh);
+    tex = new THREE.CanvasTexture(c); tex.colorSpace = u.tex.colorSpace; tex.anisotropy = u.tex.anisotropy;
+  } else {
+    tex = u.tex.clone(); tex.needsUpdate = true;
+    if (ia > fa) { tex.repeat.set(fa / ia, 1); tex.offset.set((1 - fa / ia) / 2, 0); } else { tex.repeat.set(1, ia / fa); tex.offset.set(0, (1 - ia / fa) / 2); }
+  }
   const m = slot === 'mug' ? new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.32, clearcoat: 0.8, clearcoatRoughness: 0.12 }) : ['paper', 'bag', 'book', 'frame', 'card', 'brochure', 'banner', 'aboard', 'pillow'].includes(slot) ? new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9 }) : new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }); // paper takes the light, a screen gives its own
   IMG_MATS.set(key, m); return m;
 }
@@ -6241,6 +6292,13 @@ function renderChecks() {
   }));
   for (const el of [$('pill'), $('tabPill')]) setLv(el, E.verdict);
   $('hudText').textContent = E.summary;
+  { // what is being checked, at a glance, then the overall result
+    const p = PERSONAS[S.persona], P = dims(), pl = S.supOff ? S.supPrev : S.place, on = pl && SURF[pl] != null && !['hand', 'head', 'back', 'floor'].includes(pl) ? ` ${Math.round((pl === 'wall' ? (winLook() ? winSill() : wallMid()) : SURF[pl] * 1000) / 10)}cm` : '';
+    const rows = [[L('제품', 'Product'), `${prodName()} · ${mmi(P.W)}×${mmi(P.D)}×${mmi(P.H)}mm`], [L('사람', 'Person'), `${pLabel(p)} · ${L('키', 'height')} ${S.height}cm · ${S.A.seated ? L('앉음', 'seated') : L('서 있음', 'standing')}`],
+      [L('놓는 곳', 'Placed'), isFurniture() ? L('바닥 (가구)', 'floor (furniture)') : `${placeLabel(pl) || '-'}${on}${S.supOff ? L(' · 보조 숨김', ' · support hidden') : ''}`], [L('보기', 'Mode'), `${S.mode === 'use' ? L('사용하기', 'In use') : L('나란히', 'Compare')} · ${L({ ko: '한국', intl: '국제', us: '미국', eu: '유럽' }[STD] + ' 신체 기준', { ko: 'Korean', intl: 'International', us: 'US', eu: 'European' }[STD] + ' body data')}${S.ceil.on ? L(` · 천장 ${S.ceil.h / 10}cm`, ` · ceiling ${S.ceil.h / 10} cm`) : ''}`]];
+    const box = $('checkSum'); box.replaceChildren(...rows.map(([k, v]) => { const r = document.createElement('div'); r.className = 'row'; const a = document.createElement('b'); a.textContent = k; const b = document.createElement('span'); b.textContent = v; r.append(a, b); return r; }));
+    const all = document.createElement('div'); all.className = 'all'; const pill = document.createElement('span'); setLv(pill, E.verdict); const t = document.createElement('span'); t.textContent = E.summary; all.append(pill, t); box.append(all);
+  }
 }
 
 function renderDims() {
@@ -6294,12 +6352,14 @@ const furnHintText = () => ({
   beanbag: L('H는 앉아서 꺼졌을 때의 좌면 높이예요. 빈백 전체는 이보다 높아요.', 'H is the seat once it gives way under you. The bag itself is taller.'),
 })[furn()] || (S.shape === 'chair' ? L('H는 좌면 높이예요. 사용하기에서는 사람이 직접 앉아요.', 'H is the seat height. In use, the person sits on it.') : L('H는 상판 높이예요. 사람 탭에서 서기·앉기를 바꿀 수 있어요.', 'H is the top height. Switch standing and sitting on the Person tab.'));
 function syncUI() {
+  syncPenBtn(); syncGuidesBtn();
   const p = PERSONAS[S.persona], A = S.A, ring = S.shape === 'ring' && S.source === 'box';
   for (const b of $('personaChips').children) b.setAttribute('aria-pressed', String(b.dataset.persona === S.persona));
   { const c = S.ceil; for (const b of $('ceilOn').children) b.setAttribute('aria-pressed', String((b.dataset.v === 'on') === !!c.on)); $('ceilRows').hidden = !c.on;
     if (!$('ceilStd').children.length) $('ceilStd').replaceChildren(...Object.keys(CEIL_STDS).map((k) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.std = k; return b; }));
     for (const b of $('ceilStd').children) { const [mm, ko, en] = CEIL_STDS[b.dataset.std]; b.textContent = `${L(ko, en)} ${mm / 10}`; b.setAttribute('aria-pressed', String(c.std === b.dataset.std && c.h === mm)); }
     for (const [id, k] of [['ceilH', 'h'], ['ceilW', 'w'], ['ceilD', 'd']]) for (const e of [$(id), $(id + 'n')]) if (document.activeElement !== e) e.value = c[k]; }
+  for (const b of $('imgFitSeg').children) b.setAttribute('aria-pressed', String(b.dataset.v === (S.imgFit || 'fill')));
   for (const b of $('stdSeg').children) b.setAttribute('aria-pressed', String(b.dataset.std === STD));
   $('stdSrc').textContent = L(`${STD_SRC[STD][0]} · 키 ${PERSONAS[S.persona].h}cm · BMI ${PERSONAS[S.persona].bmi}`, `${STD_SRC[STD][1]} · height ${PERSONAS[S.persona].h} cm · BMI ${PERSONAS[S.persona].bmi}`);
   if (+$('hIn').min !== p.hr[0] || +$('hIn').max !== p.hr[1]) { $('hIn').min = p.hr[0]; $('hIn').max = p.hr[1]; }
@@ -6330,7 +6390,7 @@ function syncUI() {
   { const slot = imgSlot(); $('imgField').hidden = !slot; if (slot) { $('imgLbl').textContent = slot === 'cap' ? L('내 이미지 · 모든 제품 공통 (자수는 PNG 추천)', 'Your image · on every product (PNG for embroidery)') : L('내 이미지 · 모든 제품 공통', 'Your image · on every product'); $('imgDel').hidden = !USER_IMG[slot]; } }
   $('setName').textContent = prodName(); $('setName').title = prodName(); // cut short in a narrow panel: the whole name on hover
   if (fam) { FAMILIES[fam].last = S.pkey; $('variantSeg').replaceChildren(...FAMILIES[fam].sizes.map(([k, ko, en]) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.size = k; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(S.pkey === k)); return b; })); }
-  segSet('shapeSeg', 'shape', S.shape); segSet('placeSeg', 'place', S.place); segSet('faceSeg', 'face', S.face); segSet('actSeg', 'act', S.action); segSet('modeSeg', 'mode', S.mode); segSet('langSeg', 'lang', LANG);
+  segSet('shapeSeg', 'shape', S.shape); segSet('placeSeg', 'place', S.place); segSet('faceSeg', 'face', S.face); { const t = $('faceSeg').querySelector('[data-face="top"]'); t.disabled = S.source === 'box' && S.look === 'fridge'; if (t.disabled && S.face === 'top') S.face = 'front'; } // a fridge: its controls are on the door segSet('actSeg', 'act', S.action); segSet('modeSeg', 'mode', S.mode); segSet('langSeg', 'lang', LANG);
   const isModel = S.source === 'model', fixedForm = isFurniture() || ring || ['cup', 'laptop', 'headphone', 'earbud'].includes(S.shape) || S.look === 'paper' || kind() !== 'free'; // these come only from the examples
   // the forms an example comes in (the cube: solid or frame; the object: sphere or cone); the plain box mockup, all of them
   const forms = !isModel && !fixedForm ? (PRESETS[S.pkey] && PRESETS[S.pkey].forms) || (S.pkey === 'box' ? Object.keys(FORMS) : null) : null;
@@ -6478,7 +6538,7 @@ let tipsOff = (() => { try { return localStorage.getItem('human-scale-tips-off')
 function setTipsOff(v) { tipsOff = v; try { localStorage.setItem('human-scale-tips-off', v ? '1' : '0'); } catch {} updateToast(); }
 function updateToast() {
   const it = aiQueue.length ? aiQueue[0] : S.E.sug.find((x) => !dismissed.has(x.key)) || (!dismissed.has('intro') ? intro : null);
-  const b = $('btnTip'); b.setAttribute('aria-pressed', String(!tipsOff)); b.toggleAttribute('data-new', tipsOff && !!it);
+  const b = $('btnTip'); icoBtn(b, 'tip', tipsOff ? '팁 보기' : '팁 숨기기', tipsOff ? 'Show tips' : 'Hide tips'); b.setAttribute('aria-pressed', String(!tipsOff)); b.toggleAttribute('data-new', tipsOff && !!it);
   b.title = tipsOff ? L('팁 보기', 'Show tips') : L('팁 숨기기', 'Hide tips');
   if (it && !tipsOff) return showToast(it);
   toastItem = null;
@@ -6600,8 +6660,25 @@ function syncBodyVis() {
 const frontUse = () => S.view === 'front' && S.mode === 'use' && !carried();
 /* the person: shown, see-through or hidden — the viewer's pick, else hidden for a product floating in midair, see-through in the front view in use */
 const personVis = () => S.pv || (S.place === 'air' && !S.supOff ? 'off' : (frontUse() && S.ghost) || S.autoGhost ? 'ghost' : 'on');
+/* the stage buttons are icons: their names show on hover and are read out */
+const ICO = {
+  tip: '<path d="M9.5 17.5h5M10.5 20.5h3M12 3.5a5.5 5.5 0 0 0-3.3 9.9c.7.5 1 1.2 1 2.1h4.6c0-.9.3-1.6 1-2.1A5.5 5.5 0 0 0 12 3.5z"/>',
+  person: '<circle cx="12" cy="6.5" r="3"/><path d="M6.5 20v-3.5a5.5 5.5 0 0 1 11 0V20"/>',
+  ghost: '<circle cx="12" cy="6.5" r="3" stroke-dasharray="2.2 2"/><path d="M6.5 20v-3.5a5.5 5.5 0 0 1 11 0V20" stroke-dasharray="2.2 2"/>',
+  noperson: '<circle cx="12" cy="6.5" r="3"/><path d="M6.5 20v-3.5a5.5 5.5 0 0 1 11 0V20"/><path d="M4 4l16 16"/>',
+  support: '<rect x="9" y="4.5" width="6" height="5" rx="0.6"/><rect x="5" y="11.5" width="14" height="8.5" rx="0.8"/>',
+  nosupport: '<rect x="9" y="4.5" width="6" height="5" rx="0.6"/><rect x="5" y="11.5" width="14" height="8.5" rx="0.8" stroke-dasharray="2.2 2"/><path d="M4 4l16 16"/>',
+  pen: '<path d="M4.5 19.5l3.8-.9L19 7.9a2 2 0 0 0-2.9-2.9L5.4 15.7z"/><path d="M14.6 6.5l2.9 2.9"/>',
+  dims: '<path d="M4 7v10M20 7v10M4 12h16M4 12l3-2.5M4 12l3 2.5M20 12l-3-2.5M20 12l-3 2.5"/>',
+  play: '<path d="M8 5.5l10.5 6.5L8 18.5z" fill="currentColor"/>',
+  rest: '<rect x="7" y="7" width="10" height="10" rx="1.2" fill="currentColor"/>',
+};
+function icoBtn(b, key, ko, en) { // an icon, with its name for hover and screen readers
+  const k = key + '|' + LANG; if (b.dataset.ico !== k) { b.dataset.ico = k; b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${ICO[key]}</svg>`; }
+  b.setAttribute('aria-label', L(ko, en)); b.title = L(ko, en);
+}
 const PV_LABEL = { on: ['사람 O', 'Person'], ghost: ['사람 반투명', 'See-through'], off: ['사람 X', 'No person'] };
-function syncSupportBtn() { const b = $('btnSupport'), on = !!S.supOff; b.hidden = !on && !supportable(); const [ko, en] = on ? ['보조 X', 'No support'] : ['보조 O', 'Support']; b.dataset.ko = ko; b.dataset.en = en; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(on)); }
+function syncSupportBtn() { const b = $('btnSupport'), on = !!S.supOff; b.hidden = !on && !supportable(); const [ko, en] = on ? ['보조 숨김 (누르면 보이기)', 'Support hidden (show)'] : ['보조 보임 (누르면 숨기기)', 'Support shown (hide)']; icoBtn(b, on ? 'nosupport' : 'support', ko, en); b.setAttribute('aria-pressed', String(on)); }
 /* ---------- line drawing ("pen") mode: everything white, its outlines and creases in ink, like a product sheet. The scene is drawn once
    with its normals (and depth), then a full-screen pass draws ink where depth jumps or the surface turns sharply ---------- */
 const PEN = { on: false, rt: null, nm: new THREE.MeshNormalMaterial({ side: THREE.DoubleSide }) };
@@ -6639,25 +6716,29 @@ function ceilChecks(out) { // with the ceiling on: the product's top and the per
   if (!S.A.seated) { const reach = S.A.shoulderY + S.A.armLen; add(L('머리 위', 'Headroom'), L(`머리 위 ${cmi(hd)}cm · 팔을 뻗으면 ${reach >= c ? '천장에 닿아요' : `천장까지 ${cmi(c - reach)}cm`}`, `${cmi(hd)} cm above the head · arms up ${reach >= c ? 'touch the ceiling' : `stop ${cmi(c - reach)} cm short`}`), hd < 0.1 ? 'bad' : 'info'); }
 }
 function drawScene() {
+  groundLine.visible = isOrtho() && S.view !== 'top';
   if (!PEN.on) { renderer.render(scene, cam); return; }
   const sz = renderer.getDrawingBufferSize(new THREE.Vector2());
   if (!PEN.rt || PEN.rt.width !== sz.x || PEN.rt.height !== sz.y) { if (PEN.rt) { PEN.rt.depthTexture.dispose(); PEN.rt.dispose(); } PEN.rt = new THREE.WebGLRenderTarget(sz.x, sz.y, { depthTexture: new THREE.DepthTexture(sz.x, sz.y, THREE.UnsignedIntType) }); }
   const bg = scene.background, sh = renderer.shadowMap.enabled, fv = matMesh.visible;
+  const gv = groundLine.visible; groundLine.visible = false;
   const cv = ceiling.visible; if (cam.position.y > S.ceil.h / 1000) ceiling.visible = false; // seen from above, the ceiling is not drawn (in lines either)
   scene.background = null; scene.overrideMaterial = PEN.nm; matMesh.visible = false; // the floor is the paper
   renderer.setRenderTarget(PEN.rt); renderer.setClearColor(0x8080ff, 1); renderer.clear(); renderer.render(scene, cam);
-  renderer.setRenderTarget(null); scene.overrideMaterial = null; scene.background = bg; matMesh.visible = fv; ceiling.visible = cv; renderer.shadowMap.enabled = sh;
+  renderer.setRenderTarget(null); scene.overrideMaterial = null; scene.background = bg; matMesh.visible = fv; ceiling.visible = cv; groundLine.visible = gv; renderer.shadowMap.enabled = sh;
   const u = PEN.mat.uniforms; u.tN.value = PEN.rt.texture; u.tD.value = PEN.rt.depthTexture; u.res.value.set(sz.x, sz.y); u.near.value = cam.near; u.far.value = cam.far; u.ortho.value = cam.isOrthographicCamera ? 1 : 0; u.px.value = 1; // a 1-device-pixel line at any screen density
   renderer.render(PEN.scene, PEN.cam);
+  if (gv) { const ac = renderer.autoClear, vis = []; scene.traverse((o) => { if (o !== scene && o !== groundLine && o.visible && (o.isMesh || o.isLine || o.isPoints || o.isSprite)) { vis.push(o); o.visible = false; } }); const bg2 = scene.background; scene.background = null; renderer.autoClear = false; renderer.clearDepth(); renderer.render(scene, cam); renderer.autoClear = ac; scene.background = bg2; for (const o of vis) o.visible = true; } // the floor line over the drawing
 }
 const topCtrl = () => S.face === 'top' && S.action !== 'dispense'; // a control on top: set how far back it sits, as a front one's height
-function syncPenBtn() { const b = $('btnPen'); b.setAttribute('aria-pressed', String(PEN.on)); }
-function syncGhostBtn() { const v = personVis(), b = $('btnGhost'), [ko, en] = PV_LABEL[v]; b.hidden = false; b.dataset.ko = ko; b.dataset.en = en; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(v !== 'on')); }
+function syncPenBtn() { const b = $('btnPen'); icoBtn(b, 'pen', '선화 (하얀 면에 선으로)', 'Line drawing'); b.setAttribute('aria-pressed', String(PEN.on)); }
+function syncGuidesBtn() { icoBtn($('btnGuides'), 'dims', '치수 표시', 'Dimensions'); }
+function syncGhostBtn() { const v = personVis(), b = $('btnGhost'), [ko, en] = PV_LABEL[v]; b.hidden = false; icoBtn(b, v === 'on' ? 'person' : v === 'ghost' ? 'ghost' : 'noperson', ko, en); b.setAttribute('aria-pressed', String(v !== 'on')); }
 /* the view buttons: pressed again, 3rd person goes up to the bird's-eye view, front turns to the back, side to the other side */
 const CUBE = '<path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/>', VIEW_ALT = {
   third: [['3인칭', '3rd person', '<circle cx="12" cy="7" r="3.2" fill="none"/><path d="M5.5 20c.6-4.2 3.2-6.5 6.5-6.5s5.9 2.3 6.5 6.5" fill="none"/>'], ['버드뷰', "Bird's-eye", '<path class="f" d="M4 8l4-4h12l-4 4z"/><path class="f2" d="M4 8h12v12H4z"/><path class="f3" d="M16 8l4-4v12l-4 4z"/>' + CUBE]],
-  front: [['정면', 'Front', '<path class="f" d="M4 8h12v12H4z"/>' + CUBE], ['뒷면', 'Back', '<path class="f" d="M8 4h12v12H8z"/>' + CUBE]],
-  side: [['측면', 'Side', '<path class="f" d="M16 8l4-4v12l-4 4z"/>' + CUBE], ['반대 측면', 'Other side', '<path class="f" d="M4 8l4-4v12l-4 4z"/>' + CUBE]],
+  front: [['정면', 'Front', '<path class="f" d="M4 8h12v12H4z"/>' + CUBE], ['후면', 'Back', '<path class="f" d="M8 4h12v12H8z"/>' + CUBE]],
+  side: [['측면 R', 'Side (R)', '<path class="f" d="M16 8l4-4v12l-4 4z"/>' + CUBE], ['측면 L', 'Side (L)', '<path class="f" d="M4 8l4-4v12l-4 4z"/>' + CUBE]],
 };
 function syncViewBtns() {
   for (const b of $('views').querySelectorAll('[data-view]')) {
@@ -6666,6 +6747,7 @@ function syncViewBtns() {
     if (!A) continue;
     const alt = (k === 'third' && S.view === 'bird') || (on && k !== 'third' && S.viewFlip), [ko, en, svg] = A[alt ? 1 : 0], l = b.querySelector('.vl'), ic = b.querySelector('.vi');
     if (ic.dataset.k !== String(alt)) { ic.innerHTML = svg; ic.dataset.k = String(alt); }
+    if (k === 'side') b.dataset.side = alt ? 'L' : 'R'; if (k === 'front') b.dataset.side = alt ? 'B' : 'F';
     l.dataset.ko = ko; l.dataset.en = en; l.textContent = L(ko, en); b.title = L(ko, en) + L(' · 한 번 더 누르면 바뀌어요', ' · press again to turn'); b.setAttribute('aria-label', L(ko, en));
   }
 }
@@ -6833,6 +6915,8 @@ function updateOverlay(pose) {
     for (const [px, py] of [[cx, cy], [(r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2], [r.x0, r.y0], [r.x1, r.y0], [r.x0, r.y1], [r.x1, r.y1]]) { const t = clamp(((px - s.ax) * dx + (py - s.ay) * dy) / L2, 0, 1); if (Math.hypot(s.ax + t * dx - px, s.ay + t * dy - py) < s.r) return true; }
     return false;
   };
+  const blocks = [scrBox(visBox(human)), prodR, S.place !== 'wall' && surface.children.length && !S.supOff ? scrBox(new THREE.Box3().setFromObject(surface)) : null].filter(Boolean); // the person, the product and what it stands on: tags kept off all of them
+  const allB = blocks.reduce((a, b) => uni(a, b), null);
   const callout = (el, v, show, prefs, avoid, segs = [], cls = '', lift = 0) => { // prefs: which sides to try, in order; avoid: the screen box to keep clear of
     if (!show) { el.hidden = true; return; }
     const a = proj(v); if (!a.ok) { el.hidden = true; return; }
@@ -6840,9 +6924,11 @@ function updateOverlay(pose) {
     const tw = el.offsetWidth, th = el.offsetHeight, gap = 12, reach = 22, ob = avoid || { x0: a.x, y0: a.y, x1: a.x, y1: a.y };
     const at = { up: [a.x - tw / 2, Math.min(a.y - reach, ob.y0 - gap) - th - lift], down: [a.x - tw / 2, Math.max(a.y + reach, ob.y1 + gap) + lift], right: [Math.max(a.x + reach, ob.x1 + gap), a.y - th / 2 - lift], left: [Math.min(a.x - reach, ob.x0 - gap) - tw, a.y - th / 2 - lift] };
     let best = null;
-    for (const side of prefs) {
-      const x = clamp(at[side][0], safe.x0, Math.max(safe.x0, safe.x1 - tw)), y = clamp(at[side][1], safe.y0, Math.max(safe.y0, safe.y1 - th)), r = { x0: x, y0: y, x1: x + tw, y1: y + th };
-      const bad = (avoid && hit(r, avoid, 2) ? 4 : 0) + placed.filter((q) => hit(r, q)).length * 3 + segs.filter((sg) => segHit(r, sg)).length * 2;
+    const spots = prefs.map((sd) => at[sd]);
+    if (allB) spots.push([allB.x1 + gap, a.y - th / 2 - lift], [allB.x0 - gap - tw, a.y - th / 2 - lift], [a.x - tw / 2, allB.y0 - gap - th - lift], [allB.x1 + gap, allB.y0 - th], [allB.x0 - gap - tw, allB.y0 - th], [a.x - tw / 2, allB.y1 + gap + lift]); // then clear of everything: beside it all, over it all
+    for (const [sx, sy] of spots) {
+      const x = clamp(sx, safe.x0, Math.max(safe.x0, safe.x1 - tw)), y = clamp(sy, safe.y0, Math.max(safe.y0, safe.y1 - th)), r = { x0: x, y0: y, x1: x + tw, y1: y + th };
+      const bad = (avoid && hit(r, avoid, 2) ? 4 : 0) + blocks.filter((q) => q !== avoid && hit(r, q, 2)).length * 3 + placed.filter((q) => hit(r, q)).length * 3 + segs.filter((sg) => segHit(r, sg)).length * 2;
       if (!best || bad < best.bad) best = { r, bad };
       if (!bad) break;
     }
@@ -6904,7 +6990,7 @@ function rest() {
 }
 function syncPlay() {
   const b = $('btnPlay'), on = anim.played;
-  b.dataset.ko = on ? '기본 자세' : '동작 보기'; b.dataset.en = on ? 'Rest' : 'Play'; b.textContent = L(b.dataset.ko, b.dataset.en); b.setAttribute('aria-pressed', String(on));
+  icoBtn(b, on ? 'rest' : 'play', on ? '기본 자세로' : '동작 보기', on ? 'Back to rest' : 'Play'); b.setAttribute('aria-pressed', String(on));
 }
 function play() {
   anim.played = true; syncPlay();
@@ -6984,10 +7070,11 @@ function tick() {
 
 /* the detail-size rows for the current chair, table or headphones: built when the kind changes, values kept in step on every refresh */
 let detKey = '';
+const FORM_KEYS = ['form', 'hform', 'bform', 'sform', 'gtype', 'btype', 'spout']; // a product's form: shown first
 function syncDetail() {
   const k = detKind(), box = $('detField');
   box.hidden = !k;
-  if (!k) { detKey = ''; return; }
+  if (!k) { detKey = ''; $('formRows').replaceChildren(); $('formField').hidden = true; return; }
   const spec = detSpec(), key = `${k}|${LANG}`;
   if (key !== detKey) {
     detKey = key;
@@ -7003,13 +7090,18 @@ function syncDetail() {
         const n = document.createElement('input'); n.type = 'number'; n.min = sp.min; n.max = sp.max; n.step = sp.step; n.dataset.det = sp.k; n.inputMode = 'decimal';
         row.append(r, n);
       }
+      if (FORM_KEYS.includes(sp.k) && sp.opts) row.dataset.form = '1';
       return row;
     }));
+    const fr = [...$('detRows').children].filter((r) => r.dataset.form).slice(0, 1); $('formRows').replaceChildren(...fr); // the form (shape) row goes to the top of the tab
   }
+  $('formField').hidden = !$('formRows').children.length;
+  box.hidden = !$('detRows').children.length; // only a form to pick: nothing left for the detail sizes
+  const rowsIn = (sel) => [...$('detRows').querySelectorAll(sel), ...$('formRows').querySelectorAll(sel)];
   for (const sp of spec) {
     const v = dv(sp.k);
-    if (sp.opts) for (const b of $('detRows').querySelectorAll(`[data-det="${sp.k}"] button`)) b.setAttribute('aria-pressed', String(String(v) === b.dataset.v));
-    else for (const el of $('detRows').querySelectorAll(`input[data-det="${sp.k}"]`)) if (document.activeElement !== el) el.value = v;
+    if (sp.opts) for (const b of rowsIn(`[data-det="${sp.k}"] button`)) b.setAttribute('aria-pressed', String(String(v) === b.dataset.v));
+    else for (const el of rowsIn(`input[data-det="${sp.k}"]`)) if (document.activeElement !== el) el.value = v;
   }
   $('detSub').textContent = k === 'office' ? L(`좌면 ${S.h}mm`, `seat ${S.h} mm`) : '';
   $('detHint').textContent = k === 'office' ? L('좌면 높이(H)는 가스 실린더 최저~최고 안에서 이 사람에게 맞게 정해져요. 바퀴가 커지면 다리만 올라가요.', 'The seat (H) is set for this person within the gas lift’s lowest to highest. Bigger casters raise only the base.')
@@ -7033,7 +7125,8 @@ function applyPreset(k) {
   Object.assign(S, { source: 'box', preset: k, pkey: k, name: pr.name, shape: pr.shape, style: pr.style || null, look: pr.look || null, noHand: !!pr.noHand, noCtrl: !!pr.noCtrl, w: pr.w, d: pr.d, h: pr.h, place: pr.place, face: pr.face, ctrl: pr.ctrl, action: pr.action, scale: 1, posture: pr.posture || 'stand', base: { w: pr.w, d: pr.d, h: pr.h }, screen: !!pr.screen, lift: 0, ringSize: pr.size || S.ringSize });
   S.mode = 'use'; S.itemMode = null; // every product starts in use
   S.supOff = false; S.supPrev = null;
-  if (was && was !== S.place && !['floor', 'wall', 'head', 'back'].includes(pr.place) && placeOk(was) && !isFurniture() && !['head', 'back'].includes(was)) S.place = was; // somewhere it can stand too: it goes there, in place of the last one; if not, where it usually goes
+  const keep = S.placeSet && S.placeGrp === groupOf(k) ? S.placeSet : null; if (!keep) { S.placeSet = null; S.placeGrp = null; } // a place picked by hand carries on through its own category; elsewhere each product starts where it belongs
+  if (keep && keep !== S.place && !['floor', 'wall', 'head', 'back'].includes(pr.place) && placeOk(keep) && !isFurniture() && !['head', 'back'].includes(keep)) S.place = keep; // somewhere it can stand too: it goes there, in place of the last one; if not, where it usually goes
   if (sup && S.place === was && supportable()) { S.supPrev = was; S.supOff = true; S.place = 'air'; S.supAir = supAir; } // the support stays hidden
   else if (sup && S.surf) S.surf = { ...S.surf, air: supAir }; // or back to how the air height was
   S.seatMode = 'fixed'; S.seatH = PROPS[propKind()].h; S.preDesk = null; S.row = null; S.pick = 0; S.det = {}; S.ctrlWant = null; S.ctrlTop = null; S.parts = null; S.pbase = null; S.mineId = null; S.cup = false;
@@ -7054,7 +7147,7 @@ function buildChips() {
     const g = document.createElement('div'), t = document.createElement('button'), row = document.createElement('div');
     g.className = 'pgroup'; g.dataset.pg = gi; t.type = 'button'; t.className = 'gname'; t.textContent = L(ko, en); row.className = 'chips';
     const open = !collapsedGroups.has(gi); g.classList.toggle('collapsed', !open); t.setAttribute('aria-expanded', String(open)); // every group starts open
-    t.addEventListener('click', () => { const shut = !g.classList.contains('collapsed'); g.classList.toggle('collapsed', shut); t.setAttribute('aria-expanded', String(!shut)); if (shut) collapsedGroups.add(gi); else collapsedGroups.delete(gi); });
+    t.addEventListener('click', () => { const shut = !g.classList.contains('collapsed'); g.classList.toggle('collapsed', shut); t.setAttribute('aria-expanded', String(!shut)); if (shut) collapsedGroups.add(gi); else collapsedGroups.delete(gi); syncGrpToggle(); });
     row.append(...keys.map((k) => {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'chip';
@@ -7065,6 +7158,8 @@ function buildChips() {
     g.append(t, row);
     return g;
   }));
+  { const n = PRESET_GROUPS.reduce((a, [, keys]) => a + keys.length, 0); $('presetCount').textContent = L(`총 ${n}개`, `${n} in all`); }
+  syncGrpToggle(); if ($('presetQ').value) presetSearch();
   syncExamples();
 }
 /* a product that comes in sizes: its size picker sits right under its group's chips */
@@ -7079,7 +7174,26 @@ $('toProducts').addEventListener('click', () => $('tb-product').click());
   v.addEventListener('scroll', upd, { passive: true }); if (window.ResizeObserver) new ResizeObserver(upd).observe(v); window.addEventListener('resize', upd); upd();
   v.addEventListener('wheel', (e) => { if (v.scrollWidth <= v.clientWidth + 1 || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; v.scrollLeft += e.deltaY; e.preventDefault(); }, { passive: false });
 }
-for (const [id, shut] of [['grpClose', true], ['grpOpen', false]]) $(id).addEventListener('click', () => { for (const g of $('presetChips').querySelectorAll('.pgroup')) { const gi = +g.dataset.pg; g.classList.toggle('collapsed', shut); g.querySelector('.gname').setAttribute('aria-expanded', String(!shut)); if (shut) collapsedGroups.add(gi); else collapsedGroups.delete(gi); } }); // every category shut, or every one open
+function anyOpen() { return [...$('presetChips').querySelectorAll('.pgroup')].some((g) => !g.classList.contains('collapsed')); }
+function syncGrpToggle() { const o = anyOpen(); $('grpToggle').textContent = o ? L('전체 접기', 'Collapse all') : L('전체 펼치기', 'Expand all'); }
+$('grpToggle').addEventListener('click', () => { const shut = anyOpen(); for (const g of $('presetChips').querySelectorAll('.pgroup')) { const gi = +g.dataset.pg; g.classList.toggle('collapsed', shut); g.querySelector('.gname').setAttribute('aria-expanded', String(!shut)); if (shut) collapsedGroups.add(gi); else collapsedGroups.delete(gi); } syncGrpToggle(); }); // one button: every category shut, or every one open
+/* product search: by name in either language, the size names too; the matching chips stay, their groups open while searching */
+function presetSearch() {
+  const q = $('presetQ').value.trim().toLowerCase().replace(/\s+/g, ''), norm = (t) => String(t || '').toLowerCase().replace(/\s+/g, '');
+  let hits = 0;
+  for (const g of $('presetChips').querySelectorAll('.pgroup')) {
+    let n = 0;
+    for (const b of g.querySelectorAll('.chips > .chip')) {
+      const keys = b.dataset.family ? [FAMILIES[b.dataset.family].ko, FAMILIES[b.dataset.family].en, ...FAMILIES[b.dataset.family].sizes.flatMap(([k, ko, en]) => [ko, en, PRESETS[k].name, PRESETS[k].en])] : [PRESETS[b.dataset.preset].name, PRESETS[b.dataset.preset].en];
+      const ok = !q || keys.some((t) => norm(t).includes(q)); b.classList.toggle('nohit', !ok); if (ok) n++;
+    }
+    g.classList.toggle('nohit', !!q && !n); if (q && n) g.classList.remove('collapsed'); else if (!q) g.classList.toggle('collapsed', collapsedGroups.has(+g.dataset.pg)); hits += n;
+  }
+  $('presetNone').hidden = !q || hits > 0; syncGrpToggle();
+}
+$('presetQ').addEventListener('input', presetSearch);
+$('presetQBtn').addEventListener('click', () => { presetSearch(); $('presetQ').focus(); });
+$('presetQ').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); const b = $('presetChips').querySelector('.pgroup:not(.nohit) .chips > .chip:not(.nohit)'); if (b && $('presetQ').value.trim()) b.click(); } }); // Enter: the first match
 /* the products in the order they are listed (a family as one, at its usual size): the one before or after this one, on into the next category at the end of one */
 const PROD_ORDER = PRESET_GROUPS.flatMap(([, keys]) => keys.map((k) => (k.startsWith('fam:') ? { fam: k.slice(4) } : { key: k })));
 function stepProduct(d) {
@@ -7124,7 +7238,7 @@ segBind('shapeSeg', 'shape', (v) => {
   if (!own) S.preset = null;
   refresh({ rebuild: true, refit: true });
 });
-segBind('placeSeg', 'place', (v) => { const was = S.place; if (S.supOff) { S.supOff = false; S.supPrev = null; if (S.surf) S.surf = { ...S.surf, air: S.supAir }; } S.place = v; if (v === 'desk') deskSeat(); else if (was === 'desk' && S.preDesk) { S.posture = S.preDesk; S.preDesk = null; } refresh({ refit: true }); }); // leaving the desk gives back the posture from before it
+segBind('placeSeg', 'place', (v) => { const was = S.place; S.placeSet = v; S.placeGrp = groupOf(S.pkey); if (S.supOff) { S.supOff = false; S.supPrev = null; if (S.surf) S.surf = { ...S.surf, air: S.supAir }; } S.place = v; if (v === 'desk') deskSeat(); else if (was === 'desk' && S.preDesk) { S.posture = S.preDesk; S.preDesk = null; } refresh({ refit: true }); }); // leaving the desk gives back the posture from before it
 /* at the desk the person sits on an office chair: a seat height left at another seat's default becomes the office chair's */
 function deskSeat() { if (!S.preDesk) S.preDesk = S.posture; S.posture = 'sit'; if (S.seatMode === 'fixed' && Object.values(PROPS).some((p) => p.h === S.seatH)) S.seatH = PROPS.office.h; }
 segBind('faceSeg', 'face', (v) => { S.face = v; refresh(); });
@@ -7149,6 +7263,7 @@ function applyLang() {
 for (const b of $('ceilOn').children) b.addEventListener('click', () => { S.ceil = { ...S.ceil, on: b.dataset.v === 'on' }; refresh({ rebuild: S.place === 'wall' }); });
 $('ceilStd').addEventListener('click', (e) => { const b = e.target.closest('[data-std]'); if (!b) return; S.ceil = { ...S.ceil, std: b.dataset.std, h: CEIL_STDS[b.dataset.std][0] }; refresh({ rebuild: S.place === 'wall' }); });
 for (const [id, k, lo, hi] of [['ceilH', 'h', 2000, 8000], ['ceilW', 'w', 1000, 12000], ['ceilD', 'd', 1000, 12000]]) { const set = (v) => { if (!(v >= lo && v <= hi)) return; S.ceil = { ...S.ceil, [k]: Math.round(v) }; refresh({ rebuild: k === 'h' && S.place === 'wall' }); }; $(id).addEventListener('input', (e) => set(+e.target.value)); $(id + 'n').addEventListener('change', (e) => set(+e.target.value)); }
+for (const b of $('imgFitSeg').children) b.addEventListener('click', () => { S.imgFit = b.dataset.v; refresh({ rebuild: true }); }); // the image filling the face, or all of it shown
 function setStd(k, keep) { if (!STDS[k]) return; STD = k; if (!keep) { try { localStorage.setItem('hs.std', k); } catch {} } applyStd(); const p = PERSONAS[S.persona]; S.height = p.h; S.bmi = p.bmi; refresh({ refit: true }); } // whose body data: every person takes that average
 for (const b of $('stdSeg').children) b.addEventListener('click', () => setStd(b.dataset.std));
 function setLang(v) {
@@ -7199,7 +7314,7 @@ $('detReset').addEventListener('click', (e) => { e.preventDefault(); e.stopPropa
 function setDet(k, v) { const sp = detSpec().find((x) => x.k === k); if (!sp) return; if (!sp.opts) v = clamp(Math.round(+v / sp.step) * sp.step, sp.min, sp.max); else v = sp.opts.find((o) => String(o[0]) === String(v))[0]; if (lampDet(k, v)) { refresh({ rebuild: true, refit: true }); return; } S.det = { ...(S.det || {}), [k]: v }; if (sp.apply) { detApply(); refresh({ rebuild: true, refit: true }); } else refresh({ rebuild: true }); }
 $('detRows').addEventListener('input', (e) => { const el = e.target; if (el.dataset.det && el.value !== '' && (el.type === 'range' || !isNaN(+el.value))) { if (el.type === 'number' && (+el.value < +el.min || +el.value > +el.max)) return; setDet(el.dataset.det, el.value); } });
 $('detRows').addEventListener('change', (e) => { const el = e.target; if (el.type === 'number' && el.dataset.det) setDet(el.dataset.det, el.value); });
-$('detRows').addEventListener('click', (e) => { const b = e.target.closest('button[data-v]'); if (b) setDet(b.parentElement.dataset.det, b.dataset.v); });
+for (const id of ['detRows', 'formRows']) $(id).addEventListener('click', (e) => { const b = e.target.closest('button[data-v]'); if (b) setDet(b.parentElement.dataset.det, b.dataset.v); });
 $('unitAddR').addEventListener('click', () => addUnit(false));
 $('unitDel').addEventListener('click', () => {
   const r = S.row; if (!r || r.length < 2 || r[S.pick].n === 'A') return;
@@ -7608,7 +7723,7 @@ $('dimReset').addEventListener('click', () => { if (!S.base) return; if (sizeUni
   d.addEventListener('pointermove', (e) => { if (x0 == null) return; acc += e.clientX - x0; x0 = e.clientX; while (Math.abs(acc) >= 28) { step(Math.sign(acc)); acc -= 28 * Math.sign(acc); moved = true; } });
   const up = () => { x0 = null; d.classList.remove('turning'); };
   d.addEventListener('pointerup', up); d.addEventListener('pointercancel', up);
-  d.addEventListener('click', () => { if (d.disabled) return; if (!moved) { const i = STOPS.indexOf(cur()); set(STOPS[(i + 1) % STOPS.length]); } moved = false; });
+  d.addEventListener('click', (e) => { if (d.disabled) return; if (!moved) { const z = e.target.closest('.dz'); if (z) step(z === d.querySelector('.dz') ? -1 : 1); else set(S.view === 'first' ? 20 : 35); } moved = false; }); // the arrows step; the number itself goes back to the default lens
   d.addEventListener('wheel', (e) => { if (d.disabled) return; e.preventDefault(); e.stopPropagation(); step((Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) > 0 ? 1 : -1); }, { passive: false });
   d.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { step(1); e.preventDefault(); } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { step(-1); e.preventDefault(); } });
 }
@@ -7749,6 +7864,7 @@ refresh({ rebuild: true });
 commit();
 setView('third');
 renderer.setAnimationLoop(tick);
+document.addEventListener('keydown', (e) => { const el = e.target; if (!e.shiftKey || !(el instanceof HTMLInputElement) || el.type !== 'number' || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return; e.preventDefault(); const st = +el.step || 1, v = (+el.value || 0) + (e.key === 'ArrowUp' ? 10 : -10) * st, lo = el.min !== '' ? +el.min : -Infinity, hi = el.max !== '' ? +el.max : Infinity; el.value = String(+clamp(v, lo, hi).toFixed(4)); el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }, true); // Shift + up/down: ten steps at a time
 
 /* ---------- model files: the product as drawn, at its size now, in millimetres ----------
    One zip with a Rhino file (.3dm), an OBJ and an STL. The .3dm is written here (openNURBS layout: what rhino3dm writes for a mesh, the tables
