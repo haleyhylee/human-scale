@@ -47,7 +47,7 @@
   --good: #52c283; --warn: #e3ad42; --bad: #f2705c; --good-bg: #183026; --warn-bg: #362c13; --bad-bg: #3a1d18;
   color-scheme: dark;
 }
-html { height: 100%; box-sizing: border-box; }
+html { height: 100%; box-sizing: border-box; touch-action: manipulation; } /* no double-tap zoom of the page */
 *, *::before, *::after { box-sizing: inherit; }
 body { height: 100%; margin: 0; overflow: hidden; background: var(--bg); color: var(--ink); font: 400 14px/1.5 var(--font-body); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
 button, input, select { font: inherit; color: inherit; }
@@ -56,6 +56,16 @@ button { cursor: pointer; }
 .app { height: 100%; display: flex; flex-direction: column; }
 .stage { position: relative; flex: 0 0 60%; min-height: 280px; background: var(--viewport); overflow: hidden; }
 .panel { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; background: var(--panel); border-top: 1px solid var(--line); padding-block: 14px 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 14px; }
+.stage-tap, .stage-back { display: none; }
+@media (max-width: 859px) { /* phones: the view a third of the screen, the settings two thirds; a tap on the view fills the screen with it */
+  .app:not(.full) .stage { flex: 0 0 34%; min-height: 200px; }
+  .app:not(.full) .stage > :not(canvas):not(.stage-tap) { display: none !important; }
+  .app:not(.full) .stage-tap { display: flex; position: absolute; inset: 0; z-index: 20; align-items: flex-end; justify-content: center; padding: 0 0 10px; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .stage-tap span { padding: 5px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.86); border: 1px solid var(--line); font-size: 12px; color: var(--ink-2); }
+  .app.full .stage { flex: 1 1 auto; }
+  .app.full .panel { display: none; }
+  .app.full .stage-back { display: flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 6px; height: 44px; padding-bottom: env(safe-area-inset-bottom, 0px); border: 0; border-top: 1px solid var(--line); background: var(--panel); color: var(--ink); font: 500 13px var(--font-body); cursor: pointer; }
+}
 @media (min-width: 860px) {
   .app { flex-direction: row; }
   .stage { flex: 1 1 auto; min-height: 0; }
@@ -80,6 +90,7 @@ button { cursor: pointer; }
 .one { display: inline-flex; align-items: stretch; height: 32px; border-radius: 6px; background: var(--accent); flex: 0 0 auto; overflow: hidden; }
 .one:has(.onebtn[aria-pressed="true"]) { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--accent); }
 .one .chip { height: 100%; border: 0 !important; border-radius: 0; background: transparent !important; color: #fff !important; }
+.onecfg { display: inline-flex; align-items: center; justify-content: center; width: 32px; padding: 0; border: 0; border-left: 1px solid rgba(255, 255, 255, 0.35); background: none; color: #fff; cursor: pointer; } /* the screen set up, beside it */
 .onebtn { display: inline-flex; align-items: center; font-weight: 600; padding: 0 12px; -webkit-touch-callout: none; user-select: none; touch-action: manipulation; }
 .one .chip:hover { background: rgba(255, 255, 255, 0.12) !important; }
 .calib-card .calib-say { color: var(--accent); font-size: 13px; font-weight: 600; margin: 0 0 -6px; text-align: center; text-wrap: balance; word-break: keep-all; max-width: 100%; } /* centred over the line, as wide as it */
@@ -225,9 +236,9 @@ span.br { display: block; }
 .colpop input[type="range"] { flex: 1 1 auto; min-width: 0; height: 12px; border-radius: 6px; -webkit-appearance: none; appearance: none; background: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
 .colpop input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 1px solid rgba(0, 0, 0, 0.35); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
 .colpop input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 1px solid rgba(0, 0, 0, 0.35); }
-.colpop .cg { display: grid; gap: 6px; } .colpop .cg.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.colpop .cg { display: grid; gap: 6px; } .colpop .cg.four { grid-template-columns: repeat(4, minmax(0, 1fr)); } .colpop .cg.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .colpop label { display: flex; flex-direction: column; gap: 3px; } .colpop label b { font: 600 10px var(--font-mono); color: var(--ink-2); text-align: center; }
-.colpop .cg:not(.four) label { flex-direction: row; align-items: center; gap: 8px; }
+.colpop .cg:not(.four):not(.three) label { flex-direction: row; align-items: center; gap: 8px; }
 .colpop input[type="text"], .colpop input[type="number"] { min-width: 0; width: 100%; height: 30px; padding: 0 6px; border: 1px solid var(--line); border-radius: 5px; background: var(--raise); font: 12px var(--font-mono); text-align: center; color: var(--ink); text-transform: uppercase; -moz-appearance: textfield; }
 .colpop input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
 .psearch { display: flex; gap: 6px; margin: 2px 0 10px; }
@@ -236,7 +247,7 @@ span.br { display: block; }
 .psearch svg { width: 18px; height: 18px; }
 .pgroup.nohit { display: none; }
 .presets .chip.nohit { display: none; }
-.brandrow { flex: 1 1 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 12px; row-gap: 4px; } .brandrow .brand, .brandrow .phr { display: contents; } .brandrow .wm { grid-column: 1; grid-row: 1; } .brandrow .hist { grid-column: 2; grid-row: 1; justify-self: stretch; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; } .brandrow .hist .btn { width: auto; } /* the two as wide as the credit under them */ .brandrow .sub { grid-column: 1; grid-row: 2; } .brandrow .credit { grid-column: 2; grid-row: 2; justify-self: end; } /* the wordmark level with undo and redo, the line under it level with the credit */
+.brandrow { flex: 1 1 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 12px; row-gap: 4px; } .brandrow .brand, .brandrow .phr { display: contents; } .brandrow .wm { grid-column: 1; grid-row: 1; min-width: 0; overflow: hidden; } .brandrow .hist { grid-column: 2; grid-row: 1; justify-self: stretch; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; } .brandrow .hist .btn { width: auto; } /* the two as wide as the credit under them */ .brandrow .sub { grid-column: 1; grid-row: 2; } .brandrow .credit { grid-column: 2; grid-row: 2; justify-self: end; } /* the wordmark level with undo and redo, the line under it level with the credit */
 
 .phr { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; } /* undo and redo, then the credit under them */
 .credit { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-2); font-weight: 350; text-decoration: none; line-height: 1.2; text-align: right; }
@@ -419,6 +430,7 @@ input:disabled { opacity: 0.55; }
       <div class="guide target" id="g-tg" hidden><span></span></div>
       <div class="tag" id="t-human" hidden></div>
       <div class="tag" id="t-prod" hidden></div>
+      <div class="tag sup" id="t-sup" hidden></div>
       <div class="tag unit" id="t-u0" hidden></div>
       <div class="tag unit" id="t-u1" hidden></div>
       <div class="tag unit" id="t-u2" hidden></div>
@@ -438,15 +450,15 @@ input:disabled { opacity: 0.55; }
         </div>
       </div>
       <div class="rcol">
-        <span class="one"><button type="button" class="chip onebtn" id="btn11" aria-pressed="false" title="실제 크기로 보기 (화면 1:1) · 길게 누르면 다시 보정" data-en-title="Real size on screen (1:1) · press and hold to calibrate again">1:1 Size</button></span>
+        <span class="one"><button type="button" class="chip onebtn" id="btn11" aria-pressed="false" title="화면에서 실제 크기로 보기" data-en-title="See it at its actual size on screen" data-en="Actual Size">실제 사이즈</button><button type="button" class="onecfg" id="btn11Set" aria-label="실제 사이즈 맞추기" data-en-aria="Set up actual size" title="화면 크기 맞추기" data-en-title="Match the screen"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button></span>
         <button type="button" class="chip vbtn" id="btnMeasure" aria-pressed="false" title="치수 재기" data-en-title="Measure" aria-label="치수 재기" data-en-aria="Measure"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5l17-17v17z" fill="none"/><path d="M10.5 17.5l6-6v6z" fill="none"/><path d="M20.5 9h-1.6M20.5 12.5h-1.6M20.5 16h-1.6" fill="none"/></svg><span class="vl" data-en="Measure">치수 재기</span></button>
       </div>
     </div>
-    <div class="one-badge" id="oneBadge" hidden data-en="Real size 1:1 · drag to move around">실제 크기 1:1 · 드래그로 이동</div>
+    <div class="one-badge" id="oneBadge" hidden data-en="Actual size · drag to move around">실제 사이즈 · 드래그로 이동</div>
     <div class="calib" id="calib" hidden role="dialog" aria-modal="true" aria-labelledby="calibT">
       <div class="calib-card">
-        <b id="calibT" data-en="1:1 on screen: measure once">화면 1:1 보정 (한 번만)</b>
-        <p data-en="Hold a ruler to the screen and measure the bar below, end to end, then type its length. After that the front, side and top views can show things at their real size.">자를 화면에 대고 아래 막대의 양 끝 사이를 재서 길이를 넣어 주세요. 그다음부터 정면·측면·평면 뷰에서 실제 크기로 볼 수 있어요.</p>
+        <b id="calibT" data-en="Match the screen to actual size">화면을 실제 크기에 맞추기</b>
+        <p data-en="Hold a ruler to the screen, measure the orange line end to end and type its length. The front, side and top views then show things at their actual size.">자를 화면에 대고 아래 주황 선의 양 끝 사이를 재서 길이를 넣어 주세요. 정면·측면·평면 뷰에서 실제 크기로 보여요.</p>
         <p class="calib-say" data-en="Measure this orange line with a real ruler and type its length below.">실제 자로 잰 라인의 길이 값을 아래에 입력해주세요.</p>
         <div class="calib-bar" id="calibBar"></div>
         <div class="calib-row"><input type="number" id="calibMm" min="10" max="2000" step="0.5" inputmode="decimal" aria-label="막대 길이 (mm)" data-en-aria="Bar length (mm)"> mm <button type="button" class="btn accent" id="calibOk" data-en="Apply">적용</button><button type="button" class="btn" id="calibNo" data-en="Cancel">취소</button></div>
@@ -458,12 +470,12 @@ input:disabled { opacity: 0.55; }
       <button type="button" class="btn" id="btnPen" aria-pressed="false"></button>
       <button type="button" class="btn" id="zoomIn" aria-label="확대" title="확대" data-en-aria="Zoom in" data-en-title="Zoom in">+</button>
       <button type="button" class="btn" id="zoomOut" aria-label="축소" title="축소" data-en-aria="Zoom out" data-en-title="Zoom out">−</button>
-      <button type="button" class="btn" id="viewReset" aria-label="기본 시점으로" title="기본 시점으로 (더블클릭)" data-en-aria="Reset view" data-en-title="Reset view (double-click)"><svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18" style="transform: translateY(1.6px)"><path d="M4 12a8 8 0 0 1 14.3-4.9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 3.5V8h-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 12a8 8 0 0 1-14.3 4.9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 20.5V16h4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button type="button" class="btn" id="viewReset" aria-label="처음 상태로" title="처음 상태로 (새로고침)" data-en-aria="Start over" data-en-title="Start over (reload)"><svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18" style="transform: translateY(1.6px)"><path d="M4 12a8 8 0 0 1 14.3-4.9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 3.5V8h-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 12a8 8 0 0 1-14.3 4.9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 20.5V16h4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
     <div class="tipdock" id="tipdock">
       <div class="toast" id="toast" role="status" hidden>
         <div>
-          <div class="kicker"><span class="lv info" id="toastLv">참고</span><span id="toastSrc">자동 점검</span></div>
+          <div class="kicker"><span class="lv info" id="toastLv">참고</span><span id="toastSrc">자동 확인</span></div>
           <p id="toastText"></p>
         </div>
         <div class="acts">
@@ -483,7 +495,9 @@ input:disabled { opacity: 0.55; }
         <button type="button" class="btn accent" id="btnAI" hidden>AI 제안</button>
       </div>
     </div>
+    <button type="button" class="stage-tap" id="stageTap" aria-label="크게 보기" data-en-aria="See it full screen"><span data-en="Tap to see it full screen">눌러서 크게 보기</span></button>
   </section>
+  <button type="button" class="stage-back" id="stageBack"><span data-en="Back to the settings">설정으로 돌아가기</span> <b aria-hidden="true">▴</b></button>
 
   <aside class="panel" aria-label="설정" data-en-aria="Settings">
     <header class="ph">
@@ -505,8 +519,8 @@ input:disabled { opacity: 0.55; }
     <div class="tabs" role="tablist" aria-label="설정 분류" data-en-aria="Settings sections">
       <button type="button" role="tab" id="tb-person" aria-controls="tab-person" aria-selected="true"><span data-en="Person">사람</span></button>
       <button type="button" role="tab" id="tb-product" aria-controls="tab-product" aria-selected="false"><span data-en="Product">제품</span></button>
-      <button type="button" role="tab" id="tb-set" aria-controls="tab-set" aria-selected="false"><span data-en="Settings">설정</span></button>
-      <button type="button" role="tab" id="tb-check" aria-controls="tab-check" aria-selected="false"><span data-en="Checks">점검</span> <span class="lv info" id="tabPill">-</span></button>
+      <button type="button" role="tab" id="tb-set" aria-controls="tab-set" aria-selected="false"><span data-en="Dimensions">치수</span></button>
+      <button type="button" role="tab" id="tb-check" aria-controls="tab-check" aria-selected="false"><span data-en="Checks">확인</span> <span class="lv info" id="tabPill">-</span></button>
     </div>
 
     <section class="tabpanel" id="tab-person" role="tabpanel" aria-labelledby="tb-person">
@@ -516,7 +530,7 @@ input:disabled { opacity: 0.55; }
       </div>
       <div class="field">
         <div class="label" data-en="Posture">자세</div>
-        <div class="seg" id="postureSeg"><button type="button" data-posture="stand" data-en="Stand">서기</button><button type="button" data-posture="sit" data-en="Sit">앉기</button></div>
+        <div class="seg full" id="postureSeg"><button type="button" data-posture="stand" data-en="Stand">서기</button><button type="button" data-posture="sit" data-en="Sit">앉기</button></div>
       </div>
       <div class="field" id="seatField" hidden>
         <div class="lrow"><label for="seatIn" id="seatLbl">의자 높이</label><button type="button" class="reset" id="seatReset" data-en="Default">기본값</button><output class="mono" id="seatOut" for="seatIn"></output></div>
@@ -549,7 +563,7 @@ input:disabled { opacity: 0.55; }
 
     <section class="tabpanel" id="tab-product" role="tabpanel" aria-labelledby="tb-product" hidden>
       <div class="field">
-        <div class="label exrow"><span class="exl"><span id="presetCount"></span> <span class="muted">· <span data-en="fine-tune it in Settings">설정 탭에서 다듬어요</span></span></span><button type="button" class="reset" id="grpToggle">전체 접기</button></div>
+        <div class="label exrow"><span class="exl"><span id="presetCount"></span> <span class="muted">· <span data-en="fine-tune it in Dimensions">치수 탭에서 다듬어요</span></span></span><button type="button" class="reset" id="grpToggle">전체 접기</button></div>
         <div class="psearch"><input type="search" id="presetQ" placeholder="제품 검색" data-en-ph="Search products" aria-label="제품 검색" data-en-aria="Search products" autocomplete="off"><button type="button" class="btn" id="presetQBtn" aria-label="검색" data-en-aria="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 15l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
         <p class="hint" id="presetNone" hidden data-en="Nothing matches. Try another word.">맞는 제품이 없어요. 다른 단어로 찾아보세요.</p>
         <div class="presets" id="presetChips"></div>
@@ -729,6 +743,7 @@ input:disabled { opacity: 0.55; }
           <div class="hrow"><button type="button" class="btn ico" id="colDrop2" aria-label="스포이드" data-en-aria="Eyedropper"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.7 5.6l-2.3-2.3a1 1 0 0 0-1.4 0l-3.1 3.1-1.9-1.9-1.4 1.4 1.4 1.4L3 16.3V21h4.7l9-9 1.4 1.4 1.4-1.4-1.9-1.9 3.1-3.1a1 1 0 0 0 0-1.4zM6.9 19H5v-1.9l8.1-8.1 1.9 1.9z" fill="currentColor" stroke="none"/></svg></button><span class="cdot" id="colDot"></span><input type="range" id="colHue" min="0" max="360" step="1" aria-label="색상(Hue)" data-en-aria="Hue"></div>
           <div class="cg"><label><b>HEX</b><input type="text" id="colHex2" maxlength="7" spellcheck="false"></label></div>
           <div class="cg four"><label><b>C</b><input type="number" id="colC" min="0" max="100" inputmode="numeric"></label><label><b>M</b><input type="number" id="colM" min="0" max="100" inputmode="numeric"></label><label><b>Y</b><input type="number" id="colY" min="0" max="100" inputmode="numeric"></label><label><b>K</b><input type="number" id="colK" min="0" max="100" inputmode="numeric"></label></div>
+          <div class="cg three"><label><b>R</b><input type="number" id="colR" min="0" max="255" inputmode="numeric"></label><label><b>G</b><input type="number" id="colG" min="0" max="255" inputmode="numeric"></label><label><b>B</b><input type="number" id="colB" min="0" max="255" inputmode="numeric"></label></div>
         </div>
         <p class="hint" id="colPickHint" hidden data-en="Click anywhere on the 3D view to take its colour.">3D 화면에서 원하는 곳을 누르면 그 색이 돼요.</p>
       </div>
@@ -742,6 +757,7 @@ input:disabled { opacity: 0.55; }
           <li><b data-en="Contents">담기는 것</b><span><span data-en="The product alone. Tick the person or the plinth for">제품만. 사람·단상을 체크하면</span><span class="br" data-en="the whole scene (floor at 0).">화면 그대로의 장면 (바닥 0)</span></span></li>
           <li><b>3DM</b><span><span data-en="Rhino 7 or later.">라이노 7 이상.</span><span class="br" data-en="Layers: Product (parts under it) / Person / Scene">레이어: Product(부품별) / Person / Scene</span></span></li>
           <li><b>OBJ · STL</b><span data-en="Z up, floor at 0, like Rhino">라이노처럼 위가 Z, 바닥이 0</span></li>
+          <li><b>SKETCHUP</b><span data-en="File → Import → the .obj or .stl, units in millimetres">파일 → 가져오기 → .obj·.stl, 단위는 밀리미터</span></li>
           <li><b>SOLIDWORKS</b><span data-en="Open the .stl or .obj, Options → Solid Body">.stl·.obj 열기 → 옵션에서 '솔리드 바디'</span></li>
           <li><b data-en="Surfaces">면으로</b><span data-en="All meshes: MeshToNURB or QuadRemesh in Rhino">모두 메시예요. 라이노에서 MeshToNURB·QuadRemesh</span></li>
         </ul>
@@ -841,8 +857,8 @@ const PRESETS = {
   macbook17: { name: '노트북 17인치', en: 'Laptop 17"', shape: 'laptop', w: 383, d: 260, h: 19, place: 'table', face: 'top', ctrl: 11, action: 'press', posture: 'sit', noHand: true }, // opens on the table
   keyboard: { name: '키보드 풀배열', en: 'Keyboard, full size', shape: 'box', look: 'keyboard', style: 'full', w: 440, d: 135, h: 35, place: 'desk', face: 'top', ctrl: 25, action: 'press', posture: 'sit', noHand: true }, // with the number pad; typed on at the desk
   keyboardTkl: { name: '키보드 텐키리스', en: 'Keyboard, tenkeyless', shape: 'box', look: 'keyboard', style: 'tkl', w: 360, d: 135, h: 35, place: 'desk', face: 'top', ctrl: 25, action: 'press', posture: 'sit', noHand: true }, // no number pad
-  mouseG: { name: '게이밍 마우스', en: 'Gaming mouse', shape: 'box', look: 'mouse', style: 'gaming', w: 63, d: 125, h: 40, place: 'desk', face: 'top', ctrl: 40, action: 'press', posture: 'sit' }, // a right-handed gaming mouse, its hump toward the back, two thumb buttons
-  mouseV: { name: '버티컬 마우스', en: 'Vertical mouse', shape: 'box', look: 'mouse', style: 'vertical', w: 75, d: 110, h: 72, place: 'desk', face: 'top', ctrl: 72, action: 'press', posture: 'sit' }, // held in a handshake: the grip face leans at a set angle
+  mouseG: { name: '게이밍 마우스', en: 'Gaming mouse', shape: 'box', look: 'mouse', style: 'gaming', w: 63, d: 125, h: 40, place: 'desk', ctrl: 40, posture: 'sit' }, // a right-handed gaming mouse, held (no control to press), its hump toward the back, two thumb buttons
+  mouseV: { name: '버티컬 마우스', en: 'Vertical mouse', shape: 'box', look: 'mouse', style: 'vertical', w: 75, d: 110, h: 72, place: 'desk', ctrl: 72, posture: 'sit' }, // held in a handshake: the grip face leans at a set angle
   tv32: { name: 'TV 32인치', en: 'TV 32"', shape: 'box', look: 'tv', w: 724, d: 60, h: 414, place: 'wall', face: 'front', ctrl: 207, action: 'press', noCtrl: true, noHand: true, diag: 32 },
   tv43: { name: 'TV 43인치', en: 'TV 43"', shape: 'box', look: 'tv', w: 968, d: 60, h: 551, place: 'wall', face: 'front', ctrl: 275, action: 'press', noCtrl: true, noHand: true, diag: 43 },
   tv50: { name: 'TV 50인치', en: 'TV 50"', shape: 'box', look: 'tv', w: 1123, d: 60, h: 638, place: 'wall', face: 'front', ctrl: 319, action: 'press', noCtrl: true, noHand: true, diag: 50 },
@@ -1890,10 +1906,11 @@ function torsoKeys(A, p) {
   const F = p.sex === 'F', M = p.sex === 'M';
   const hw = A.hipW / 2, hd = A.hipD / 2, ww = A.waistW / 2, wd = A.waistD / 2, cw = A.chestW / 2, cd = A.chestD / 2, sw = A.shoulderHalf;
   const nx = 0.985 * HEAD_MESH.nr[0] * A.headH, nz = 0.985 * HEAD_MESH.nr[1] * A.headH; // neck half-width and half-depth
+  const bl = clamp((22 * A.g * A.g - 25) / 10, 0, 1.4), bf = (k) => bl * k * wd; // over BMI 25 the belly comes forward (not back): deeper and shifted ahead at the waist and below
   return [
     // below the hip line the pelvis turns in sharply, so the thighs come out of it along a clean line
-    [-0.2, 0.22 * hw, 0.3 * hd, -0.04 * hd], [-0.12, 0.6 * hw, 0.76 * hd, -0.08 * hd], [-0.06, 0.9 * hw, 0.96 * hd, -0.09 * hd], [-0.02, hw, hd, -0.08 * hd], [0.14, 0.9 * hw, 0.93 * hd, -0.03 * hd],
-    [0.38, ww, wd, 0], [0.56, 0.4 * ww + 0.6 * cw, (wd + cd) / 2, 0.03 * cd], [0.72, cw, cd * (F ? 1.08 : 1), (F ? 0.12 : 0.05) * cd],
+    [-0.2, 0.22 * hw, 0.3 * hd, -0.04 * hd], [-0.12, 0.6 * hw, 0.76 * hd, -0.08 * hd], [-0.06, 0.9 * hw, 0.96 * hd, -0.09 * hd], [-0.02, hw, hd, -0.08 * hd], [0.14, 0.9 * hw * (1 + 0.05 * bl), 0.93 * hd + bf(0.22), -0.03 * hd + bf(0.22)],
+    [0.38, ww * (1 + 0.08 * bl), wd + bf(0.32), bf(0.32)], [0.56, 0.4 * ww + 0.6 * cw, (wd + cd) / 2 + bf(0.14), 0.03 * cd + bf(0.14)], [0.72, cw, cd * (F ? 1.08 : 1), (F ? 0.12 : 0.05) * cd],
     [0.87, cw * (M ? 1.06 : 1.02), 0.92 * cd, 0.03 * cd], [0.99, 0.97 * sw, 0.74 * cd, -0.02 * cd], [1.06, 0.9 * sw, 0.6 * cd, -0.04 * cd],
     [1.1, 0.55 * sw, Math.max(0.5 * cd, 1.02 * nz), -0.02 * cd], [1.135, 0.9 * nx, 0.9 * nz, 0], // ends just inside the neck
   ];
@@ -2173,11 +2190,11 @@ const SPHERE_CUT_DEF = () => Math.round(0.067 * Math.min(S.w, S.h)); // by defau
 const sphereCut = () => (S.source === 'box' && S.shape === 'sphere' && S.pkey === 'sphere' ? clamp(S.det && S.det.cut != null ? +S.det.cut : SPHERE_CUT_DEF(), 0, 0.45 * S.h) : 0); // mm cut off the bottom of the sphere (its H stays the ball's own height)
 const sphereCutTop = () => (S.source === 'box' && S.shape === 'sphere' && S.pkey === 'sphere' ? clamp(S.det && S.det.cutTop != null ? +S.det.cutTop : 0, 0, 0.45 * S.h) : 0); // and off its top (0: round)
 const canDispense = () => kind() === 'dispenser' || (kind() === 'free' && !isProp() && (S.source === 'model' || S.pkey === 'box' || !!S.cup)); // a mockup solid never fills a cup; an AI-made one only if AI said it dispenses
-const ctrlKind = () => ['free', 'dispenser', 'floor', 'lamp', 'mouse', 'monitor', 'tv'].includes(kind()); // things with a button, a tap or a switch
+const ctrlKind = () => ['free', 'dispenser', 'floor', 'lamp', 'monitor', 'tv'].includes(kind()); // (a mouse is held, not pressed) // things with a button, a tap or a switch
 const ctrlOff = () => ctrlKind() && !!S.noCtrl; // controls switched off: it is only looked at
 const lookCtrl = () => S.source === 'box' && S.look === 'standac' && !ctrlOff(); // a display up top that is looked at, not touched (run from the remote)
 const lookAtIt = () => lookOnly() && !carried() && !atDesk();
-const grabbable = () => lookAtIt() && S.source === 'box' && !['banner', 'aboard', 'pot', 'pan', 'kettle', 'snowman', 'teddy'].includes(S.look) && (kind() === 'free' || S.look === 'paper' || S.shape === 'ring') && S.place !== 'wall'; // a mockup with no controls on: Play takes hold of it where it lies
+const grabbable = () => lookAtIt() && S.source === 'box' && !['banner', 'aboard', 'pot', 'pan', 'kettle', 'snowman', 'teddy'].includes(S.look) && (kind() === 'free' || kind() === 'mouse' || S.look === 'paper' || S.shape === 'ring') && S.place !== 'wall'; // a mockup with no controls on: Play takes hold of it where it lies
 const GRAB_MAX = 0.11; // narrower than this (in its narrow direction) goes in one fist // set down only to be looked at (a sheet, a mug, controls off): in use, the person stands at it and looks at it
 const hasControls = () => ctrlKind() && !ctrlOff(); // the others are simply held, worn, typed on or looked at
 const typedOn = () => S.source === 'box' && (S.shape === 'laptop' || S.look === 'keyboard'); // typed on: a laptop or a computer keyboard
@@ -4070,15 +4087,19 @@ function mouseGeo(group, W, D, H) {
   const own = meshIn(group), vert = S.style === 'vertical', dark = mats.stemBlack;
   const geo = new THREE.SphereGeometry(1, 56, 28, 0, Math.PI * 2, 0, Math.PI / 2), p = geo.attributes.position;
   const lean = vert ? 1 / Math.tan(deg(clamp(+dv('vang') || 57, 30, 90))) : 0;
-  for (let i = 0; i < p.count; i++) { let x = p.getX(i), y = p.getY(i), z = p.getZ(i); const f = Math.max(0, z); // z: +1 the front
-    y *= 1 - (vert ? 0.12 : 0.32) * f; x *= 1 - 0.14 * f; if (!vert && x > 0) x *= 0.92; // lower and narrower at the front; a right-hand mouse, its right side a little in
+  const sq = (c, n) => Math.sign(c) * Math.pow(Math.abs(c), 2 / n); // a squarer outline than an ellipse
+  for (let i = 0; i < p.count; i++) { const sx = p.getX(i), sy = p.getY(i), sz = p.getZ(i), r = Math.hypot(sx, sz), th = Math.atan2(sz, sx); // z: +1 the back (the palm, by the person), -1 the front (the buttons)
+    let x = r * sq(Math.cos(th), 2.8), z = r * sq(Math.sin(th), 2.4);
+    const front = Math.max(0, -z), hump = vert ? 1 - 0.12 * front : 0.6 + 0.4 * Math.exp(-(((z - 0.22) / 0.75) ** 2)); // the high point a little behind the middle, under the palm, sloping down to the buttons
+    let y = Math.pow(sy, 0.8) * hump; x *= 1 - 0.1 * front; if (!vert && x > 0) x *= 0.94; // narrower at the buttons; a right-hand mouse, its right side a little in
     if (vert) x -= y * lean * 0.9;
     p.setXYZ(i, x, y, z); }
   geo.computeBoundingBox(); const bb = geo.boundingBox; geo.translate(-(bb.min.x + bb.max.x) / 2, 0, 0); geo.scale(W / (bb.max.x - bb.min.x), H / bb.max.y, D / 2); geo.translate(0, 0, -D / 2); geo.computeVertexNormals();
+  { let hy = -1; const hp = geo.attributes.position; for (let i = 0; i < hp.count; i++) if (hp.getY(i) > hy) { hy = hp.getY(i); group.userData.hump = new V3(hp.getX(i), hy, hp.getZ(i)); } } // the top of the hump: where the palm rests
   part('몸체', 'Body'); own(geo, mats.foam);
   part('바닥', 'Base'); own(new THREE.CylinderGeometry(0.5, 0.5, 0.003, 48).scale(W * 0.92, 1, D * 0.94).translate(vert ? W * 0.04 : 0, 0.0015, -D / 2), dark);
-  let top = new V3(), best = -1; for (let i = 0; i < p.count; i++) { const z = p.getZ(i); if (z < -D * 0.18 && z > -D * 0.34 && p.getY(i) > best) { best = p.getY(i); top.set(p.getX(i), best, z); } } // the highest point a little behind the front: the wheel
-  if (best < 0) top.set(0, H * 0.7, -D * 0.3);
+  let top = new V3(), best = -1; for (let i = 0; i < p.count; i++) { const z = p.getZ(i), x = p.getX(i); if (z < -D * 0.66 && z > -D * 0.8 && Math.abs(x) < W * 0.1 && p.getY(i) > best) { best = p.getY(i); top.set(0, best, z); } } // the wheel: between the buttons, toward the front
+  if (best < 0) top.set(0, H * 0.6, -D * 0.72);
   part('휠', 'Wheel'); own(new THREE.CylinderGeometry(0.011, 0.011, 0.007, 24).rotateZ(Math.PI / 2 - (vert ? Math.atan(lean) : 0)).translate(top.x, top.y - 0.004, top.z), dark);
   if (!vert) { part('버튼', 'Buttons'); for (const [zc, l] of [[-D * 0.38, 0.018], [-D * 0.56, 0.016]]) own(new RoundedBoxGeometry(0.004, 0.009, l, 2, 0.0015).translate(-W * 0.47, H * 0.5, zc), dark); } // thumb buttons on the left
   part();
@@ -4964,10 +4985,13 @@ function buildSurface() {
       box(surface, Math.min(w, 0.9), ch, cd, E.c, cy + ch / 2, zb + cd / 2, mats.surface); // the mirror cabinet
       box(surface, Math.min(w, 0.9) - 0.01, ch - 0.01, 0.004, E.c, cy + ch / 2, zb + cd + 0.002, mir); }
     if (lvl < 2) { const sh = vanSink(), sw = Math.min(w, 0.8), sd = VAN_SINK_D, zf = z0 + sd, basin = new THREE.MeshStandardMaterial({ color: 0xf4f4f2, roughness: 0.25 });
-      box(surface, sw, sh - 0.12, sd, E.c, 0.12 + (sh - 0.12) / 2, z0 + sd / 2, mats.surface); // the basin unit, its top following the ledge
-      box(surface, sw + 0.02, 0.03, sd + 0.01, E.c, sh - 0.015, z0 + sd / 2 + 0.005, basin);
-      const bw = Math.min(0.5, sw * 0.7), bd = Math.min(0.34, sd * 0.7), bowl = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 20, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2).scale(bw / 2, 0.14, bd / 2), new THREE.MeshStandardMaterial({ color: 0xe8e8e6, roughness: 0.3, side: THREE.DoubleSide }));
-      bowl.position.set(E.c, sh + 0.001, z0 + sd / 2 + 0.02); surface.add(bowl);
+      box(surface, sw, sh - 0.152, sd, E.c, 0.12 + (sh - 0.152) / 2, z0 + sd / 2, mats.surface); // the basin unit, its top just under the counter (never the same plane: that flickered)
+      const bw = Math.min(0.5, sw * 0.7), bd = Math.min(0.34, sd * 0.7);
+      { const tw = sw + 0.02, td = sd + 0.01, sh2 = new THREE.Shape(); sh2.moveTo(-tw / 2, -td / 2); sh2.lineTo(tw / 2, -td / 2); sh2.lineTo(tw / 2, td / 2); sh2.lineTo(-tw / 2, td / 2); sh2.closePath();
+        const hole = new THREE.Path(); hole.absellipse(0, -0.015, bw / 2 - 0.002, bd / 2 - 0.002, 0, Math.PI * 2, true); sh2.holes.push(hole); // the counter, open over the bowl
+        const top = new THREE.Mesh(new THREE.ExtrudeGeometry(sh2, { depth: 0.03, bevelEnabled: false, curveSegments: 40 }).rotateX(-Math.PI / 2).translate(E.c, sh - 0.03, z0 + sd / 2 + 0.005), basin); top.userData.own = true; surface.add(top); }
+      const bowl = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 20, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2).scale(bw / 2, 0.14, bd / 2), new THREE.MeshStandardMaterial({ color: 0xe8e8e6, roughness: 0.3, side: THREE.DoubleSide }));
+      bowl.position.set(E.c, sh - 0.001, z0 + sd / 2 + 0.02); surface.add(bowl);
       box(surface, 0.03, Math.max(0.05, h - sh + 0.06), 0.03, E.c, sh + Math.max(0.05, h - sh + 0.06) / 2, z0 + 0.03, steel); box(surface, 0.022, 0.022, 0.12, E.c, sh + Math.max(0.05, h - sh + 0.06) - 0.011, z0 + 0.09, steel); } // the tap, standing at the ledge's front
     return;
   }
@@ -5040,6 +5064,12 @@ function layoutHuman() {
     const front = A.thigh + 0.14 + (A.chair === 'wheel' ? 0.07 : 0); // knees (a wheelchair's footrests further on)
     z = PL() === 'table' ? EDGE + 0.22 : PL() === 'counter' ? EDGE + front + 0.02 : PL() === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + front + 0.03 : PL() === 'wall' ? wallDist() + front : 0.15 + front; // a plinth's face, or the set distance from the wall, before the knees and footrests
   } else z = PL() === 'wall' ? wallDist() + toe /* stood back far enough to take it all in, or as set */ : PL() === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) + 0.06 + toe : PL() === 'vanity' ? EDGE + ((S.vanLvl || 0) < 2 ? VAN_SINK_D : 0) + 0.02 + toe /* in front of the basin, reaching over it to the ledge */ : PL() === 'counter' ? EDGE - 0.02 + toe + (S.source === 'box' && S.look === 'microwave' ? 0.08 : 0) : PL() === 'table' ? EDGE + 0.03 + toe : ((viewDistOn() ? viewDist() : null) ?? (S.source === 'box' && S.style === 'drawer' && !drawerCols() ? dims().D * 0.62 + 0.06 : null) ?? APPLIANCE_GAP[S.source === 'box' && S.look] ?? (dims().H > 0.6 && S.look !== 'floorlamp' ? 0.03 : 0.1)) + toe; // up to a tall thing on the floor (a plinth): toes close
+  S.bellyPush = 0;
+  if (!A.seated && !st && ['table', 'counter', 'vanity', 'plinth'].includes(PL())) { // the belly never through the edge of what it stands at: stood back if it would be
+    const pl = PL(), van = pl === 'vanity' && (S.vanLvl || 0) < 2, ez = pl === 'plinth' ? Math.max(0, plinthSize().d / 2 - dims().D / 2) : EDGE + (van ? VAN_SINK_D : 0), eh = pl === 'plinth' ? plinthSize().h : van ? vanSink() : SURF[pl];
+    const P0 = basePose(A, PP(), 0); let f = 0; for (let y = eh - 0.08; y <= eh + 0.021; y += 0.02) for (const u of [-0.1, -0.05, 0, 0.05, 0.1]) f = Math.max(f, torsoFrontAt(A, P0, y, u) || 0);
+    const need = ez + f + 0.008; if (f > 0 && z < need) { S.bellyPush = need - z; z = need; }
+  }
   if (cupInHand() && !A.seated && S.mode === 'use') { // a cup held under the outlet: stood back far enough that the hand round it is clear of the belly
     const cy = Math.max(controlWorld().y - 0.084, SURF[S.place] + 0.052), by = controlWorld().y + 0.05, key = [S.persona, S.height, S.bmi, S.posture, cy.toFixed(4), by.toFixed(4)].join('|'); let fc = 0, fb = 0;
     if (CUP_STAND.key === key) z = Math.max(z, CUP_STAND.z); else {
@@ -5512,6 +5542,7 @@ function planHands() {
     else if (S.look === 'dmirror' && holder.userData.stand) { // a desk mirror: the fist round its stand's upright (the right one of a fork, or the post), not on the glass
       const st = holder.userData.stand, k = S.scale, P2 = { W: st.w * k, D: st.d * k, H: st.h * k }, g = objectGrip(HD, P2, st.round, 0); g.dims = { W: st.w, D: st.d, H: st.h };
       S.plan = { ...g, kind: 'grab', grab: grabGoal(g, new THREE.Matrix4().makeTranslation(st.x, st.y, st.z + st.d / 2), [0, 2, 6]) }; }
+    else if (S.look === 'mouse' && holder.userData.hump) { product.updateMatrixWorld(true); S.pressLocal = human.worldToLocal(holder.localToWorld(holder.userData.hump.clone())); S.plan = { kind: 'flat', hp: flatPose() }; } // a mouse: the palm over its hump, the fingers on the buttons
     else if (S.look === 'cushion' && !laidFlat()) S.plan = cushionDab(HD, P); // open on the table: two fingertips touch the puff
     else if (S.look === 'pencase' && !laidFlat()) S.plan = pencaseGrab(HD, P); // lying on the table: the fist closes round it from above
     else if (S.look === 'book' && !laidFlat()) { const g = objectGrip(HD, P, false, 0); S.plan = { ...g, kind: 'grab', grab: grabGoal(g, null, [0, 4]) }; } // stood up: the right hand round its side, halfway up, thumb on the front cover, fingers round the back
@@ -5539,6 +5570,7 @@ function planHands() {
   const lap = typedOn(), c = controlWorld(), st = furn();
   const kb = S.mode === 'use' && atDesk() && !lap ? null : keyboardPoint(); // at the desk: typing while the product stands by, reaching for it in use
   if (!kb && S.mode !== 'use') return;
+  if (!kb && S.source === 'box' && S.look === 'mouse' && holder.userData.hump) { product.updateMatrixWorld(true); S.pressLocal = human.worldToLocal(holder.localToWorld(holder.userData.hump.clone())); S.plan = { kind: 'flat', hp: flatPose() }; return; } // a mouse at the desk: the palm over its hump, the fingers on the buttons
   if (kb) { // typing: palms down over the keys, the middle fingertips on the home row
     const hp = typePose(), tip = fingerPts(HD, hp)[1][3].clone().add(new V3(HD.fingers[1].r[2] * 0.9, 0, 0));
     const side = (s) => holder.localToWorld(holder.worldToLocal(kb.clone()).add(new V3(-s * 0.055 / S.scale, 0, 0)));
@@ -6108,6 +6140,7 @@ function evaluate() {
   const b0 = basePose(A, p, 0);
   const eyeY = b0.eye.y, shY = b0.shR.y, elY = shY - A.upperArm;
   out.land = { eyeY, shY, elY };
+  if (S.bellyPush > 0.003) { const nm = { table: ['테이블', 'table'], counter: ['조리대', 'counter'], vanity: ['세면대', 'basin'], plinth: ['단상', 'plinth'] }[PL()] || ['상판', 'top']; add(L('배', 'Belly'), L(`배가 ${nm[0]} 모서리에 닿아서 ${(S.bellyPush * 100).toFixed(1)}cm 물러서 있어요 — 손이 그만큼 멀어져요`, `The belly meets the ${nm[1]}'s edge, so the person stands ${(S.bellyPush * 100).toFixed(1)} cm further back: the hands reach that much further`), S.bellyPush > 0.04 ? 'warn' : 'info'); } // a big belly pressed against the edge
   if (isFurniture() && S.mode === 'use') return furnitureChecks(out, add, push, b0);
   const sizeTxt = L(`폭 ${mmi(P.W)}mm ≈ ${(P.W / A.span).toFixed(1)}뼘 · 높이 ${mmi(P.H)}mm (키의 ${Math.round((P.H / A.H) * 100)}%)`, `Width ${mmi(P.W)} mm ≈ ${(P.W / A.span).toFixed(1)} spans · height ${mmi(P.H)} mm (${Math.round((P.H / A.H) * 100)}% of stature)`);
 
@@ -6461,7 +6494,7 @@ function furnitureChecks(out, add, push, b0) {
       elbowCheck(top);
       if (st === 'standing') { const lo = 0.62, hi = 1.27, fit = clamp(Lm.elY - 0.02, lo, hi); add(L('높이 조절', 'Height range'), L(`62~127cm 전동 조절 · 이 사람은 ${A.seated ? '앉아서' : '서서'} ${cmi(fit)}cm가 맞아요`, `Motorized 62–127 cm · ${cmi(fit)} cm suits this person ${A.seated ? 'seated' : 'standing'}`), 'info'); }
       if (A.seated) kneeCheck(top - (dv('topT') / 1000) * S.scale);
-      else if (st === 'desk') add(L('자세', 'Posture'), L('서서 쓰는 높이로 점검했어요. 서서 일하려면 스탠딩 책상을 골라 보세요.', 'Checked standing. For standing work, try the standing desk.'), 'info');
+      else if (st === 'desk') add(L('자세', 'Posture'), L('서서 쓰는 높이로 확인했어요. 서서 일하려면 스탠딩 책상을 골라 보세요.', 'Checked standing. For standing work, try the standing desk.'), 'info');
       const md = top + 0.42 * S.scale - Lm.eyeY, mlv = md > 0.02 || md < -0.15 ? 'warn' : 'good';
       add(L('모니터', 'Monitor'), md > 0.02 ? L(`윗선이 눈보다 ${cmi(md)}cm 높아 고개를 들어요`, `Top edge ${cmi(md)} cm above the eyes, head tilts up`) : md < -0.15 ? L(`윗선이 눈보다 ${cmi(-md)}cm 낮아 고개를 숙여요`, `Top edge ${cmi(-md)} cm below the eyes, head tilts down`) : L(`24인치 윗선이 눈높이보다 ${cmi(-md)}cm 아래 · 보기 편해요`, `24-inch top edge ${cmi(-md)} cm below eye level, easy to view`), mlv);
       ownSeat();
@@ -6753,7 +6786,7 @@ function syncUI() {
     const sRGB = new THREE.Color(); sRGB.setHex(parseInt(hex.slice(1), 16), THREE.SRGBColorSpace); const R8 = parseInt(hex.slice(1, 3), 16), G8 = parseInt(hex.slice(3, 5), 16), B8 = parseInt(hex.slice(5, 7), 16);
     const k = 1 - Math.max(R8, G8, B8) / 255, cm = (v) => (k >= 1 ? 0 : Math.round(((1 - v / 255 - k) / (1 - k)) * 100));
     const set = (id, v) => { const e = $(id); if (document.activeElement !== e) e.value = v; };
-    set('colHex', hex.toUpperCase()); set('colHex2', hex.toUpperCase()); $('colNow').style.background = hex; $('colDot').style.background = hex; set('colC', cm(R8)); set('colM', cm(G8)); set('colY', cm(B8)); set('colK', Math.round(k * 100));
+    set('colHex', hex.toUpperCase()); set('colHex2', hex.toUpperCase()); $('colNow').style.background = hex; $('colDot').style.background = hex; set('colC', cm(R8)); set('colM', cm(G8)); set('colY', cm(B8)); set('colK', Math.round(k * 100)); set('colR', R8); set('colG', G8); set('colB', B8);
     if (!$('colSw').children.length) $('colSw').replaceChildren(...COL_SW.map((h) => { const b = document.createElement('button'); b.type = 'button'; b.style.background = h || tok('--foam'); b.dataset.c = h; b.title = h ? h.toUpperCase() : L('기본 (벽돌색)', 'Default (brick)'); return b; }));
     for (const b of $('colSw').children) b.setAttribute('aria-pressed', String((b.dataset.c || '') === (S.color || '')));
     $('colReset').disabled = !S.color; $('colPrev').disabled = COL_HIST.i <= 0; $('colNext').disabled = COL_HIST.i >= COL_HIST.list.length - 1; if (!$('colPop').hidden) syncColPop(hex); void r; void g; void bl; void sRGB; }
@@ -6917,16 +6950,29 @@ const ctrlDefault = () => (S.preset ? PRESETS[S.preset].ctrl : Math.round((S.sou
 /* ---------- floating suggestion ---------- */
 let toastItem = null, aiQueue = [];
 const dismissed = new Set();
-const intro = {
-  key: 'intro', level: 'info', apply: () => { S.persona = 'child'; S.height = PERSONAS.child.h; S.bmi = PERSONAS.child.bmi; }, refit: true,
-  get src() { return L('사용 팁', 'Tip'); },
-  get text() { return L('사람을 바꾸면 자동 점검이 바로 제안을 띄워요. 어린이로 바꿔 볼까요?', 'Change the person and the checks suggest fixes right away. Try a child?'); },
-  get label() { return L('어린이로', 'Try a child'); },
-};
+/* the tips: a short manual, one step at a time ("다음" steps on, the last starts over); the checks live in their own tab */
+const MANUAL = [
+  ['사람 탭에서 누구인지(성인·어린이 등)와 키·몸무게를 골라요.', 'In Person, pick who it is (adult, child…) and their height and weight.'],
+  ['제품 탭에서 예시 제품을 고르거나 \'내 모델 넣기\'로 파일을 올려요.', 'In Product, pick an example or add your own model file.'],
+  ['치수 탭에서 크기·놓는 곳·재질·색을 다듬어요. 제품을 고르면 바로 넘어가요.', 'In Dimensions, fine-tune the size, where it stands, its material and colour. Picking a product takes you there.'],
+  ['▶ 동작 보기를 누르면 사람이 쥐거나 눌러 보며 크기를 확인해요.', 'Press ▶ Play: the person holds or presses it, so you can judge the size.'],
+  ['위의 시점 버튼으로 3인칭·1인칭·정면·측면·평면을 오가요. 화각 숫자를 누르면 렌즈가 바뀌어요.', 'The view buttons switch between 3rd person, eye view, front, side and top. Tap the lens number to change it.'],
+  ['실제 사이즈를 누르면 화면에 실제 크기로 보여요. 처음엔 톱니 버튼에서 자로 화면을 맞춰요.', 'Actual Size shows it at its real size on screen. The first time, match the screen with a ruler under the gear.'],
+  ['삼각자 버튼을 켜고 정면·측면·평면에서 두 점을 찍으면 길이를 재요.', 'Turn on the set square and tap two points in a front, side or top view to measure.'],
+  ['확인 탭에서 손·높이·자세가 맞는지 자동으로 알려줘요.', 'The Checks tab tells you whether the hand, heights and posture work.'],
+  ['다 됐으면 이미지 저장이나 모델 파일 내보내기(3DM·OBJ·STL)로 가져가요.', 'When it is right, save an image or export the model (3DM, OBJ, STL).'],
+];
+let manIdx = 0;
+const manualItem = () => ({
+  key: 'man', level: 'info', apply: () => { manIdx = (manIdx + 1) % MANUAL.length; dismissed.delete('man'); },
+  get src() { return L(`사용법 ${manIdx + 1}/${MANUAL.length}`, `How to ${manIdx + 1}/${MANUAL.length}`); },
+  get text() { return L(...MANUAL[manIdx]); },
+  get label() { return manIdx === MANUAL.length - 1 ? L('처음부터', 'Start over') : L('다음', 'Next'); },
+});
 function showToast(it) {
   toastItem = it;
   if (it.src && it.src.startsWith('AI')) setLv($('toastLv'), it.level, L('제안', 'Idea'), 'idea'); else setLv($('toastLv'), it.level);
-  $('toastSrc').textContent = it.src || L('자동 점검', 'Auto check');
+  $('toastSrc').textContent = it.src || L('자동 확인', 'Auto check');
   $('toastText').textContent = it.text;
   $('toastApply').hidden = !it.apply;
   $('toastApply').textContent = it.label || L('적용', 'Apply');
@@ -6937,7 +6983,7 @@ function showToast(it) {
 let tipsOff = (() => { try { return localStorage.getItem('human-scale-tips-off') === '1'; } catch { return false; } })();
 function setTipsOff(v) { tipsOff = v; try { localStorage.setItem('human-scale-tips-off', v ? '1' : '0'); } catch {} updateToast(); }
 function updateToast() {
-  const it = aiQueue.length ? aiQueue[0] : S.E.sug.find((x) => !dismissed.has(x.key)) || (!dismissed.has('intro') ? intro : null);
+  const it = aiQueue.length ? aiQueue[0] : manualItem(); // AI ideas when asked for; otherwise the manual
   const b = $('btnTip'); icoBtn(b, 'tip', tipsOff ? '팁 보기' : '팁 숨기기', tipsOff ? 'Show tips' : 'Hide tips'); b.setAttribute('aria-pressed', String(!tipsOff)); b.toggleAttribute('data-new', tipsOff && !!it);
   b.title = tipsOff ? L('팁 보기', 'Show tips') : L('팁 숨기기', 'Hide tips');
   if (it && !tipsOff) return showToast(it);
@@ -6950,6 +6996,7 @@ $('toastApply').addEventListener('click', () => {
   dismissed.add(it.key);
   if (aiQueue[0] === it) aiQueue.shift();
   it.apply();
+  if (it.key === 'man') return updateToast(); // the manual only turns its page
   refresh({ rebuild: true, refit: !!it.refit });
 });
 $('toastClose').addEventListener('click', () => setTipsOff(true)); // tucked away, not thrown away
@@ -7378,6 +7425,11 @@ function updateOverlay(pose) {
   }
   const handTag = S.place === 'hand', wr = pose.arms[0].wr, el0 = pose.arms[0].el, armS = (() => { const a = proj(human.localToWorld(wr.clone())), b = proj(human.localToWorld(el0.clone())); return { ax: a.x, ay: a.y, bx: b.x, by: b.y, r: 22 }; })();
   callout($('t-tg'), handTag ? hands[0].g.localToWorld(new V3(0, 0, 0)) : controlWorld(), S.guides && S.view !== 'top' && S.view !== 'first' && S.place !== 'back' && !lookOnly() && (handTag || S.mode === 'use'), handTag ? ['down', 'left', 'right', 'up'] : ['right', 'left', 'up', 'down'], handTag ? prodR : uni(prodR, scrBox(new THREE.Box3().setFromObject(hands[0].g))), handTag ? [armS] : [], 'tg');
+  { const pl = S.place, on = ['table', 'desk', 'counter', 'vanity', 'plinth'].includes(pl) && !S.supOff && S.guides && S.view !== 'top' && S.view !== 'first' && !atDesk(); // what it stands on: its height, at its front corner
+    let at = new V3();
+    if (on) { const h = pl === 'plinth' ? plinthSize().h : SURF[pl], fz = pl === 'plinth' ? Math.max(0, plinthSize().d / 2 - P.D / 2) : EDGE, hx = pl === 'plinth' ? plinthSize().w / 2 : 0.3; at = product.parent.localToWorld(new V3(product.position.x - hx, h, product.position.z + fz));
+      $('t-sup').textContent = L(`${SURF_NAME[pl] ? SURF_NAME[pl][0] : pl === 'vanity' ? '젠다이' : ''} 높이 ${mmi(h)}`, `${SURF_NAME[pl] ? SURF_NAME[pl][1][0].toUpperCase() + SURF_NAME[pl][1].slice(1) : 'Ledge'} ${mmi(h)} mm high`); }
+    callout($('t-sup'), at, on, ['left', 'down', 'right'], prodR); }
   callout($('t-human'), headTop, S.guides && S.view !== 'first' && personVis() !== 'off', ['up', 'left', 'right'], uni(scrBox(new THREE.Box3().setFromObject(R.head)), S.place === 'head' ? prodR : null));
   $('leaderSvg').innerHTML = leaders.join('');
   const lines = S.guides && (S.view === 'front' || S.view === 'side');
@@ -7522,6 +7574,7 @@ function syncDetail() {
     }));
     const fr = [...$('detRows').children].filter((r) => r.dataset.form).slice(0, 1); $('formRows').replaceChildren(...fr); // the form (shape) row goes to the top of the tab
     $('matRows').replaceChildren(...[...$('detRows').children].filter((r) => MAT_KEYS.includes(r.dataset.k))); // the materials: just above the colour
+    for (const r of $('matRows').children) { const lb = r.querySelector('label'); if (lb && ['재질', 'Material'].includes(lb.textContent.trim())) lb.hidden = true; } // a row called just 'Material' under the 'Material' heading: the heading says it
   }
   $('formField').hidden = !$('formRows').children.length; $('matField').hidden = !$('matRows').children.length; $('matField').style.setProperty('--prodc', '#' + new THREE.Color(prodCol()).getHexString());
   box.hidden = !$('detRows').children.length; // only a form to pick: nothing left for the detail sizes
@@ -7582,7 +7635,7 @@ function buildChips() {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'chip';
       if (k.startsWith('fam:')) { const f = k.slice(4), F = FAMILIES[f]; b.dataset.family = f; b.textContent = L(F.ko, F.en); b.addEventListener('click', () => applyPreset(F.last || F.sizes[0][0])); }
-      else { b.dataset.preset = k; b.textContent = presetName(k); b.addEventListener('click', () => applyPreset(k)); }
+      else { b.dataset.preset = k; b.textContent = presetName(k); b.addEventListener('click', () => { applyPreset(k); goDims(); }); } // picked: straight on to its dimensions (a family stays, for its size first)
       return b;
     }));
     g.append(t, row);
@@ -7647,7 +7700,7 @@ $('btnSupport').addEventListener('click', () => {
   refresh({ rebuild: true });
 });
 buildChips();
-$('variantSeg').addEventListener('click', (e) => { const b = e.target.closest('[data-size]'); if (b) applyPreset(b.dataset.size); });
+$('variantSeg').addEventListener('click', (e) => { const b = e.target.closest('[data-size]'); if (b) { applyPreset(b.dataset.size); goDims(); } });
 $('hIn').addEventListener('input', (e) => { S.height = +e.target.value; refresh(); });
 $('hNum').addEventListener('change', (e) => { const p = PERSONAS[S.persona], v = parseFloat(e.target.value); if (isFinite(v)) S.height = clamp(Math.round(v * 10) / 10, p.hr[0], p.hr[1]); e.target.blur(); refresh(); }); // typed: kept within this person's range
 $('wNum').addEventListener('change', (e) => { const br = PERSONAS[S.persona].br, v = parseFloat(e.target.value); if (isFinite(v) && v > 0) S.bmi = clamp(v / (S.height / 100) ** 2, br[0], br[1]); e.target.blur(); refresh(); });
@@ -7715,6 +7768,7 @@ const hexIn = (v) => { v = v.trim(); if (!v.startsWith('#')) v = '#' + v; if (/^
 $('colHex').addEventListener('change', (e) => hexIn(e.target.value));
 $('colHex2').addEventListener('change', (e) => hexIn(e.target.value));
 const hex2 = (n) => clamp(Math.round(+n || 0), 0, 255).toString(16).padStart(2, '0');
+for (const id of ['colR', 'colG', 'colB']) $(id).addEventListener('input', () => setColor('#' + ['colR', 'colG', 'colB'].map((i) => hex2($(i).value)).join(''))); // RGB under CMYK
 for (const id of ['colC', 'colM', 'colY', 'colK']) $(id).addEventListener('input', () => { const [c, m, y, k] = ['colC', 'colM', 'colY', 'colK'].map((i) => clamp(+$(i).value || 0, 0, 100) / 100); setColor('#' + hex2(255 * (1 - c) * (1 - k)) + hex2(255 * (1 - m) * (1 - k)) + hex2(255 * (1 - y) * (1 - k))); });
 /* the detailed picker: a saturation-brightness field over the hue, the hue bar, the code and CMYK */
 const HSV = { h: 0, s: 0, v: 0 };
@@ -7760,6 +7814,7 @@ segBind('actSeg', 'act', (v) => { S.action = v; refresh(); });
 segBind('ctrlOnSeg', 'on', (v) => { S.noCtrl = v === '0'; refresh({ refit: true }); }); // off: no control point, the person simply stands beside it
 $('btnMode').addEventListener('click', () => { if ($('btnMode').disabled) return; const v = S.mode === 'compare' ? 'use' : 'compare'; S.mode = v; if (S.source === 'box' && S.look === 'parcel') { S.place = v === 'compare' ? 'floor' : 'hand'; refresh({ rebuild: true, refit: true }); return; } refresh({ refit: true }); }); // a parcel box: carried in use, set on the floor beside the person side by side
 for (const b of $('views').querySelectorAll('[data-view]')) b.addEventListener('click', () => { if (!b.disabled) pressView(b.dataset.view); });
+function goDims() { $('tb-set').click(); const pn = document.querySelector('.panel'); if (pn) pn.scrollTop = 0; }
 for (const t of document.querySelectorAll('[role="tab"][aria-controls]')) { // the panel tabs (the example tabs have their own)
   t.addEventListener('click', () => {
     for (const u of document.querySelectorAll('[role="tab"][aria-controls]')) {
@@ -8136,7 +8191,7 @@ function reviewPrompt() {
     S.place === 'head' ? '착용: 머리·귀에 씀' : `놓는 곳: ${placeLabel(S.place)}${S.place === 'hand' ? '에 들고 사용' : ` (윗면 높이 ${cmi(SURF[S.place])}cm)`}`,
     carried() || isFurniture() ? '' : `조작부: ${S.face === 'top' ? '윗면' : `앞면, 제품 밑면에서 ${mmi(ctrlM())}mm`}, 동작: ${cupOnTray() ? '받침에 둔 컵에 받기' : cupInHand() ? '컵을 들고 받기' : '누르기'}`,
     `배치: ${carried() ? (S.place === 'hand' ? '손에 들고 봄' : '머리에 쓰고 있음') : atDesk() ? (S.mode === 'use' ? '컴퓨터 책상에 앉아 모니터 오른쪽에 놓인 제품에 손을 뻗음' : '컴퓨터 책상에 앉아 타이핑 중, 제품은 24인치 모니터 오른쪽에 놓여 있음') : S.mode === 'use' ? (A.seated ? '제품 앞에 앉아서 사용' : '제품 앞에 서서 사용') : '제품 옆에 나란히 서 있음'}`,
-    `자동 점검 결과: ${E.checks.map((c) => `${c.k}: ${c.v}`).join(' / ')}`,
+    `자동 확인 결과: ${E.checks.map((c) => `${c.k}: ${c.v}`).join(' / ')}`,
     '규칙: 최대 3개, 효과 큰 것부터. 숫자는 mm 단위 실제 값. 바꿀 값이 없으면 change는 null.',
     `title과 why는 ${LANG === 'en' ? '영어(English)' : '한국어'}로.`,
     '답은 JSON 하나만: {"suggestions":[{"title":"30자 이내 제안","why":"60자 이내 근거","change":{"field":"w|d|h|ctrl|place|face","value":숫자 또는 문자열(place면 floor|table|desk|counter|hand)}}]}',
@@ -8203,7 +8258,7 @@ $('dimReset').addEventListener('click', () => { if (!S.base) return; if (sizeUni
 }
 $('zoomIn').addEventListener('click', () => zoomView(0.8));
 $('zoomOut').addEventListener('click', () => zoomView(1.25));
-$('viewReset').addEventListener('click', resetView);
+$('viewReset').addEventListener('click', () => location.reload()); // everything back to the start, as a reload (the language, body data, screen size and your models stay)
 canvas.addEventListener('wheel', (e) => { if (S.view !== 'first') return; e.preventDefault(); zoomView(e.deltaY > 0 ? 1.08 : 1 / 1.08); }, { passive: false });
 segBind('postureSeg', 'posture', (v) => { S.posture = v; refresh({ refit: true }); });
 $('hReset').addEventListener('click', () => { S.height = PERSONAS[S.persona].h; refresh(); });
@@ -8262,12 +8317,8 @@ $('btnMeasure').addEventListener('click', () => setMeasure(!meas.on));
 { // 1:1: measured once, then on and off
   const open = () => { const w = Math.round(Math.min(320, (stage.clientWidth || 600) - 120)); $('calibBar').style.width = `${w}px`; document.querySelector('.calib-say').style.width = `${w}px`; $('calibBar').dataset.px = w; $('calibMm').value = ''; $('calib').hidden = false; setTimeout(() => $('calibMm').focus(), 30); };
   const close = () => { $('calib').hidden = true; };
-  let holdT = 0, held = false; // press and hold: calibrate again
-  const b11 = $('btn11'), endHold = () => clearTimeout(holdT);
-  b11.addEventListener('pointerdown', () => { held = false; clearTimeout(holdT); holdT = setTimeout(() => { held = true; open(); }, 600); });
-  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b11.addEventListener(ev, endHold);
-  b11.addEventListener('contextmenu', (e) => e.preventDefault());
-  b11.addEventListener('click', () => { if (held) { held = false; return; } if (ONE.on) setOne(false); else if (ONE.ppmm > 0) setOne(true); else open(); });
+  $('btn11').addEventListener('click', () => { if (ONE.on) setOne(false); else if (ONE.ppmm > 0) setOne(true); else open(); }); // the first time, the screen is matched first
+  $('btn11Set').addEventListener('click', open); // the gear: match the screen again
   $('calibNo').addEventListener('click', close);
   const ok = () => { const mm = +$('calibMm').value, px = +$('calibBar').dataset.px; if (!(mm >= 10 && mm <= 2000) || !(px > 0)) { $('calibMm').focus(); return; } ONE.ppmm = px / mm; try { localStorage.setItem('hs.ppmm', String(ONE.ppmm)); } catch {} $('calibMm').blur(); window.scrollTo(0, 0); close(); setOne(true); }; // the keyboard and any zoom it brought put away
   $('calibOk').addEventListener('click', ok);
@@ -8339,6 +8390,15 @@ commit();
 setView('third');
 renderer.setAnimationLoop(tick);
 document.addEventListener('keydown', (e) => { const el = e.target; if (!e.shiftKey || !(el instanceof HTMLInputElement) || el.type !== 'number' || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return; e.preventDefault(); const st = +el.step || 1, v = (+el.value || 0) + (e.key === 'ArrowUp' ? 10 : -10) * st, lo = el.min !== '' ? +el.min : -Infinity, hi = el.max !== '' ? +el.max : Infinity; el.value = String(+clamp(v, lo, hi).toFixed(4)); el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }, true); // Shift + up/down: ten steps at a time
+
+{ // phones: the view small over the settings; a tap fills the screen with it, the bar under it brings the settings back
+  const app = document.querySelector('.app');
+  $('stageTap').addEventListener('click', () => app.classList.add('full'));
+  $('stageBack').addEventListener('click', () => app.classList.remove('full'));
+}
+/* iPhone and iPad: no pinching or double-tapping the page itself bigger (the 3D view keeps its own zoom) */
+for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove', (e) => { if (e.touches.length > 1 && !e.target.closest('canvas')) e.preventDefault(); }, { passive: false });
 
 /* ---------- model files: the product as drawn, at its size now, in millimetres ----------
    One zip with a Rhino file (.3dm), an OBJ and an STL. The .3dm is written here (openNURBS layout: what rhino3dm writes for a mesh, the tables
