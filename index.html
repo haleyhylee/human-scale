@@ -2200,7 +2200,7 @@ const vanSink = () => Math.max(0.62, SURF.vanity - 0.17); // the basin's counter
 const VAN_SINK_D = 0.48;
 const GLASS_MIRROR = new THREE.MeshPhysicalMaterial({ color: 0xc9d4d9, metalness: 0.55, roughness: 0.08, clearcoat: 1, clearcoatRoughness: 0.02 }); // a mirror's glass: bright and cool (there is nothing round it to reflect)
 const cookOn = () => S.source === 'box' && ['pan', 'pot'].includes(S.look) && S.place === 'counter'; // a pan or pot on the counter: on an induction hob
-const viewDistOn = () => S.source === 'box' && ['aboard', 'banner'].includes(S.look) && S.place === 'floor' && !S.supOff; // a sign stood on the floor: looked at from a set distance
+const viewDistOn = () => S.source === 'box' && ['aboard', 'banner', 'pendant'].includes(S.look) && S.place === 'floor' && !S.supOff; // a pendant: how far the person stands from under it // a sign stood on the floor: looked at from a set distance
 const viewDist = () => (S.surf && S.surf.viewD ? S.surf.viewD / 1000 : APPLIANCE_GAP[S.look] || 1);
 const wallDist = () => (S.surf && S.surf.wallD ? S.surf.wallD / 1000 : S.source === 'box' && S.look === 'shelf' ? dims().D + 0.35 : S.source === 'box' && S.look === 'frame' ? 1 : S.source === 'box' && S.look === 'tv' ? Math.max(1.2, ((PRESETS[S.pkey] && PRESETS[S.pkey].diag) || 65) * 0.0254 * 1.2) : Math.max(0.45, 1.1 * Math.max(rowExt().w, dims().H))); // from the wall to the person's toes (m)
 const carried = () => S.place === 'hand' || S.place === 'head' || S.place === 'back'; // held in the hands, or worn on the head or the back
@@ -5495,7 +5495,7 @@ function flatTop() {
   return t;
 }
 /* how far the toes stay from big things on the floor (m): room to stand back, and for a door to swing past */
-const APPLIANCE_GAP = { banner: 1.1, aboard: 0.85, fridge: 0.32, washer: 0.16, standac: 0.38, airpurifier: 0.1, purifier: 0.25, door: 0.16, luggage: 0.03, wardrobe: 0.3, trolley: 0.18, floorlamp: 0.12 };
+const APPLIANCE_GAP = { pendant: 0.5, banner: 1.1, aboard: 0.85, fridge: 0.32, washer: 0.16, standac: 0.38, airpurifier: 0.1, purifier: 0.25, door: 0.16, luggage: 0.03, wardrobe: 0.3, trolley: 0.18, floorlamp: 0.12 };
 function planHands() {
   const A = S.A, HD = A.hd;
   S.handRest = A.seated ? flatPose() : restPose(); // seated, the hands lie flat on the thighs (or on the beanbag)
@@ -6846,7 +6846,7 @@ function syncUI() {
     $('vanityRows').hidden = !(S.place === 'vanity' && !isFurniture()); if (S.place === 'vanity') for (const [id, v] of [['vanD', vanD()], ['vanDn', vanD()], ['vanGap', vanGap()], ['vanGapn', vanGap()]]) if (document.activeElement !== $(id)) $(id).value = Math.round(v * 1000);
     const pl = S.place === 'plinth' && !isFurniture();
     $('plinthRows').hidden = !pl;
-    $('wallRow').hidden = S.place !== 'wall' && !viewDistOn(); $('wallRow').querySelector('label').textContent = viewDistOn() ? L('보는 거리', 'Viewing distance') : L('벽과 거리', 'From wall'); if (S.place === 'wall' || viewDistOn()) { const v = Math.round((viewDistOn() ? viewDist() : wallDist()) * 1000); for (const id of ['wallD', 'wallDn']) if (document.activeElement !== $(id)) $(id).value = v; }
+    $('wallRow').hidden = S.place !== 'wall' && !viewDistOn(); $('wallRow').querySelector('label').textContent = viewDistOn() ? (S.look === 'pendant' ? L('펜던트와 거리', 'From the pendant') : L('보는 거리', 'Viewing distance')) : L('벽과 거리', 'From wall'); if (S.place === 'wall' || viewDistOn()) { const v = Math.round((viewDistOn() ? viewDist() : wallDist()) * 1000); for (const id of ['wallD', 'wallDn']) if (document.activeElement !== $(id)) $(id).value = v; }
     if (pl) { for (const [id, k, d] of [['plForm', 'plinthForm', 'cube'], ['plMat', 'plinthMat', 'solid']]) for (const b of $(id).children) b.setAttribute('aria-pressed', String(b.dataset.v === ((S.surf && S.surf[k]) || d))); }
     if (pl) { const ps = plinthSize(); for (const [id, v] of [['plW', ps.w], ['plWn', ps.w], ['plD', ps.d], ['plDn', ps.d], ['plR', ((S.surf && S.surf.plinthR) || 0) / 1000], ['plRn', ((S.surf && S.surf.plinthR) || 0) / 1000]]) if (document.activeElement !== $(id)) $(id).value = Math.round(v * 1000); }
     for (const b of $('placeSeg').children) { const k = b.dataset.place; if (!NM[k]) continue; const c = k === 'wall' ? Math.round((winLook() ? winSill() : wallMid()) / 10) : Math.round(SURF[k] * 100), nm = { plinth: ['단상', 'Plinth'], air: ['공중', 'Midair'], wall: ['벽', 'Wall'], vanity: ['젠다이', 'Vanity'] }[k] || NM[k]; b.dataset.ko = `${nm[0]} ${c}`; b.dataset.en = `${nm[1]} ${c}`; b.textContent = LANG === 'en' ? b.dataset.en : b.dataset.ko; }
