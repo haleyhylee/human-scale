@@ -217,10 +217,11 @@ button { cursor: pointer; }
 .psearch svg { width: 18px; height: 18px; }
 .pgroup.nohit { display: none; }
 .presets .chip.nohit { display: none; }
-.brandrow { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex: 1 1 100%; }
-.credit { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; font-size: 12px; color: var(--ink-2); text-decoration: none; line-height: 1.2; }
-.credit .who { display: inline-flex; align-items: center; gap: 4px; color: var(--ink); font-weight: 600; }
-.credit svg { width: 15px; height: 15px; color: #111; }
+.brandrow { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex: 1 1 100%; }
+.phr { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; } /* undo and redo, then the credit under them */
+.credit { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-2); text-decoration: none; line-height: 1.2; text-align: right; }
+.credit .who { display: inline-flex; align-items: center; gap: 3px; color: inherit; font-weight: 400; }
+.credit svg { width: 11px; height: 11px; color: inherit; }
 .credit:hover .who { text-decoration: underline; }
 .wm { font-family: var(--font-display); font-stretch: 72%; font-weight: 800; font-size: 26px; letter-spacing: 0.05em; line-height: 1; }
 .wm i { display: inline-block; width: 8px; height: 8px; background: var(--accent); margin: 0 6px 3px; vertical-align: middle; }
@@ -339,7 +340,7 @@ input:disabled { opacity: 0.55; }
 .reset { height: 24px; padding: 0 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--raise); font-size: 11.5px; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
 .reset:hover:not(:disabled) { border-color: var(--ink-2); color: var(--ink); }
 .reset:disabled { opacity: 0.45; cursor: default; }
-.ph-r { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.langf { padding-bottom: 14px; }
 .hist { display: inline-flex; gap: 4px; }
 .hist .btn { width: 34px; padding: 0; font-size: 19px; line-height: 1; }
 .vhint { font-size: 11.5px; color: var(--ink-2); }
@@ -449,6 +450,7 @@ input:disabled { opacity: 0.55; }
         <button type="button" class="btn ico" id="btnGhost" aria-pressed="false"></button>
         <button type="button" class="btn ico" id="btnSupport" aria-pressed="false" hidden></button>
         <button type="button" class="btn ico" id="btnGuides" aria-pressed="true"></button>
+        <button type="button" class="btn ico" id="btnMode"></button>
         <button type="button" class="btn ico" id="btnPlay"></button>
         <button type="button" class="btn accent" id="btnAI" hidden>AI 제안</button>
       </div>
@@ -462,17 +464,12 @@ input:disabled { opacity: 0.55; }
           <span class="wm">HUMAN<i aria-hidden="true"></i>SCALE</span>
           <span class="sub" data-en="Check product size against people">사람을 기준으로 제품 크기를 확인하기</span>
         </div>
-        <a class="credit" href="https://instagram.com/hyeym" target="_blank" rel="noopener" aria-label="made by hyeym · Instagram"><span>made by</span><span class="who">hyeym<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.3" cy="6.7" r="1.2" fill="currentColor"/></svg></span></a>
-      </div>
-      <div class="ph-r">
-        <div class="seg lang" id="langSeg" role="group" aria-label="언어 · Language"><button type="button" data-lang="ko" lang="ko">한국어</button><button type="button" data-lang="en" lang="en">EN</button></div>
-        <div class="seg" id="modeSeg" aria-label="배치" data-en-aria="Layout">
-          <button type="button" data-mode="use" aria-pressed="true" data-en="In use">사용하기</button>
-          <button type="button" data-mode="compare" aria-pressed="false" data-en="Compare">나란히</button>
-        </div>
-        <div class="hist">
+        <div class="phr">
+          <div class="hist">
           <button type="button" class="btn" id="undoBtn" aria-label="이전 상태로" title="이전 (Ctrl+Z)" data-en-aria="Undo" data-en-title="Undo (Ctrl+Z)">‹</button>
           <button type="button" class="btn" id="redoBtn" aria-label="다음 상태로" title="다음 (Ctrl+Shift+Z)" data-en-aria="Redo" data-en-title="Redo (Ctrl+Shift+Z)">›</button>
+        </div>
+          <a class="credit" href="https://instagram.com/hyeym" target="_blank" rel="noopener" aria-label="made by hyeym · Instagram"><span>made by</span><span class="who">hyeym<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.3" cy="6.7" r="1.2" fill="currentColor"/></svg></span></a>
         </div>
       </div>
     </header>
@@ -723,6 +720,9 @@ input:disabled { opacity: 0.55; }
     </section>
 
     <section class="tabpanel" id="tab-check" role="tabpanel" aria-labelledby="tb-check" hidden>
+      <div class="field langf"><div class="label" data-en="Language">언어</div>
+        <div class="seg lang full" id="langSeg" role="group" aria-label="언어 · Language"><button type="button" data-lang="ko" lang="ko">한국어</button><button type="button" data-lang="en" lang="en">EN</button></div>
+      </div>
       <div class="csum" id="checkSum"></div>
       <ul class="checklist" id="checks"></ul>
       <p class="foot" data-en="A comfortable control height is between elbow and shoulder. The lean angle is how far the body bends until the hand reaches. These are simple rules, so use them to set direction.">편한 조작 높이는 팔꿈치~어깨 사이로 봐요. 허리 숙임은 손이 닿을 때까지 몸을 굽힌 각도예요. 단순한 규칙이라 방향을 잡는 용도로 쓰세요.</p>
@@ -6837,7 +6837,7 @@ function syncUI() {
   if (topCtrl()) { const D = dims().D; $('cIn').max = Math.round((D / S.scale) * 1000); $('cIn').value = Math.round((topCtrlZ(D) / S.scale) * 1000); }
   else { $('cIn').max = Math.round(isModel ? S.model.h : S.h); $('cIn').value = S.ctrl; }
   $('cOut').textContent = topCtrl() ? `${Math.round((topCtrlZ(dims().D) / S.scale) * 1000)}mm` : `${mmi(ctrlM())}mm`;
-  for (const b of $('modeSeg').children) b.disabled = (carried() && !(S.source === 'box' && S.look === 'parcel')) || (lookOnly() && !lookAtIt() && !(S.source === 'box' && S.look === 'parcel')); // a ring, a sheet, a phone laid on the desk or a mug set down is only looked at
+  { const b = $('btnMode'), cmp = S.mode === 'compare'; icoBtn(b, cmp ? 'compare' : 'inuse', cmp ? '나란히 (누르면 사용하기)' : '사용하기 (누르면 나란히)', cmp ? 'Compare (press for in use)' : 'In use (press for compare)'); b.setAttribute('aria-pressed', String(cmp)); b.disabled = (carried() && !(S.source === 'box' && S.look === 'parcel')) || (lookOnly() && !lookAtIt() && !(S.source === 'box' && S.look === 'parcel')); } // in use or side by side, one button that swaps them; a ring, a sheet, a phone laid on the desk or a mug set down is only looked at
   $('modelOpts').hidden = !isModel; $('backToBox').hidden = !isModel;
   syncPlay();
   $('btnPlay').disabled = handKind() === 'clutch' || (S.source === 'box' && (S.look === 'snowman' || S.look === 'teddy')) || (lookAtIt() && !grabbable() && !(holder.userData.door && holder.userData.door.auto) && !(S.plan && (S.plan.kind === 'pot2' || (S.plan.kind === 'bar' && S.source === 'box' && (S.look === 'pan' || S.look === 'kettle'))))) || (S.mode === 'compare' && S.place !== 'hand') || (A.chair === 'product' && !officeDesk()) || S.place === 'head' || S.place === 'back';
@@ -7034,6 +7034,8 @@ const ICO = {
   halfsupport: '<rect x="9" y="4.5" width="6" height="5" rx="0.6" stroke-dasharray="2.2 2"/><rect x="5" y="11.5" width="14" height="8.5" rx="0.8"/>',
   nosupport: '<rect x="9" y="4.5" width="6" height="5" rx="0.6"/><rect x="5" y="11.5" width="14" height="8.5" rx="0.8" stroke-dasharray="2.2 2"/><path d="M4 4l16 16"/>',
   render: '<circle cx="12" cy="12" r="7.5"/><path d="M18.5 8.2A7.5 7.5 0 0 1 8.2 18.5A10.5 10.5 0 0 1 18.5 8.2z" fill="currentColor" stroke="none" opacity="0.45"/><path d="M4.5 12a7.5 2.6 0 0 0 15 0M12 4.5a2.6 7.5 0 0 0 0 15" stroke-width="1.1"/>',
+  inuse: '<circle cx="8.5" cy="4.5" r="2.2"/><path d="M8.5 7.5v7M8.5 21v-6.5M5 21l3.5-6.5L12 21M8.5 10l5 2.5"/><rect x="13.5" y="10" width="6" height="6" rx="0.8"/>',
+  compare: '<circle cx="6.5" cy="4.5" r="2.2"/><path d="M6.5 7.5v7M6.5 21v-6.5M3.5 21l3-6.5 3 6.5M3.5 10.5l3-1 3 1"/><rect x="14" y="13" width="7" height="8" rx="0.8"/><path d="M11.5 3v18" stroke-dasharray="1.6 2.2"/>',
   pen: '<path d="M4.5 19.5l3.8-.9L19 7.9a2 2 0 0 0-2.9-2.9L5.4 15.7z"/><path d="M14.6 6.5l2.9 2.9"/>',
   dims: '<path d="M12 2.5l5.5 3.2v6.4L12 15.3l-5.5-3.2V5.7z"/><path d="M6.5 5.7L12 8.9l5.5-3.2M12 8.9v6.4"/><path d="M3.5 20h17M6 17.5L3.5 20 6 22.5M18 17.5l2.5 2.5-2.5 2.5"/>',
   nodims: '<path d="M12 2.5l5.5 3.2v6.4L12 15.3l-5.5-3.2V5.7z"/><path d="M6.5 5.7L12 8.9l5.5-3.2M12 8.9v6.4"/><path d="M3.5 20h17M6 17.5L3.5 20 6 22.5M18 17.5l2.5 2.5-2.5 2.5"/><path d="M3 3l18 18"/>',
@@ -7701,7 +7703,7 @@ function setLang(v) {
 const setMsg = (id, text) => { const el = $(id); el.textContent = text; el.dataset.dyn = '1'; }; // a status line that stays put when the language changes
 segBind('actSeg', 'act', (v) => { S.action = v; refresh(); });
 segBind('ctrlOnSeg', 'on', (v) => { S.noCtrl = v === '0'; refresh({ refit: true }); }); // off: no control point, the person simply stands beside it
-segBind('modeSeg', 'mode', (v) => { S.mode = v; if (S.source === 'box' && S.look === 'parcel') { S.place = v === 'compare' ? 'floor' : 'hand'; refresh({ rebuild: true, refit: true }); return; } refresh({ refit: true }); }); // a parcel box: carried in use, set on the floor beside the person side by side
+$('btnMode').addEventListener('click', () => { if ($('btnMode').disabled) return; const v = S.mode === 'compare' ? 'use' : 'compare'; S.mode = v; if (S.source === 'box' && S.look === 'parcel') { S.place = v === 'compare' ? 'floor' : 'hand'; refresh({ rebuild: true, refit: true }); return; } refresh({ refit: true }); }); // a parcel box: carried in use, set on the floor beside the person side by side
 for (const b of $('views').querySelectorAll('[data-view]')) b.addEventListener('click', () => { if (!b.disabled) pressView(b.dataset.view); });
 for (const t of document.querySelectorAll('[role="tab"][aria-controls]')) { // the panel tabs (the example tabs have their own)
   t.addEventListener('click', () => {
