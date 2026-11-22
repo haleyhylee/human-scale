@@ -363,6 +363,7 @@ input:disabled { opacity: 0.55; }
 .reset { height: 24px; padding: 0 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--raise); font-size: 11.5px; font-weight: 500; color: var(--ink-2); white-space: nowrap; }
 .reset:hover:not(:disabled) { border-color: var(--ink-2); color: var(--ink); }
 .reset:disabled { opacity: 0.45; cursor: default; }
+.label > .reset { margin-left: auto; } .lrow > .reset { order: 3; margin-left: 8px; align-self: center; } /* every default button at the right end of its line, as the colour one is */
 .langf { padding-bottom: 14px; }
 .hist { display: inline-flex; gap: 4px; }
 .hist .btn { width: 34px; height: 28px; padding: 0; display: inline-flex; align-items: center; justify-content: center; } .hist .btn svg { display: block; }
@@ -737,7 +738,7 @@ input:disabled { opacity: 0.55; }
         <button type="button" class="btn wide" id="btnExport" data-en="Download 3DM · OBJ · STL (zip)">3DM · OBJ · STL 받기 (zip)</button>
         <p class="hint" id="expMsg" aria-live="polite" hidden></p>
         <ul class="explist">
-          <li><b data-en="Contents">담기는 것</b><span data-en="The product alone. Tick the person or the plinth for the whole scene (floor at 0).">제품만. 사람·단상을 체크하면 화면 그대로의 장면 (바닥 0)</span></li>
+          <li><b data-en="Contents">담기는 것</b><span><span data-en="The product alone. Tick the person or the plinth for">제품만. 사람·단상을 체크하면</span><span class="br" data-en="the whole scene (floor at 0).">화면 그대로의 장면 (바닥 0)</span></span></li>
           <li><b>3DM</b><span><span data-en="Rhino 7 or later.">라이노 7 이상.</span><span class="br" data-en="Layers: Product (parts under it) / Person / Scene">레이어: Product(부품별) / Person / Scene</span></span></li>
           <li><b>OBJ · STL</b><span data-en="Z up, floor at 0, like Rhino">라이노처럼 위가 Z, 바닥이 0</span></li>
           <li><b>SOLIDWORKS</b><span data-en="Open the .stl or .obj, Options → Solid Body">.stl·.obj 열기 → 옵션에서 '솔리드 바디'</span></li>
