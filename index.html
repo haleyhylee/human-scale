@@ -1697,9 +1697,9 @@ function torsoGeo(key, tl, p, band = null) {
 }
 /* limb thickness measured on the base mesh (a 2 m woman), scaled to this person's height and build; men a little more muscular */
 function limbProfiles(A, p) {
-  const k = (A.H / 2) * A.g, arm = p.sex === 'M' ? 1.1 : 1, leg = p.sex === 'M' ? 1.04 : 1;
+  const k = A.H / 2, arm = p.sex === 'M' ? 1.1 : 1, leg = p.sex === 'M' ? 1.04 : 1, up = Math.pow(A.g, 1.6), lo = Math.pow(A.g, 1.25); // build shows most on the upper arm and thigh, less on the forearm and calf
   const sc = (pr, f, end) => pr.map(([t, r], i) => [t, (i === pr.length - 1 && end ? Math.min(r, pr[i - 1][1]) : r) * k * f]);
-  return { arm: [sc(LIMB_PROFILE.upArm, arm), sc(LIMB_PROFILE.loArm, arm)], leg: [sc(LIMB_PROFILE.upLeg, leg), sc(LIMB_PROFILE.loLeg, leg, true)] };
+  return { arm: [sc(LIMB_PROFILE.upArm, arm * up), sc(LIMB_PROFILE.loArm, arm * lo)], leg: [sc(LIMB_PROFILE.upLeg, leg * up), sc(LIMB_PROFILE.loLeg, leg * lo, true)] };
 }
 /* an articulated mannequin's limb piece: straight between two joint centres, thickness from the measured profile,
    its ends stopping short of the centres so the joint balls show between the pieces */
