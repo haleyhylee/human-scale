@@ -3961,12 +3961,18 @@ function eyewearGeo(group) {
   }
   // ---- temples: from the hinges straight back beside the head, over the root of the ear and down behind it
   const ear = EAR_CANAL.clone().multiplyScalar(hh), side = eggRay(1, 0, 0) * hh;
+  const tL = clamp((S.d || 145) / 1000, 0.06, 0.25); let tInfo = null; // the temple's own length (D), hinge to tip
   for (const s of [-1, 1]) {
-    const h = at(hinge(s)), path = [h, new V3(s * (side + 0.0035), h.y - 0.0015, ear.z + 0.046), new V3(s * (side + 0.003), ear.y + 0.023, ear.z + 0.008), new V3(s * (side + 0.0015), ear.y + 0.014, ear.z - 0.017), new V3(s * (side - 0.003), ear.y - 0.011, ear.z - 0.035)];
+    const h = at(hinge(s)), fit = [h, new V3(s * (side + 0.0035), h.y - 0.0015, ear.z + 0.046), new V3(s * (side + 0.003), ear.y + 0.023, ear.z + 0.008), new V3(s * (side + 0.0015), ear.y + 0.014, ear.z - 0.017), new V3(s * (side - 0.003), ear.y - 0.011, ear.z - 0.035)];
+    /* the line it takes on this head, cut to its length, or run on down behind the ear past the fitted tip if longer */
+    const cv = new THREE.CatmullRomCurve3(fit), Lf = cv.getLength(), sp = cv.getSpacedPoints(80); let Lb = 0; { let best = 1e9, acc = 0; for (let i = 1; i < sp.length; i++) { acc += sp[i].distanceTo(sp[i - 1]); const d = sp[i].distanceTo(fit[2]); if (d < best) { best = d; Lb = acc; } } }
+    let path; if (tL <= Lf) path = Array.from({ length: 13 }, (_, i) => cv.getPointAt((tL / Lf) * i / 12));
+    else { const tip = fit[4], dir = tip.clone().sub(cv.getPointAt(0.97)).normalize(); path = Array.from({ length: 11 }, (_, i) => cv.getPointAt(i / 10)).concat([tip.clone().addScaledVector(dir, tL - Lf)]); }
+    tInfo = { L: tL, bend: Lb, fit: Lf };
     if (metal) { own(tubeAlong(path, Math.max(0.0012, t * 0.5), 48), frameM); own(tubeAlong(path.slice(2), 0.0019, 24), sun ? mats.acetate : frameM); } // a wire, its tip sleeved
     else own(barAlong(path, sun ? 0.0036 : 0.003, sun ? 0.0095 : 0.0062, sun ? 0.0042 : 0.0034), frameM);
   }
-  group.userData.wear = { glasses: true, pd: 2 * cx, W: g.W, z: zB };
+  group.userData.wear = { glasses: true, pd: 2 * cx, W: g.W, z: zB, temple: tInfo };
   group.userData.focus = at(new V3(0, 0, dep)); // zooming closes on the front, between the lenses
 }
 /* helmet: a shell over the head, its rim over the brow at the front and lower at the back, a dark rim band, vents on top, a chin strap */
@@ -4597,7 +4603,7 @@ function tvGeo(group, W, D, H) {
 /* a desk mirror: a base, a U-shaped fork (or a post) holding the mirror on a pivot at its middle, tilted to the set angle */
 function deskMirrorGeo(group, W, D, H) {
   const own = meshIn(group), m = propMat(), cz = -D / 2, bh = Math.min(0.018, H * 0.06), form = dv('form'), fork = dv('stand') !== 'post', a = deg(+dv('tilt') || 0);
-  const mw = fork ? W - 0.03 : W, mh = form === 'round' ? Math.min(mw, H * 0.6) : Math.min(H * 0.6, form === 'oval' ? mw * 1.35 : mw * 1.3), mwF = form === 'round' ? mh : mw;
+  const mw = fork ? W - 0.03 : W, mh = Math.min(H - bh - 0.04, form === 'round' ? mw : mw * 1.13), mwF = form === 'round' ? mh : mw; // the glass sized by the width (its height in proportion), as tall as the height leaves room for over a short stand
   const py = H - mh / 2 - 0.004, ft = 0.008, fr = 0.006; // the pivot: the mirror's middle
   part('받침', 'Base'); own((form === 'rect' ? new RoundedBoxGeometry(W * 0.8, bh, D, 3, Math.min(0.01, bh / 2)).translate(0, bh / 2, cz) : stadiumPlate(W * 0.8, D, bh, Math.min(0.005, bh / 3)).applyMatrix4(ON_DECK)), m);
   part('지지대', 'Stand');
@@ -6414,6 +6420,8 @@ function evaluate() {
       else add(L('렌즈 중심', 'Lens centres'), L(`렌즈 중심 사이 ${mmi(lc)}mm · 눈동자 사이 약 ${mmi(pd)}mm${off <= 0.004 ? ' · 잘 맞아요' : ` · ${mmi(off)}mm 어긋나요`}`, `${mmi(lc)} mm apart · pupils about ${mmi(pd)} mm${off <= 0.004 ? ', lined up' : `, ${mmi(off)} mm off`}`), off <= 0.004 ? 'good' : off <= 0.008 ? 'warn' : 'bad');
       const dw = g.W - faceW, lo = -0.012, hi = sun ? 0.02 : 0.012, okW = dw >= lo && dw <= hi;
       add(L('테 폭', 'Frame width'), L(`${sun ? '선글라스' : '안경'} 폭 ${mmi(g.W)}mm · 얼굴 폭 약 ${mmi(faceW)}mm${okW ? ' · 알맞아요' : dw > 0 ? ' · 얼굴보다 넓어요' : ' · 관자놀이를 눌러요'}`, `${mmi(g.W)} mm wide · face about ${mmi(faceW)} mm${okW ? ', a good fit' : dw > 0 ? ', wider than the face' : ', presses the temples'}`), okW ? 'good' : 'warn');
+      const tp = holder.userData.wear && holder.userData.wear.temple;
+      if (tp) { const tail = tp.L - tp.bend; add(L('안경다리', 'Temples'), tail < 0.008 ? L(`다리 ${mmi(tp.L)}mm · 귀까지 ${mmi(tp.bend + 0.008 - tp.L)}mm 모자라 걸리지 않아요`, `${mmi(tp.L)} mm · ${mmi(tp.bend + 0.008 - tp.L)} mm short of the ears, they will not hold`) : tail > 0.055 ? L(`다리 ${mmi(tp.L)}mm · 귀 뒤로 ${mmi(tail)}mm 남아 길어요`, `${mmi(tp.L)} mm · ${mmi(tail)} mm past the ears, too long`) : L(`다리 ${mmi(tp.L)}mm · 귀 뒤로 ${mmi(tail)}mm 감겨 잘 걸려요`, `${mmi(tp.L)} mm · ${mmi(tail)} mm round behind the ears, holds well`), tail < 0.008 ? 'bad' : tail > 0.055 ? 'warn' : 'good'); }
       add(L('코에 얹힘', 'On the nose'), g.F.metal ? L('코 받침 두 개가 콧등 양옆에 얹혀요', 'Two nose pads sit on the sides of the nose') : L('브리지가 콧등에 바로 얹혀요', 'The bridge rests right on the nose'), 'info');
       add(L('렌즈', 'Lenses'), L(`${mmi(g.lw)} × ${mmi(g.lh)}mm · 두께 2mm${sun ? (dv('lens') === 'black' ? ' · 블랙' : ' · 미러') : ''}`, `${mmi(g.lw)} × ${mmi(g.lh)} mm · 2 mm thick${sun ? (dv('lens') === 'black' ? ' · black' : ' · mirror') : ''}`), 'info');
     } else if (S.shape === 'cap') {
@@ -6686,6 +6694,20 @@ function reachText(rs, A, careful) {
 }
 
 /* ---------- furniture as the product: tables, counters, drawers, seats ---------- */
+function seatFeet(A, add) { // the person's own chair, stool or sofa: do the feet reach the floor, and if not how tall a footrest would put them flat
+  if (A && A.seated && A.chair === 'wheel') { // a wheelchair: its own heights, as drawn (wheelchairGeo)
+    const sy = A.seatTop, foot = Math.max(0.06, sy + 0.055 * A.H + 0.012 - A.shank - A.ankleY - 0.01) + 0.006;
+    add(L('휠체어', 'Wheelchair'), L(`좌석 ${cmi(sy)}cm · 발받침 ${cmi(foot)}cm · 팔걸이 ${cmi(sy + 0.24)}cm · 미는 손잡이 ${cmi(sy + 0.46)}cm`, `Seat ${cmi(sy)} cm · footrest ${cmi(foot)} cm · armrests ${cmi(sy + 0.24)} cm · push handles ${cmi(sy + 0.46)} cm`), 'info');
+    return; }
+  if (!A || !A.seated || A.chair !== 'prop') return;
+  const pr = PROPS[A.prop], nm = L(pr.ko, pr.en), d = A.seatTop - A.popliteal, fit = S.seatMode === 'fit' ? L(' · 사람에 맞춤', ' · fitted') : '';
+  if (A.footrest) { add(L(`${pr.ko} 높이`, 'Seat'), L(`${cmi(A.seatTop)}cm${fit} · 발받침(${cmi(A.footrest.y)}cm)에 발을 올려요`, `${cmi(A.seatTop)} cm${fit} · feet on the footrest (${cmi(A.footrest.y)} cm)`), 'good'); return; }
+  let lv = 'good', txt = L('발이 바닥에 닿아요', 'feet flat on the floor');
+  if (d > 0.08) { lv = 'warn'; txt = L(`오금보다 ${cmi(d)}cm 높아 발이 떠요 · 편하게 디디려면 높이 ${cmi(d)}cm 발받침이 필요해요`, `${cmi(d)} cm above the knee crease, feet dangle · a ${cmi(d)} cm footrest puts them flat`); }
+  else if (d > 0.035) { lv = 'info'; txt = L(`오금보다 ${cmi(d)}cm 높아 허벅지 뒤가 조금 눌려요 · ${cmi(d)}cm 발받침이면 편해요`, `${cmi(d)} cm above the knee crease, a little pressure under the thighs · a ${cmi(d)} cm footrest eases it`); }
+  else if (d < -0.07) { lv = 'info'; txt = L(`오금보다 ${cmi(-d)}cm 낮아 무릎이 올라와요`, `${cmi(-d)} cm below the knee crease, knees rise`); }
+  add(L(`${pr.ko} 높이`, 'Seat'), `${nm} ${cmi(A.seatTop)}cm${fit} · ${txt}`, lv);
+}
 function furnitureChecks(out, add, push, b0) {
   const A = S.A, p = PP(), P = dims(), Lm = out.land, who = pLabel(PERSONAS[S.persona]), whoEn = who.toLowerCase(), st = furn();
   const ok = L('적용', 'Apply'), careful = p.kind === 'elder' || p.seated;
@@ -6712,16 +6734,8 @@ function furnitureChecks(out, add, push, b0) {
     add(L('무릎 공간', 'Knee room'), gap < 0 ? L(`허벅지가 상판 아래에 ${cmi(-gap)}cm 걸려요`, `Thighs hit the underside by ${cmi(-gap)} cm`) : L(`허벅지 위로 ${cmi(gap)}cm 여유`, `${cmi(gap)} cm clear above the thighs`), gap < 0 ? 'bad' : gap < 0.03 ? 'warn' : 'good');
     if (gap < 0.02) { const h = P.H + 0.025 - gap; push(`knee:${S.persona}:${mmi(P.H)}`, 'bad', L(`허벅지가 걸려요. 높이를 ${mmi(h)}mm로 올려볼까요?`, `The thighs don't fit. Raise it to ${mmi(h)} mm?`), ok, () => setDimEffective('h', mmi(h))); }
   };
-  const ownSeat = () => { // the person's own chair, stool or sofa
-    if (A.chair !== 'prop') return;
-    const pr = PROPS[A.prop], nm = L(pr.ko, pr.en), d = A.seatTop - A.popliteal, fit = S.seatMode === 'fit' ? L(' · 사람에 맞춤', ' · fitted') : '';
-    if (A.footrest) { add(L(`${pr.ko} 높이`, 'Seat'), L(`${cmi(A.seatTop)}cm${fit} · 발받침(${cmi(A.footrest.y)}cm)에 발을 올려요`, `${cmi(A.seatTop)} cm${fit} · feet on the footrest (${cmi(A.footrest.y)} cm)`), 'good'); return; }
-    let lv = 'good', txt = L('발이 바닥에 닿아요', 'feet flat on the floor');
-    if (d > 0.08) { lv = 'warn'; txt = L(`오금보다 ${cmi(d)}cm 높아 발이 떠요`, `${cmi(d)} cm above the knee crease, feet dangle`); }
-    else if (d > 0.035) { lv = 'info'; txt = L(`오금보다 ${cmi(d)}cm 높아 허벅지 뒤가 조금 눌려요`, `${cmi(d)} cm above the knee crease, a little pressure under the thighs`); }
-    else if (d < -0.07) { lv = 'info'; txt = L(`오금보다 ${cmi(-d)}cm 낮아 무릎이 올라와요`, `${cmi(-d)} cm below the knee crease, knees rise`); }
-    add(L(`${pr.ko} 높이`, 'Seat'), `${nm} ${cmi(A.seatTop)}cm${fit} · ${txt}`, lv);
-  };
+  const ownSeat = () => seatFeet(A, add);
+
 
   if (S.shape === 'desk') {
     const base = PERSONAS[S.persona], rs = reachSolve(A, p, out.targetLocal, base.seated ? 25 : base.maxFlex ?? (A.seated ? 42 : 60));
@@ -6836,7 +6850,7 @@ function furnitureChecks(out, add, push, b0) {
       if (p.kind === 'elder') add(L('일어나기', 'Getting up'), L('낮고 푹 꺼져서 노인은 일어나기 어려워요', 'Low and soft — hard for older people to get up'), 'warn');
     } else {
       let lv, txt;
-      if (d > 0.07) { lv = 'bad'; txt = L(`오금보다 ${cmi(d)}cm 높아 발이 떠요`, `${cmi(d)} cm above the knee crease, feet dangle`); }
+      if (d > 0.07) { lv = 'bad'; txt = L(`오금보다 ${cmi(d)}cm 높아 발이 떠요 · 편하게 디디려면 높이 ${cmi(d)}cm 발받침이 필요해요`, `${cmi(d)} cm above the knee crease, feet dangle · a ${cmi(d)} cm footrest puts them flat`); }
       else if (d > 0.03) { lv = 'warn'; txt = L(`오금보다 ${cmi(d)}cm 높아 허벅지 뒤가 눌려요`, `${cmi(d)} cm above the knee crease, presses the thighs`); }
       else if (d < -0.06) { lv = 'warn'; txt = L(`오금보다 ${cmi(-d)}cm 낮아 무릎이 올라와요`, `${cmi(-d)} cm below the knee crease, knees rise`); }
       else { lv = 'good'; txt = L('발이 바닥에 편하게 닿아요', 'feet rest flat on the floor'); }
@@ -6902,6 +6916,7 @@ function refresh(o = {}) {
   human.updateMatrixWorld(true);
   product.updateMatrixWorld(true);
   S.E = evaluate();
+  if (S.E && !isFurniture()) { const E = S.E; seatFeet(S.A, (k, v, level) => E.checks.push({ k, v, level: level === 'warn' ? 'info' : level })); } // seated on a chair at a table, desk or counter: do the feet reach the floor (said, but it is the chair's doing, not the product's)
   ceilChecks(S.E);
   planHands();
   for (let i = 0; i < 4; i++) { const need = torsoNeed(); if (need < 0.003) break; S.torsoBack += need + 0.01; layoutHuman(); layoutProduct(); human.updateMatrixWorld(true); product.updateMatrixWorld(true); S.E = evaluate(); planHands(); } // a big belly: stood back till the hands are clear of it
