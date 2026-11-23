@@ -4178,7 +4178,7 @@ function vMouseGeo(group, W, D, H, own, dark) {
   for (let k = 0; k < 8; k++) { const t0 = -0.93 + k * 0.09, t1 = t0 + 0.09; if (t1 < tw - 0.06 || t0 > tw + 0.06) seam(sp(0.3, t0), sp(0.3, t1)); } // between the two buttons (broken by the wheel)
   for (let k = 0; k < 6; k++) seam(sp(k / 6 * 0.62, -0.2), sp((k + 1) / 6 * 0.62, -0.2)); // the buttons' back edge, across the face
   for (const [t, l] of [[-0.18, 0.016], [0.02, 0.014]]) { const c = at(-0.235, 0.8, t); own(new RoundedBoxGeometry(0.004, 0.008, l, 2, 0.0015).rotateZ(0.2).translate(c.x, c.y, c.z), dark); } // two thumb buttons high on the left, by the ridge
-  group.userData.vgrip = { n: nrm(-0.4), index: onFace(0.2, -0.72), thumb: at(-0.31, 0.62, -0.08) }; // the hand's marks: the index on the upper button toward the front, the thumb in the hollow on the left
+  group.userData.vgrip = { n: nrm(-0.4), index: onFace(-0.05, -0.72), thumb: at(-0.31, 0.62, -0.08) }; // the hand's marks: the index on the upper button toward the front, the thumb in the hollow on the left
   part();
 }
 function mouseGeo(group, W, D, H) {
@@ -5875,8 +5875,8 @@ function mouseGrip(HD) {
   for (const [y, z] of [[0.2, -0.3], [0.3, -0.3], [0.4, -0.3], [0.3, -0.2], [0.3, -0.4]]) palm.push(new V3(0.66 * HD.palmT, y * HD.palmLen, z * HD.palmW)); // the pad at the thumb's root stands proud of the palm
   let F, W, at, best = null;
   const vg = holder.userData.vgrip, toHd = (v) => human.worldToLocal(holder.localToWorld(v.clone())).sub(human.worldToLocal(holder.localToWorld(new V3()))).normalize();
-  if (vg) { // a vertical mouse, held in a handshake: the palm against its grip face, the hand turned with it, the index finger on the upper button
-    const pn = toHd(vg.n).negate(), y = fwd.clone().addScaledVector(pn, -fwd.dot(pn)).normalize(), g0 = HD.fingers[0]; F = handFrame(pn, y); at = (W) => (x, y2, z) => sdfW(W.clone().add(inHand(F, new V3(x, y2, z))));
+  if (vg) { // a vertical mouse, held in a handshake: the palm against its grip face (turned with it, a little less than it leans: over it more than beside it), the index finger on the upper button
+    const pn = toHd(vg.n).negate().multiplyScalar(0.45).add(new V3(0, -0.55, 0)).normalize(), y = fwd.clone().addScaledVector(pn, -fwd.dot(pn)).normalize(), g0 = HD.fingers[0]; F = handFrame(pn, y); at = (W) => (x, y2, z) => sdfW(W.clone().add(inHand(F, new V3(x, y2, z))));
     W = human.worldToLocal(holder.localToWorld(vg.index.clone())) /* the index fingertip about on its mark */.addScaledVector(F.y, -(g0.y + 0.5 * (g0.L[0] + g0.L[1] + g0.L[2]))).addScaledVector(F.z, -g0.z).addScaledVector(F.x, -0.06);
     for (let k = 0; k < 60; k++) { const m = palm.reduce((m, q) => Math.min(m, at(W)(q.x, q.y, q.z)), 1e9); if (Math.abs(m - 0.0015) < 0.0004) break; W.addScaledVector(F.x, Math.max(-0.01, Math.min(0.01, m - 0.0015))); }
   } else for (let tl = -0.25; tl <= 0.401; tl += 0.05) { // the palm tilted as it best lies along the shell: settled down onto it, then the tilt with it closest all over
@@ -7650,11 +7650,11 @@ function updateOverlay(pose) {
   }
   const handTag = S.place === 'hand', wr = pose.arms[0].wr, el0 = pose.arms[0].el, armS = (() => { const a = proj(human.localToWorld(wr.clone())), b = proj(human.localToWorld(el0.clone())); return { ax: a.x, ay: a.y, bx: b.x, by: b.y, r: 22 }; })();
   callout($('t-tg'), handTag ? hands[0].g.localToWorld(new V3(0, 0, 0)) : controlWorld(), S.guides && S.view !== 'top' && S.view !== 'first' && S.place !== 'back' && !lookOnly() && (handTag || S.mode === 'use'), handTag ? ['down', 'left', 'right', 'up'] : ['right', 'left', 'up', 'down'], handTag ? prodR : uni(prodR, scrBox(new THREE.Box3().setFromObject(hands[0].g))), handTag ? [armS] : [], 'tg');
-  { const pl = S.place, on = ['table', 'desk', 'counter', 'vanity', 'plinth'].includes(pl) && !S.supOff && S.guides && S.view !== 'top' && S.view !== 'first' && !atDesk(); // what it stands on: its height, written on its front just under the top (no leader to cross anything)
+  { const pl = S.place, on = ['table', 'desk', 'counter', 'vanity', 'plinth'].includes(pl) && !S.supOff && S.guides && S.view !== 'top' && S.view !== 'first' && !atDesk(); // what it stands on: its height, pointed at on its front just under the top
     let at = new V3();
     if (on) { const h = pl === 'plinth' ? plinthSize().h : SURF[pl], fz = pl === 'plinth' ? Math.max(0, plinthSize().d / 2 - P.D / 2) : EDGE; at = product.parent.localToWorld(new V3(product.position.x, h - 0.03, product.position.z + fz));
       $('t-sup').textContent = L(`${SURF_NAME[pl] ? SURF_NAME[pl][0] : pl === 'vanity' ? '젠다이' : ''} 높이 ${mmi(h)}`, `${SURF_NAME[pl] ? SURF_NAME[pl][1][0].toUpperCase() + SURF_NAME[pl][1].slice(1) : 'Ledge'} ${mmi(h)} mm high`); }
-    put($('t-sup'), at, on, 'translate(-50%, 0)'); }
+    callout($('t-sup'), at, on, ['left', 'right', 'down', 'up'], prodR); } // off to the side with a leader, like the other tags
   callout($('t-human'), headTop, S.guides && S.view !== 'first' && personVis() !== 'off', ['up', 'left', 'right'], uni(scrBox(new THREE.Box3().setFromObject(R.head)), S.place === 'head' ? prodR : null));
   $('leaderSvg').innerHTML = leaders.join('');
   const lines = S.guides && (S.view === 'front' || S.view === 'side');
