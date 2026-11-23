@@ -7640,7 +7640,7 @@ function updateOverlay(pose) {
   let boxes = null, allTop = 0;
   if (prRow) { boxes = {}; for (const c of holder.children) if (c.userData.unit) boxes[c.userData.unit] = new THREE.Box3().setFromObject(c); boxes.A = mainBox(); allTop = Math.max(...Object.values(boxes).map((b) => b.max.y)) + 0.012; } // world boxes, so a row hung on a wall is tagged above it too
   const topOf = (b) => new V3((b.min.x + b.max.x) / 2, allTop, (b.min.z + b.max.z) / 2);
-  const prodAt = prRow ? topOf(Object.values(boxes).reduce((a, b) => a.union(b), new THREE.Box3())) : product.localToWorld(new V3(ru ? (((rowSpan().right - rowSpan().left) / 2) / 1000) * S.scale : 0, ru ? (Math.max(...ru.map((u) => u.h)) / 1000) * S.scale : P.H, -P.D / 2));
+  const prodAt = prRow ? topOf(Object.values(boxes).reduce((a, b) => a.union(b), new THREE.Box3())) : ru ? product.localToWorld(new V3((((rowSpan().right - rowSpan().left) / 2) / 1000) * S.scale, (Math.max(...ru.map((u) => u.h)) / 1000) * S.scale, -P.D / 2)) : (() => { const b = visBox(product); return new V3((b.min.x + b.max.x) / 2, b.max.y, (b.min.z + b.max.z) / 2); })(); // the top of what is actually there (laid flat, tilted or turned, its own top may face elsewhere)
   callout($('t-prod'), prodAt, S.guides, ['up', 'right', 'left', 'down'], prodR, [], '', prRow ? ru.length * 24 : 0);
   for (let i = 0; i < 3; i++) { // each unit's name and size: on a chest's front just under its top; over a mockup
     const el = $(`t-u${i}`), u = ru && ru[i], ud = u ? (roundBase() ? u.w : u.d) : 0, bx = prRow && u && boxes[u.n];
