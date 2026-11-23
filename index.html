@@ -209,6 +209,7 @@ span.br { display: block; }
 .mdot[data-m="wood"] { background: repeating-linear-gradient(100deg, #b98a5a 0 3px, #a87648 3px 5px, #c39565 5px 8px); }
 .mdot[data-m="glass"] { background: radial-gradient(circle at 35% 30%, #ffffff 0 18%, rgba(205, 228, 240, 0.65) 45%, rgba(150, 185, 205, 0.55)); }
 .mdot[data-m="metal"] { background: linear-gradient(135deg, #f4f4f4 0%, #9a9da2 40%, #e6e7e9 55%, #7d8085 100%); }
+.mdot[data-m="gloss"] { background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.85) 0 14%, transparent 32%), var(--prodc, #723838); }
 .mdot[data-m="anod"] { background: linear-gradient(135deg, #b9bbbe, #8e9196); }
 .mdot[data-m="fabric"] { background: repeating-linear-gradient(45deg, #efe6d6 0 2px, #e2d6c1 2px 4px); }
 .mdot[data-m="paper"] { background: #f6f1e6; }
@@ -2546,7 +2547,13 @@ function detKind() {
   if (S.shape === 'glasses' || S.shape === 'sunglasses') return S.shape;
   return isFurniture() && DETAIL[furn()] ? furn() : null;
 }
-const detSpec = () => DETAIL[detKind()] || [];
+/* electronics and appliances: what their body is finished in (the product colour stays) */
+const FIN_ROW = { k: 'fin', ko: '재질', en: 'Material', opts: [['solid', '무광', 'Matte'], ['gloss', '유광', 'Gloss'], ['anod', '무광 메탈', 'Matte metal'], ['metal', '유광 메탈', 'Polished metal']], def: 'solid' };
+const ELEC_KEYS = new Set(PRESET_GROUPS.filter(([[ko]]) => ko === '전자제품' || ko === '생활 제품').flatMap(([, ks]) => ks).flatMap((k) => (k.startsWith('fam:') ? FAMILIES[k.slice(4)].sizes.map((s) => s[0]) : [k])).concat(['kettle', 'microwave', 'ricecooker', 'airbuds', 'airmax']));
+const isElec = () => S.source === 'box' && ELEC_KEYS.has(S.pkey) && !(DETAIL[detKind()] || []).some((r) => r.k === 'mat');
+const detSpec = () => { const b = DETAIL[detKind()] || []; return isElec() ? [...b, FIN_ROW] : b; };
+const FINISH = { solid: [0.88, 0], gloss: [0.22, 0], anod: [0.45, 0.8], metal: [0.14, 1] };
+function applyFinish() { const [r, m] = FINISH[isElec() ? dv('fin') || 'solid' : 'solid'] || FINISH.solid; mats.foam.roughness = r; mats.foam.metalness = m; const env = m > 0 ? mats.metal.envMap : null; if (mats.foam.envMap !== env) { mats.foam.envMap = env; mats.foam.envMapIntensity = 0.9; mats.foam.needsUpdate = true; } } // the body's product-colour material
 function dv(k) { const sp = detSpec().find((x) => x.k === k); if (!sp) return undefined; const v = S.det && S.det[k] != null ? S.det[k] : sp.def; return typeof v === 'function' ? v() : v; }
 let DET_ON = false; // set while the product itself is being built
 const q = (k, d) => { if (!DET_ON) return d; const v = dv(k); return v == null ? d : v / 1000; };
@@ -4665,8 +4672,8 @@ function microwaveGeo(group, W, D, H) {
 function riceCookerGeo(group, W, D, H) {
   const own = meshIn(group), R = W / 2, kz = D / W, bh = H * 0.66, cz = -D / 2, V2 = THREE.Vector2;
   const lathe = (pts, m, y = 0, k = kz) => { const g = new THREE.LatheGeometry(pts, 72); g.scale(1, 1, k); g.translate(0, y, cz); return own(g, m); };
-  const prof = [new V2(0, 0), new V2(R * 0.82, 0), new V2(R * 0.93, bh * 0.06), new V2(R, bh * 0.35), new V2(R * 0.99, bh * 0.75), new V2(R * 0.96, bh), new V2(R * 0.71, bh), new V2(R * 0.71, bh * 0.25)]; // open in the middle, where the inner pot sits
-  lathe(prof, mats.paper);
+  const prof = [new V2(0, 0), new V2(R * 0.82, 0), new V2(R * 0.93, bh * 0.06), new V2(R, bh * 0.35), new V2(R * 0.99, bh * 0.75), new V2(R * 0.96, bh), new V2(R * 0.71, bh), new V2(R * 0.71, bh * 0.25)], bm = S.color || (dv('fin') && dv('fin') !== 'solid') ? mats.foam : mats.paper; // open in the middle, where the inner pot sits
+  lathe(prof, bm); // white unless given a colour or a finish
   lathe([new V2(R * 0.965, bh - 0.002), new V2(R * 0.975, bh + 0.045), new V2(R * 0.8, bh + 0.045), new V2(R * 0.8, bh - 0.002)], steel); // the silver band
   own(new THREE.BoxGeometry(W * 0.3, 0.022, 0.003).translate(0, bh + 0.022, 0.003 - (D / 2) * 0.03), darkGloss); // the display on it, at the front
   own(new THREE.CylinderGeometry(0.028, 0.028, 0.004, 40).rotateX(Math.PI / 2).translate(0, bh * 0.45, 0.002 - D * 0.005), steel); // the dial on the front
@@ -4674,9 +4681,9 @@ function riceCookerGeo(group, W, D, H) {
   lathe([new V2(0, y0), new V2(Rp * 0.64, y0), new V2(Rp * 0.66, y0 + 0.006), new V2(Rp * 0.7, yT), new V2(Rp * 0.7 - pt, yT)], steel, 0, 1);
   lathe([new V2(Rp * 0.7 - pt, yT), new V2(Rp * 0.66 - pt, y0 + 0.009), new V2(Rp * 0.63, y0 + pt), new V2(0, y0 + pt)], new THREE.MeshStandardMaterial({ color: 0x3a3a3c, roughness: 0.45, metalness: 0.2 }), 0, 1);
   const lid = new THREE.Group(), hz = cz - (D / 2) * 0.92; lid.position.set(0, bh + 0.045, hz); group.add(lid);
-  const lt = H - bh - 0.045, lg = new THREE.LatheGeometry([new V2(0, lt), new V2(R * 0.55, lt * 0.95), new V2(R * 0.78, lt * 0.6), new V2(R * 0.8, 0), new V2(0, 0)], 72); lg.scale(1, 1, kz); lg.translate(0, 0, cz - hz);
-  meshIn(lid)(lg, mats.paper);
-  meshIn(lid)(new THREE.CylinderGeometry(0.03, 0.034, 0.018, 40).translate(0, lt + 0.009, cz - hz - D * 0.08), mats.paper); // the steam vent; no buttons on the lid: the controls are at the front
+  const lt = H - bh - 0.045, lg = new THREE.LatheGeometry([new V2(0, 0), new V2(R * 0.8, 0), new V2(R * 0.78, lt * 0.6), new V2(R * 0.55, lt * 0.95), new V2(0, lt)], 72); /* traced up from the bottom, so its faces point out (traced down they faced in and it looked see-through from above) */ lg.scale(1, 1, kz); lg.translate(0, 0, cz - hz);
+  meshIn(lid)(lg, bm);
+  meshIn(lid)(new THREE.CylinderGeometry(0.03, 0.034, 0.018, 40).translate(0, lt + 0.009, cz - hz - D * 0.08), bm); // the steam vent; no buttons on the lid: the controls are at the front
   group.userData.door = { g: lid, max: deg(80), axis: 'x', sign: -1, hinge: new V3(0, bh + 0.045, hz), auto: true };
 }
 /* a humidifier: a frosted shade that glows, round or square, on a white base with a button at the front */
@@ -6845,6 +6852,7 @@ let builtRow = '';
 function refresh(o = {}) {
   if (S.source === 'box' && S.look === 'tv') { const t = tvScreen(), h = t.sh + 2 * t.b + t.standH; if (S.h !== h) { S.h = h; o = { ...o, rebuild: true }; } } // a TV's stand comes and goes with the wall
   if (S.ceil.on && S.source === 'box' && S.look === 'pendant' && S.h !== S.ceil.h) { S.h = S.ceil.h; o = { ...o, rebuild: true }; } // a pendant hangs from the ceiling that is there
+  applyFinish();
   const p = PERSONAS[S.persona], k = kind(); // an example keeps a place and a use that make sense for it, whatever was clicked or restored
   if (PLACE_OK[k] && !placeOk(S.place) && !isFurniture()) S.place = PLACE_OK[k][0];
   if (S.action === 'dispense' && !canDispense()) S.action = 'press';
@@ -7764,7 +7772,7 @@ function tick() {
 
 /* the detail-size rows for the current chair, table or headphones: built when the kind changes, values kept in step on every refresh */
 let detKey = '';
-const MAT_KEYS = ['mat', 'smat', 'stemCol', 'fcol', 'partCol', 'anodR']; // material rows: shown as swatches, above the colour
+const MAT_KEYS = ['mat', 'fin', 'smat', 'stemCol', 'fcol', 'partCol', 'anodR']; // material rows: shown as swatches, above the colour
 const FORM_KEYS = ['form', 'hform', 'bform', 'sform', 'gtype', 'btype', 'spout']; // a product's form: shown first
 function syncDetail() {
   const k = detKind(), box = $('detField');
