@@ -1156,7 +1156,7 @@ function anthro(p, hcm, bmi) {
       fingers: [[0.96, -0.36, 0.92, 0.054], [1, -0.12, 1, 0.056], [0.97, 0.12, 0.95, 0.052], [0.89, 0.35, 0.76, 0.045]].map(([y, z, l, r]) => ({
         y: y * palmLen, z: z * palmW, L: [0.45, 0.3, 0.25].map((k) => k * l * fl), r: [r, r * 0.93, r * 0.86].map((v) => v * HL),
       })),
-      thumb: { base: new V3(0.3 * palmT, 0.38 * palmLen, -0.5 * palmW), L: [0.2, 0.165].map((k) => k * HL), r: [0.055, 0.05].map((k) => k * HL) }, // two segments from the knuckle at the palm's edge, slim like a finger (a mannequin hand's proportions)
+      thumb: { base: new V3(0.3 * palmT, 0.38 * palmLen, -0.5 * palmW), L: [0.2, 0.0825].map((k) => k * HL), r: [0.055, 0.05].map((k) => k * HL) }, // two segments from the knuckle at the palm's edge, slim like a finger (a mannequin hand's proportions)
     },
   };
 }
