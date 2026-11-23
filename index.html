@@ -446,6 +446,8 @@ input:disabled { opacity: 0.55; }
       <div class="guide" id="g-eye" hidden><span></span></div>
       <div class="guide" id="g-sh" hidden><span></span></div>
       <div class="guide" id="g-el" hidden><span></span></div>
+      <div class="guide" id="g-seat" hidden><span></span></div>
+      <div class="guide" id="g-foot" hidden><span></span></div>
       <div class="guide target" id="g-tg" hidden><span></span></div>
       <div class="tag" id="t-human" hidden></div>
       <div class="tag" id="t-prod" hidden></div>
@@ -6720,6 +6722,10 @@ function reachText(rs, A, careful) {
 }
 
 /* ---------- furniture as the product: tables, counters, drawers, seats ---------- */
+function seatFootH(A) { // the top of a wheelchair's footrest; on a chair, how tall a footrest dangling feet need (0: they reach the floor)
+  if (!A || !A.seated) return 0;
+  if (A.chair === 'wheel') return Math.max(0.06, A.seatTop + 0.055 * A.H + 0.012 - A.shank - A.ankleY - 0.01) + 0.006;
+  if (A.chair !== 'prop') return 0; const d = A.seatTop - A.popliteal; return d > 0.035 ? d : 0; }
 function seatFeet(A, add) { // the person's own chair, stool or sofa: do the feet reach the floor, and if not how tall a footrest would put them flat
   if (A && A.seated && A.chair === 'wheel') { // a wheelchair: its own heights, as drawn (wheelchairGeo)
     const sy = A.seatTop, foot = Math.max(0.06, sy + 0.055 * A.H + 0.012 - A.shank - A.ankleY - 0.01) + 0.006;
@@ -7738,6 +7744,8 @@ function updateOverlay(pose) {
   const lines = S.guides && (S.view === 'front' || S.view === 'side');
   const Lm = S.E.land, base = human.position, pre = S.A.seated ? L('앉은 ', 'seated ') : '';
   const rows = [['g-eye', Lm.eyeY, `${pre}${L('눈', 'eye')} ${cmi(Lm.eyeY)}`], ['g-sh', Lm.shY, `${L('어깨', 'shoulder')} ${cmi(Lm.shY)}`], ['g-el', Lm.elY, `${L('팔꿈치', 'elbow')} ${cmi(Lm.elY)}`]];
+  { const A = S.A, ft = seatFootH(A); $('g-seat').hidden = $('g-foot').hidden = true; // seated: the seat's height, and the footrest's (a wheelchair's own, or the one a too-high chair needs)
+    if (A.seated && (A.chair === 'wheel' || A.chair === 'prop')) { rows.push(['g-seat', A.seatTop, `${L('좌석', 'seat')} ${cmi(A.seatTop)}`]); if (ft > 0.01) rows.push(['g-foot', ft, `${A.chair === 'wheel' ? L('발받침', 'footrest') : L('필요한 발받침', 'footrest needed')} ${cmi(ft)}`]); } }
   if (S.mode === 'use' && S.place !== 'hand' && hasControls() && !lookOnly()) rows.push(['g-tg', controlWorld().y, `${tgLabel()} ${cmi(controlWorld().y)}`]); // no control line for something only looked at
   else $('g-tg').hidden = true;
   for (const [id, y, label] of rows) {
