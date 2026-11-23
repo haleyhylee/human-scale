@@ -5671,6 +5671,8 @@ function planHands() {
     else if (S.look === 'mouse' && holder.userData.hump) { if (holder.userData.mouseBody) S.plan = mouseGrip(HD); else { product.updateMatrixWorld(true); S.pressLocal = human.worldToLocal(holder.localToWorld(holder.userData.hump.clone())); S.plan = { kind: 'flat', hp: flatPose() }; } } // a mouse: the palm over its hump, the fingers on the buttons
     else if (S.look === 'cushion' && !laidFlat()) S.plan = cushionDab(HD, P); // open on the table: two fingertips touch the puff
     else if (S.look === 'pencase' && !laidFlat()) S.plan = pencaseGrab(HD, P); // lying on the table: the fist closes round it from above
+    else if (isProp() && S.shape === 'box' && P.W >= 1.5 * Math.max(P.D, P.H) && P.D <= GRAB_MAX && P.H <= GRAB_MAX) S.plan = pencaseGrab(HD, P, Math.min((+dv('rad') || 0) / 1000 * S.scale, 0.45 * Math.min(P.D, P.H)));
+    else if (isProp() && S.shape === 'box' && P.D >= 1.5 * Math.max(P.W, P.H) && P.W <= GRAB_MAX && P.H <= GRAB_MAX) S.plan = pencaseGrab(HD, { W: P.D, D: P.W, H: P.H }, Math.min((+dv('rad') || 0) / 1000 * S.scale, 0.45 * Math.min(P.W, P.H)), true); // a long block lying along the table: taken from above like a pen case, its length through the fist
     else if (S.look === 'book' && !laidFlat()) { const g = objectGrip(HD, P, false, 0); S.plan = { ...g, kind: 'grab', grab: grabGoal(g, null, [0, 4]) }; } // stood up: the right hand round its side, halfway up, thumb on the front cover, fingers round the back
     else if (!laidFlat() && P.H >= 0.025 && Math.min(P.W, P.D) <= GRAB_MAX && S.look !== 'pump' && S.look !== 'pencase') { const { g, gg } = supportGrip(HD, P, ['cyl', 'sphere', 'cone', 'parts'].includes(S.shape)); S.plan = { ...g, kind: 'grab', grab: gg }; } // a fist round its middle, raised till the hand clears what it stands on
     else if (S.look === 'book' && laidFlat() && holder.userData.bookFold) S.plan = bookTurn(HD); // lying shut on the table: the hand opens it
@@ -6129,19 +6131,19 @@ function cushionDab(HD, P) {
 }
 /* a pencil case lying on the table, its length across in front of the person: the right hand comes over it from above, palm down, the
    fingers closing round its far side and the thumb round the near one, a little right of its middle, the hand turned to follow the forearm */
-function pencaseGrab(HD, P) {
+function pencaseGrab(HD, P, rcSet, alongD = false) { // alongD: its length runs away from the person (P given with W and D swapped)
   // its length runs through the fist; its section a soft rounded box, as made: its height under the palm (hand x), its depth along the fingers (hand y)
-  const ax = P.H / 2, by = P.D / 2, rc = 0.42 * Math.min(P.D, P.H), yc = Math.max(0.62 * HD.palmLen, by + 0.2 * HD.palmLen + HD.thumb.r[0]);
+  const ax = P.H / 2, by = P.D / 2, rc = rcSet != null ? Math.max(0.002, rcSet) : 0.42 * Math.min(P.D, P.H), yc = Math.max(0.62 * HD.palmLen, by + 0.2 * HD.palmLen + HD.thumb.r[0]);
   const tc = new V3(0.24 * HD.palmT, 0.3 * HD.palmLen, -0.3 * HD.palmW), ts = new V3(0.44 * HD.palmT, 0.28 * HD.palmLen, 0.18 * HD.palmW);
   let pad = 0; for (let i = 0; i <= 8; i++) for (let j = 0; j <= 8; j++) { const y = yc - by + (2 * by * i) / 8, z = -P.W / 2 + (P.W * j) / 8, kk = 1 - ((y - tc.y) / ts.y) ** 2 - ((z - tc.z) / ts.z) ** 2; if (kk > 0) pad = Math.max(pad, tc.x + ts.x * Math.sqrt(kk) - HD.palmT / 2); }
   const off = new V3(HD.palmT / 2 + ax + 0.001 + pad, yc, 0);
   product.updateMatrixWorld(true); human.updateMatrixWorld(true);
-  const c = human.worldToLocal(product.localToWorld(new V3(0, P.H / 2, -P.D / 2))), yaw = deg(14); // its middle (body frame)
-  c.x -= Math.min(0.03, P.W * 0.15); // a little toward the right hand
-  const F = handFrame(new V3(0, -1, 0).applyAxisAngle(UP, yaw), new V3(0, 0, 1).applyAxisAngle(UP, yaw)); // palm down on its top, fingers forward round the far side, turned a little toward the shoulder
+  const c = human.worldToLocal(product.localToWorld(new V3(0, P.H / 2, -(alongD ? P.W : P.D) / 2))), yaw = deg(14); // its middle (body frame)
+  if (alongD) c.z -= Math.min(0.03, P.W * 0.15); else c.x -= Math.min(0.03, P.W * 0.15); // a little toward the right hand
+  const F = handFrame(new V3(0, -1, 0).applyAxisAngle(UP, yaw), (alongD ? new V3(1, 0, 0.25).normalize() : new V3(0, 0, 1)).applyAxisAngle(UP, yaw)); // palm down on its top, fingers forward round the far side, turned a little toward the shoulder
   // the case itself in hand space (the hand turned on it): its length, height and depth axes, a box rounded along its length
   const toH = (v) => new V3(v.dot(F.x), v.dot(F.y), v.dot(F.z)), pdir = (v) => human.worldToLocal(product.localToWorld(v.clone())).sub(human.worldToLocal(product.localToWorld(new V3()))).normalize();
-  const eL = toH(pdir(new V3(1, 0, 0))), eU = toH(pdir(new V3(0, 1, 0))), eD = toH(pdir(new V3(0, 0, 1)));
+  const eL = toH(pdir(alongD ? new V3(0, 0, 1) : new V3(1, 0, 0))), eU = toH(pdir(new V3(0, 1, 0))), eD = toH(pdir(alongD ? new V3(1, 0, 0) : new V3(0, 0, 1)));
   const sdf3 = (x, y, z) => { const q = new V3(x, y, z).sub(off), a = Math.abs(q.dot(eU)) - (ax - rc), b = Math.abs(q.dot(eD)) - (by - rc), l = Math.abs(q.dot(eL)) - P.W / 2; const sec = Math.hypot(Math.max(a, 0), Math.max(b, 0)) + Math.min(Math.max(a, b), 0) - rc; return Math.max(sec, l); };
   const f = HD.fingers.map((gg) => solveClear({ sdf3 }, new V3(0, gg.y, gg.z), UP, FAX, gg.L, gg.r, [90, 105, 85]));
   const hp = { f, ...thumbRest(HD, sdf3, f, new V3(0.5, -0.4, -0.75), off.clone().add(new V3(-ax * 0.2, -by - 0.004, -0.02))) }; // the thumb round its near side
