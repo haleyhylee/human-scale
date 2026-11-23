@@ -5591,8 +5591,8 @@ function twoHandHold(P) { // a box too big for one hand: upright in front of the
     return { origin: new V3(0, yb, zb + D3.D / 2), basis: [new V3(1, 0, 0), UP.clone(), new V3(0, 0, 1)], hand: (s) => at(s, yb) };
   }
   const hand = (s) => {
-    const F = handFrame(new V3(-s, 0, 0), new V3(0, 0.2, 1));
-    return { F, W: new V3(s * (D3.W / 2 + HD.palmT / 2 + 0.003), yh, zc).addScaledVector(F.y, -0.5 * HD.palmLen) };
+    const F = handFrame(new V3(-s, 0, 0), new V3(0, 0.2, 1)), pad = fingerPts(HD, flatPose())[4].reduce((m, p, i) => (i ? Math.max(m, p.x + HD.thumb.r[Math.min(i - 1, 1)]) : m), HD.palmT / 2); // the palm off the side by whichever stands out more toward it, the palm or the thumb (a small hand's thumb does)
+    return { F, W: new V3(s * (D3.W / 2 + pad + 0.003), yh, zc).addScaledVector(F.y, -0.5 * HD.palmLen) };
   };
   return { origin: new V3(0, yh - Math.min(0.4 * D3.H, 0.1), zc + D3.D / 2), basis: [new V3(1, 0, 0), UP.clone(), new V3(0, 0, 1)], hand };
 }
