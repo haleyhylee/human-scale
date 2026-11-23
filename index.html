@@ -153,7 +153,8 @@ button { cursor: pointer; }
 .lv.bad { color: var(--bad); background: var(--bad-bg); }
 .lv.info { color: var(--ink-2); background: var(--bg); }
 .tipbtn { position: relative; }
-.hud-acts .tipbtn { margin-right: 4px; } /* the tips with the buttons, the check line first */
+.hud-acts .tipbtn { margin-right: auto; } /* the tips at the left end of the buttons' row, under the check line, at any width */
+.hud > .verdict { flex-basis: 100%; } .hud > .hud-acts { flex-basis: 100%; margin-left: 0; }
 .tipbtn[data-new]::after { content: ""; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); } /* a tip waiting while they are hidden */
 .lv.ico { display: inline-flex; align-items: center; justify-content: center; padding: 3px 5px; vertical-align: -3px; }
 .lv.ico svg { width: 14px; height: 14px; display: block; }
