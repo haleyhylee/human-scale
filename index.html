@@ -7292,7 +7292,7 @@ function fitView() {
     else { ww = s.x; hh = s.z; up = new V3(0, 0, -1); }
     const half = Math.max(hh / (2 * f), ww / (2 * aspect)) * 1.12 + 0.03;
     const cc = c.clone().addScaledVector(up, off * 2 * half);
-    const back = (S.place === 'back' && kind() === 'pack') !== !!S.viewFlip, pos = S.view === 'front' ? new V3(cc.x, cc.y, back ? box3.min.z - 5 : box3.max.z + 5) /* worn on the back: its own front, from behind; or turned round to the back */ : S.view === 'side' ? new V3(S.viewFlip ? box3.min.x - 5 : box3.max.x + 5, cc.y, cc.z) : new V3(cc.x, box3.max.y + 5, cc.z);
+    const back = (S.place === 'back' && kind() === 'pack') !== !!S.viewFlip, pos = S.view === 'front' ? new V3(cc.x, cc.y, back ? box3.min.z - 5 : box3.max.z + 5) /* worn on the back: its own front, from behind; or turned round to the back */ : S.view === 'side' ? new V3(S.viewFlip ? box3.min.x - 5 : box3.max.x + 5, cc.y, cc.z) : new V3(cc.x, S.viewFlip ? box3.min.y - 5 : box3.max.y + 5, cc.z); /* from above, or from underneath */
     Object.assign(orthoCam, { left: -half * aspect, right: half * aspect, top: half, bottom: -half, zoom: 1 });
     orthoCam.up.copy(up); orthoCam.position.copy(pos); orthoCam.lookAt(cc);
     orthoCam.updateProjectionMatrix();
@@ -7364,6 +7364,7 @@ function drawMeasure() {
 /* 1-person view: only your own forearms and hands, seen from the eyes; sitting on a seat being checked, your legs too (your lap, knees and feet) */
 function syncBodyVis() {
   const fp = S.view === 'first', lap = fp && S.A && S.A.chair === 'product';
+  surface.visible = !(S.view === 'top' && S.viewFlip); // from underneath: what it stands on lifted away, so its base shows
   for (const m of [torso, R.head, R.neck, chair, ...R.arms.flatMap((a) => [a.up, a.sh, a.el]), ...R.legs.map((l) => l.hip)]) m.visible = !fp; // from the eyes: forearms and hands
   for (const m of R.legs.flatMap((l) => [l.up, l.lo, l.kn, l.an, l.foot])) m.visible = !fp || lap;
 }
@@ -7464,6 +7465,7 @@ function syncGhostBtn() { const v = personVis(), b = $('btnGhost'), [ko, en] = P
 const CUBE = '<path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/>', VIEW_ALT = {
   third: [['3인칭', '3rd person', '<rect x="3" y="7" width="12.5" height="10" rx="2" stroke="none"/><path d="M16.5 12L21 8.2v7.6z" stroke="none"/>'], ['버드뷰', "Bird's-eye", '<path class="f" d="M4 8l4-4h12l-4 4z"/><path class="f2" d="M4 8h12v12H4z"/><path class="f3" d="M16 8l4-4v12l-4 4z"/>' + CUBE]],
   front: [['정면', 'Front', '<path class="f" d="M4 8h12v12H4z"/>' + CUBE], ['후면', 'Back', '<path class="f" d="M8 4h12v12H8z"/>' + CUBE]],
+  top: [['평면', 'Top', '<path class="f" d="M4 8l4-4h12l-4 4z"/>' + CUBE], ['밑면', 'Bottom', '<path class="f" d="M4 20l4-4h12l-4 4z"/>' + CUBE]],
   side: [['측면 R', 'Side (R)', '<path class="f" d="M16 8l4-4v12l-4 4z"/>' + CUBE], ['측면 L', 'Side (L)', '<path class="f" d="M4 8l4-4v12l-4 4z"/>' + CUBE]],
 };
 function syncViewBtns() {
@@ -7479,10 +7481,21 @@ function syncViewBtns() {
 }
 function pressView(k) { // the same button again: its other view
   if (k === 'third' && (S.view === 'third' || S.view === 'bird')) return setView(S.view === 'third' ? 'bird' : 'third');
-  if ((k === 'front' || k === 'side') && S.view === k) { S.viewFlip = !S.viewFlip; return setView(k, true); }
+  if ((k === 'front' || k === 'side' || k === 'top') && S.view === k) { S.viewFlip = !S.viewFlip; return setView(k, true); } // round to the back, the other side, or underneath
+  if (k === 'first' && S.view === 'first') { if (S.fpFill) return setView('first'); return fpFill(); } // again: the product near filling the view; and again: back to the eyes' own view
   setView(k);
 }
+/* first person, pressed again: the gaze straight at the product and the view narrowed till it nearly fills the frame */
+function fpFill() {
+  if (!fpState.eye || !product.children.length) return;
+  const b = visBox(product), c = b.getCenter(new V3()), r = b.getSize(new V3()).length() / 2, d = c.clone().sub(fpState.eye), dist = d.length(); if (dist < 0.02) return; d.normalize();
+  const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a)), aspect = (stage.clientWidth || 1) / (stage.clientHeight || 1);
+  fpLook.yaw += wrap(Math.atan2(d.x, d.z) - fpState.yaw); fpLook.pitch += Math.asin(clamp(d.y, -1, 1)) - fpState.pitch;
+  const half = Math.atan(Math.min(0.99, r / dist) / 0.85); perspCam.fov = clamp((2 * Math.atan(Math.tan(half) / Math.min(1, aspect)) * 180) / Math.PI, 3, 100); perspCam.updateProjectionMatrix();
+  S.fpFill = true;
+}
 function setView(v, keepFlip) {
+  S.fpFill = false;
   if (!keepFlip) S.viewFlip = false;
   S.view = v;
   syncGhostBtn();
