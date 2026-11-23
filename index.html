@@ -7274,6 +7274,7 @@ $('btnTip').addEventListener('click', () => setTipsOff(!tipsOff));
 
 /* ---------- views ---------- */
 const isOrtho = () => S.view === 'front' || S.view === 'side' || S.view === 'top' || S.view === 'bird'; // ('bird': 3rd person pressed again, now an isometric view)
+const isTrueScale = () => S.view === 'front' || S.view === 'side' || S.view === 'top'; // true-scale views: the ruler, the scale bar, 1:1 and the ground line (not the isometric, which foreshortens)
 function sceneBox() {
   const b = new THREE.Box3();
   b.expandByObject(human); b.expandByObject(holder);
@@ -7351,11 +7352,11 @@ function drawMeasure() {
   const [u, v] = S.view === 'front' ? ['x', 'y'] : S.view === 'side' ? ['z', 'y'] : ['x', 'z'], nm = { x: L('가로', 'W'), y: L('높이', 'H'), z: L('깊이', 'D') };
   let html = '', txt = '', at = null;
   meas.box = null;
-  if (meas.on && isOrtho() && meas.a && meas.b) {
+  if (meas.on && isTrueScale() && meas.a && meas.b) {
     const [x0, y0] = scr(meas.a), [x1, y1] = scr(meas.b), du = Math.abs(meas.b[u] - meas.a[u]), dv = Math.abs(meas.b[v] - meas.a[v]);
     html = `<rect x="${Math.min(x0, x1)}" y="${Math.min(y0, y1)}" width="${Math.abs(x1 - x0)}" height="${Math.abs(y1 - y0)}"/>`;
     txt = `${nm[u]} ${mLen(du)} × ${nm[v]} ${mLen(dv)}`; at = [Math.min(x0, x1), Math.min(y0, y1), Math.max(x0, x1), Math.max(y0, y1)]; meas.box = { [u]: du, [v]: dv };
-  } else if (meas.on && isOrtho() && meas.pts.length) {
+  } else if (meas.on && isTrueScale() && meas.pts.length) {
     const p = meas.pts.map(scr);
     html = p.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.5"/>`).join('');
     if (p.length === 2) {
@@ -7456,7 +7457,7 @@ function ceilChecks(out) { // with the ceiling on: the product's top and the per
   if (!S.A.seated) { const reach = S.A.shoulderY + S.A.armLen; add(L('머리 위', 'Headroom'), L(`머리 위 ${cmi(hd)}cm · 팔을 뻗으면 ${reach >= c ? '천장에 닿아요' : `천장까지 ${cmi(c - reach)}cm`}`, `${cmi(hd)} cm above the head · arms up ${reach >= c ? 'touch the ceiling' : `stop ${cmi(c - reach)} cm short`}`), hd < 0.1 ? 'bad' : 'info'); }
 }
 function drawScene() {
-  groundLine.visible = isOrtho() && S.view !== 'top';
+  groundLine.visible = isTrueScale() && S.view !== 'top';
   if (!PEN.on) { renderer.render(scene, cam); return; }
   const sz = renderer.getDrawingBufferSize(new THREE.Vector2());
   if (!PEN.rt || PEN.rt.width !== sz.x || PEN.rt.height !== sz.y) { if (PEN.rt) { PEN.rt.depthTexture.dispose(); PEN.rt.dispose(); } PEN.rt = new THREE.WebGLRenderTarget(sz.x, sz.y, { depthTexture: new THREE.DepthTexture(sz.x, sz.y, THREE.FloatType) }); }
@@ -7517,8 +7518,8 @@ function setView(v, keepFlip) {
   S.view = v;
   syncGhostBtn();
   syncViewBtns();
-  if (meas.on && !isOrtho()) setMeasure(false); // the ruler works on the flat views
-  if (ONE.on && !isOrtho()) { ONE.on = false; syncOne(); } // 1:1 is for the flat views
+  if (meas.on && !isTrueScale()) setMeasure(false); // the ruler works on the flat views
+  if (ONE.on && !isTrueScale()) { ONE.on = false; syncOne(); } // 1:1 is for the flat views
   syncBodyVis();
   fpLook.yaw = 0; fpLook.pitch = 0;
   syncLens();
@@ -7594,9 +7595,9 @@ function productShare() {
 /* 1:1 on screen: measured once with a ruler against a bar of known pixels; then the flat views show things at their real size (the scale set
    from the view's height in CSS pixels). Zooming leaves it */
 const ONE = { on: false, ppmm: (() => { try { return +localStorage.getItem('hs.ppmm') || 0; } catch { return 0; } })() };
-function applyOne() { if (!ONE.on || !isOrtho() || !(ONE.ppmm > 0)) return; const h = stage.clientHeight || 1; orthoCam.zoom = (ONE.ppmm * 1000 * (orthoCam.top - orthoCam.bottom)) / h; orthoCam.updateProjectionMatrix(); ONE.zoom = orthoCam.zoom; const c = new THREE.Box3().setFromObject(holder).getCenter(new V3()), t = controlsO.target, d = orthoCam.getWorldDirection(new V3()), mv = c.sub(t); mv.addScaledVector(d, -mv.dot(d)); t.add(mv); orthoCam.position.add(mv); controlsO.update(); } // at real size, the product in the middle
+function applyOne() { if (!ONE.on || !isTrueScale() || !(ONE.ppmm > 0)) return; const h = stage.clientHeight || 1; orthoCam.zoom = (ONE.ppmm * 1000 * (orthoCam.top - orthoCam.bottom)) / h; orthoCam.updateProjectionMatrix(); ONE.zoom = orthoCam.zoom; const c = new THREE.Box3().setFromObject(holder).getCenter(new V3()), t = controlsO.target, d = orthoCam.getWorldDirection(new V3()), mv = c.sub(t); mv.addScaledVector(d, -mv.dot(d)); t.add(mv); orthoCam.position.add(mv); controlsO.update(); } // at real size, the product in the middle
 function syncOne() { $('btn11').setAttribute('aria-pressed', String(ONE.on)); $('oneBadge').hidden = !ONE.on; }
-function setOne(on) { ONE.on = !!on && ONE.ppmm > 0; syncOne(); if (ONE.on && !isOrtho()) setView('front'); else fitView(); }
+function setOne(on) { ONE.on = !!on && ONE.ppmm > 0; syncOne(); if (ONE.on && !isTrueScale()) setView('front'); else fitView(); }
 function zoomView(f) {
   queueGhostCheck();
   if (ONE.on) { ONE.on = false; syncOne(); } // zoomed: no longer 1:1
@@ -7736,7 +7737,7 @@ function updateOverlay(pose) {
   }
   if (meas.on) drawMeasure();
   const sb = $('scalebar');
-  if (isOrtho() && !ONE.on) { // at 1:1 the screen itself is the scale
+  if (isTrueScale() && !ONE.on) { // at 1:1 the screen itself is the scale
     const ppm = (h * orthoCam.zoom) / (orthoCam.top - orthoCam.bottom);
     let len = 0.05;
     for (const o of [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2]) if (o * ppm <= 140) len = o;
@@ -8618,7 +8619,7 @@ document.addEventListener('keydown', (e) => {
 /* the ruler */
 function setMeasure(on) {
   meas.on = on; meas.a = meas.b = null; meas.pts = [];
-  if (on && !isOrtho()) setView('front');
+  if (on && !isTrueScale()) setView('front');
   stage.classList.toggle('measuring', on);
   $('btnMeasure').setAttribute('aria-pressed', String(on));
   controlsO.enabled = isOrtho() && !on;
@@ -8638,7 +8639,7 @@ $('btnMeasure').addEventListener('click', () => setMeasure(!meas.on));
 }
 const worldAt = (e) => { const r = canvas.getBoundingClientRect(); return new V3(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1, 0).unproject(orthoCam); };
 canvas.addEventListener('pointerdown', (e) => {
-  if (!meas.on || !isOrtho()) return;
+  if (!meas.on || !isTrueScale()) return;
   meas.down = { x: e.clientX, y: e.clientY, p: worldAt(e), id: e.pointerId };
   canvas.setPointerCapture(e.pointerId);
 });
