@@ -2442,6 +2442,8 @@ const DETAIL = {
   standac: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cube', '사각 슬림', 'Slim square'], ['cyl', '원통', 'Round']], def: 'cube' }],
   wallac: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cube', '사각', 'Square'], ['cyl', '원통', 'Round']], def: 'cube' }],
   pframe: [{ k: 'fsize', ko: '크기', en: 'Size', opts: [['S', '소', 'S'], ['M', '중', 'M'], ['L', '대', 'L'], ['art', '아트월', 'Art wall']], def: 'M', apply: true },
+    { k: 'forient', ko: '방향', en: 'Orientation', opts: [['port', '세로', 'Portrait'], ['land', '가로', 'Landscape']], def: () => (dv('fsize') === 'art' ? 'land' : 'port'), apply: true },
+    { ...DR('lean', '뒤로 기울기 (°)', 'Lean back (°)', 0, 60, 9, 1), apply: true, show: () => S.place !== 'wall' && !laidFlat() }, // stood on its leg: how far back it leans (past what the leg can prop, it is laid down)
     { k: 'fon', ko: '프레임', en: 'Frame', opts: [['on', '있음', 'On'], ['off', '없음', 'Off']], def: 'on' }, { ...DR('ft', '프레임 폭', 'Frame width', 3, 60, 18), show: () => dv('fon') !== 'off' }, MAT_ROW, ANOD_ROW], // the frame's width is part of the frame: gone with it
   cushion: [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원통', 'Round'], ['cube', '큐브', 'Square']], def: 'cyl', apply: true }, DR('rad', '테두리 R', 'Edge radius', 0, 20, 2.5, 0.5), MAT_ROW, ANOD_ROW],
   trolley: [{ k: 'tiers', ko: '단 수', en: 'Tiers', opts: [[1, '1단', '1'], [2, '2단', '2'], [3, '3단', '3'], [4, '4단', '4']], def: 2 }, MAT_ROW, ANOD_ROW],
@@ -2516,7 +2518,8 @@ function detApply() { // a bowl's type and size, or a jar's form and volume, set
 function detApply0() {
   if (S.look === 'bowl') { const [w, h] = BOWL_SIZES[dv('btype')][dv('bsize')]; S.w = S.d = w; S.h = h; }
   else if (S.look === 'jar') { const [w, h] = JAR_SIZES[dv('form')][dv('ml')]; S.w = S.d = w; S.h = h; }
-  else if (S.look === 'frame') { const [w, h] = { S: [150, 200], M: [250, 320], L: [350, 450], art: [1200, 500] }[dv('fsize')]; S.w = w; S.h = h; S.d = 22; if (dv('fsize') === 'art') S.place = 'wall'; } // the art-wall size only hangs
+  else if (S.look === 'frame') { const [a, b] = { S: [150, 200], M: [250, 320], L: [350, 450], art: [500, 1200] }[dv('fsize')], land = dv('forient') === 'land'; S.w = land ? b : a; S.h = land ? a : b; S.d = 22; if (dv('fsize') === 'art') S.place = 'wall'; // portrait or landscape; the art-wall size only hangs
+    if (S.place !== 'wall' && +dv('lean') > frameLeanMax()) { S.lay = 'flat'; S.det = { ...S.det, lean: 9 }; } } // leaned back past what its leg can prop: laid down instead
   else if (S.look === 'washer') { const on = dv('dryer') === 'on'; S.h = on ? 1880 : 850; S.ctrl = on ? 940 : 800; } // a dryer stacked on top: the controls on the strip between them
   else if (S.look === 'cushion') { const sq = dv('form') === 'cube'; S.w = S.d = sq ? 80 : 84; S.h = 26; }
   else if (S.shape === 'ring' && S.source === 'box') S.h = +dv('stone'); // the stone's width (0: a plain band)
@@ -4907,10 +4910,12 @@ function wallAcGeo(group, W, D, H) {
   group.userData.door = { g: vane, max: deg(55), axis: 'x', sign: -1, hinge: new V3(0, vane.position.y, 0), auto: true };
 }
 /* a picture frame: your picture in a frame (or on its own as a board), hung or stood on a table on a back leg */
+const frameLeanMax = () => Math.floor((Math.atan(Math.max(0, 0.62 * S.h - 15) / (S.d + 0.32 * S.h)) * 180) / Math.PI); // its leg, from 62% up its back to the table, can prop it back only so far
 function frameGeo(group, W, D, H) {
   const own = meshIn(group), on = dv('fon') !== 'off', t = on ? Math.min((+dv('ft') || 18) / 1000, Math.min(W, H) * 0.3) : 0, m = propMat(), table = S.place !== 'wall';
   const g = new THREE.Group(); group.add(g); const ownG = meshIn(g);
-  if (table && !laidFlat()) { g.position.set(0, 0, -D); g.rotation.x = -0.16; g.position.z = -D * 0.2; } // leaning back a little (laid flat: as it is)
+  const ln = deg(clamp(+(dv('lean') ?? 9), 0, frameLeanMax()));
+  if (table && !laidFlat()) { g.position.set(0, 0, -D); g.rotation.x = -ln; g.position.z = -D * 0.2; } // leaning back a little (laid flat: as it is)
   if (on) { // four bars, mitred look kept simple: top and bottom full width, sides between
     ownG(new THREE.BoxGeometry(W, t, D).translate(0, H - t / 2, -D / 2), m); ownG(new THREE.BoxGeometry(W, t, D).translate(0, t / 2, -D / 2), m);
     for (const sx of [-1, 1]) ownG(new THREE.BoxGeometry(t, H - 2 * t, D).translate(sx * (W / 2 - t / 2), H / 2, -D / 2), m);
@@ -4919,7 +4924,7 @@ function frameGeo(group, W, D, H) {
   ownG(new THREE.BoxGeometry(iw, ih, 0.003).translate(0, H / 2, on ? -D * 0.55 : -0.0015), [mats.paper, mats.paper, mats.paper, mats.paper, im, mats.paper]); // the picture
   ownG(new THREE.BoxGeometry(iw, ih, 0.002).translate(0, H / 2, -D + 0.001), m); // the back board
   if (table && !laidFlat()) { // the leg behind: from the back, high up, down and back to the table, propping the frame as it leans
-    const top = new V3(0, H * 0.62, -D - 0.002), zb = -D - H * 0.32, bot = new V3(0, Math.max(0.004, (Math.sin(0.16) * -zb) / Math.cos(0.16)), zb), v = top.clone().sub(bot);
+    const top = new V3(0, H * 0.62, -D - 0.002), zb = -D - H * 0.32, bot = new V3(0, Math.max(0.004, Math.tan(ln) * -zb), zb), v = top.clone().sub(bot);
     ownG(new THREE.BoxGeometry(Math.min(0.04, W * 0.2), v.length(), 0.004).rotateX(Math.atan2(v.z, v.y)).translate((top.x + bot.x) / 2, (top.y + bot.y) / 2, (top.z + bot.z) / 2), m);
   }
 }
