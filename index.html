@@ -4178,7 +4178,7 @@ function vMouseGeo(group, W, D, H, own, dark) {
   for (let k = 0; k < 8; k++) { const t0 = -0.93 + k * 0.09, t1 = t0 + 0.09; if (t1 < tw - 0.06 || t0 > tw + 0.06) seam(sp(0.3, t0), sp(0.3, t1)); } // between the two buttons (broken by the wheel)
   for (let k = 0; k < 6; k++) seam(sp(k / 6 * 0.62, -0.2), sp((k + 1) / 6 * 0.62, -0.2)); // the buttons' back edge, across the face
   for (const [t, l] of [[-0.18, 0.016], [0.02, 0.014]]) { const c = at(-0.235, 0.8, t); own(new RoundedBoxGeometry(0.004, 0.008, l, 2, 0.0015).rotateZ(0.2).translate(c.x, c.y, c.z), dark); } // two thumb buttons high on the left, by the ridge
-  group.userData.vgrip = { n: nrm(-0.4), index: onFace(-0.05, -0.72), thumb: at(-0.31, 0.62, -0.08) }; // the hand's marks: the index on the upper button toward the front, the thumb in the hollow on the left
+  group.userData.vgrip = { n: nrm(-0.4), index: onFace(-0.05, -0.72), knuck: onFace(0.25, -0.3), left: new V3(-1, 0, 0), thumb: at(-0.27, 0.8, -0.32) }; // the hand's marks: the index on the upper button toward the front, the thumb in the hollow on the left
   part();
 }
 function mouseGeo(group, W, D, H) {
@@ -5875,11 +5875,14 @@ function mouseGrip(HD) {
   for (const [y, z] of [[0.2, -0.3], [0.3, -0.3], [0.4, -0.3], [0.3, -0.2], [0.3, -0.4]]) palm.push(new V3(0.66 * HD.palmT, y * HD.palmLen, z * HD.palmW)); // the pad at the thumb's root stands proud of the palm
   let F, W, at, best = null;
   const vg = holder.userData.vgrip, toHd = (v) => human.worldToLocal(holder.localToWorld(v.clone())).sub(human.worldToLocal(holder.localToWorld(new V3()))).normalize();
-  if (vg) { // a vertical mouse, held in a handshake: the palm against its grip face (turned with it, a little less than it leans: over it more than beside it), the index finger on the upper button
-    const pn = toHd(vg.n).negate().multiplyScalar(0.85).add(new V3(0, -0.15, 0)).normalize(), y = fwd.clone().addScaledVector(pn, -fwd.dot(pn)).normalize(), g0 = HD.fingers[0]; F = handFrame(pn, y); at = (W) => (x, y2, z) => sdfW(W.clone().add(inHand(F, new V3(x, y2, z))));
-    W = human.worldToLocal(holder.localToWorld(vg.index.clone())) /* the index fingertip about on its mark */.addScaledVector(F.y, -(g0.y + 0.5 * (g0.L[0] + g0.L[1] + g0.L[2]))).addScaledVector(F.z, -g0.z).addScaledVector(F.x, -0.06);
-    W.y = deskY + jointSizes(limbProfiles(S.A, PERSONAS[S.persona])).wr + 0.002; // the wrist down on the desk, the hand turned up on its side against the face
-    for (let k = 0; k < 60; k++) { const m = palm.reduce((m, q) => Math.min(m, at(W)(q.x, q.y, q.z)), 1e9); if (Math.abs(m - 0.0015) < 0.0004) break; W.addScaledVector(F.x, Math.max(-0.01, Math.min(0.01, m - 0.0015))); W.y = Math.max(W.y, deskY + jointSizes(limbProfiles(S.A, PERSONAS[S.persona])).wr + 0.002); }
+  if (vg) { /* a vertical mouse, the hand fitted over it: its ridge in the web between the thumb and index finger, the hand rolled partway to the
+     right (the palm over the ridge and down its grip face), the wrist down on the desk behind it */
+    const wy = deskY + jointSizes(limbProfiles(S.A, PERSONAS[S.persona])).wr + 0.002, g0 = HD.fingers[0], lf = toHd(vg.left), nO = toHd(vg.n), ks = human.worldToLocal(holder.localToWorld(vg.knuck.clone())), roll = deg(50);
+    const kn = new V3(0.5 * HD.palmT, HD.palmLen, g0.z), fit = (h) => { const K = ks.clone().addScaledVector(nO, h); let W1, F1, p0 = -0.3, p1 = 1.2; // pointing straight ahead, pitched up from the wrist on the desk to the knuckles on its ridge
+      for (let k = 0; k < 24; k++) { const p = (p0 + p1) / 2, yd = fwd.clone().multiplyScalar(Math.cos(p)).addScaledVector(UP, Math.sin(p)), dn = new V3(0, -1, 0).addScaledVector(yd, yd.y).normalize(), l = lf.clone().addScaledVector(yd, -lf.dot(yd)).normalize(); F1 = handFrame(dn.multiplyScalar(Math.cos(roll)).addScaledVector(l, Math.sin(roll)).normalize(), yd); W1 = K.clone().sub(inHand(F1, kn)); if (W1.y > wy) p0 = p; else p1 = p; }
+      const a = (W) => (x, y, z) => sdfW(W.clone().add(inHand(F1, new V3(x, y, z)))); return { F: F1, W: W1, at: a, m: palm.reduce((m, q) => { const w = W1.clone().add(inHand(F1, q)); return w.y < deskY + 0.006 ? m : Math.min(m, a(W1)(q.x, q.y, q.z)); }, 1e9) }; }; // the heel of the hand may lie on the desk
+    let lo = -0.01, hi = 0.05, r = fit(hi); for (let k = 0; k < 16; k++) { const h = (lo + hi) / 2, c = fit(h); if (c.m < 0.0015) lo = h; else { hi = h; r = c; } } // as close down on it as the palm comes without going in
+    F = r.F; W = r.W; at = r.at;
   } else for (let tl = -0.25; tl <= 0.401; tl += 0.05) { // the palm tilted as it best lies along the shell: settled down onto it, then the tilt with it closest all over
     const F1 = handFrame(new V3(0, -1, 0), fwd.clone().addScaledVector(UP, tl)), at1 = (W) => (x, y, z) => sdfW(W.clone().add(inHand(F1, new V3(x, y, z))));
     const W1 = ctr.clone().addScaledVector(fwd, -0.06 * len).addScaledVector(F1.y, -HD.palmLen).addScaledVector(F1.z, -(HD.fingers[0].z + HD.fingers[1].z) / 2).add(new V3(0, 0.08, 0)); // the knuckles a little ahead of its middle, the wheel between the index and middle fingers
