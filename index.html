@@ -153,7 +153,7 @@ button { cursor: pointer; }
 .lv.bad { color: var(--bad); background: var(--bad-bg); }
 .lv.info { color: var(--ink-2); background: var(--bg); }
 .tipbtn { position: relative; }
-.verdict .tipbtn { flex: 0 0 auto; }
+.hud-acts .tipbtn { margin-right: 4px; } /* the tips with the buttons, the check line first */
 .tipbtn[data-new]::after { content: ""; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); } /* a tip waiting while they are hidden */
 .lv.ico { display: inline-flex; align-items: center; justify-content: center; padding: 3px 5px; vertical-align: -3px; }
 .lv.ico svg { width: 14px; height: 14px; display: block; }
@@ -183,7 +183,7 @@ button { cursor: pointer; }
 .btn.icon { width: 32px; padding: 0; font-size: 17px; line-height: 1; }
 @media (max-width: 520px) {
   .views { flex-direction: column; align-items: flex-start; } /* the lens under the viewpoints */
-  .verdict { display: contents; } .verdict #pill { order: 1; } .verdict .vtxt { order: 2; flex: 1 1 calc(100% - 64px); } .verdict .tipbtn { order: 3; } .hud-acts { order: 4; }
+  .verdict { display: contents; } .verdict #pill { order: 1; } .verdict .vtxt { order: 2; flex: 1 1 calc(100% - 64px); } .hud-acts { order: 4; }
   .hud .btn { height: 30px; padding: 0 9px; font-size: 12px; }
   .zoom .btn.btn { height: 30px; } /* the same size as the buttons along the bottom */
   /* on a phone the tip stays small and lets the scene show through */
@@ -490,8 +490,9 @@ input:disabled { opacity: 0.55; }
       </div>
     </div>
     <div class="hud">
-      <div class="verdict"><button type="button" class="btn tipbtn ico" id="btnTip" aria-pressed="true"></button><span class="lv info" id="pill">준비</span><span class="vtxt"><span class="txt" id="hudText">3D 뷰를 불러오는 중이에요.</span><span class="vhint" id="vhint" hidden></span><span class="scalebar" id="scalebar" hidden><i id="scalebarI"></i><span id="scalebarT"></span></span></span></div>
+      <div class="verdict"><span class="lv info" id="pill">준비</span><span class="vtxt"><span class="txt" id="hudText">3D 뷰를 불러오는 중이에요.</span><span class="vhint" id="vhint" hidden></span><span class="scalebar" id="scalebar" hidden><i id="scalebarI"></i><span id="scalebarT"></span></span></span></div>
       <div class="hud-acts">
+        <button type="button" class="btn tipbtn ico" id="btnTip" aria-pressed="true"></button>
         <button type="button" class="btn ico" id="btnGhost" aria-pressed="false"></button>
         <button type="button" class="btn ico" id="btnSupport" aria-pressed="false" hidden></button>
         <button type="button" class="btn ico" id="btnGuides" aria-pressed="true"></button>
