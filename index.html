@@ -184,7 +184,7 @@ button { cursor: pointer; }
 .btn.icon { width: 32px; padding: 0; font-size: 17px; line-height: 1; }
 @media (max-width: 520px) {
   .views { flex-direction: column; align-items: flex-start; } /* the lens under the viewpoints */
-  .verdict { display: contents; } .verdict #pill { order: 1; } .verdict .vtxt { order: 2; flex: 1 1 calc(100% - 64px); } .hud > .tipbtn { order: 3; } .hud > .hud-acts { order: 4; }
+  .verdict { display: contents; } .verdict #pill { order: 1; } .verdict .vtxt { order: 2; flex: 1 1 calc(100% - 64px); } .hud > .tipbtn, .hud.stack > .tipbtn { order: 3; } .hud > .hud-acts { order: 4; }
   .hud .btn { height: 30px; padding: 0 9px; font-size: 12px; }
   .zoom .btn.btn { height: 30px; } /* the same size as the buttons along the bottom */
   /* on a phone the tip stays small and lets the scene show through */
@@ -2293,7 +2293,7 @@ function deskLayout() {
   const D = Math.max(0.6, P.D + (lap || kbd ? 0.4 : 0.2)), zm = -Math.max(0.26, D - 0.15);
   if (lap) return { W: 1.2, D, xc: 0, zf: -0.06, zm, lap };
   if (S.source === 'box' && S.look === 'monitor') { const Dm = Math.max(0.65, P.D + 0.45), zmm = -Math.max(0.26, Dm - 0.15); return { W: Math.max(1.2, P.W + 0.5), D: Dm, xc: 0, zf: zmm + P.D / 2, zm: zmm, mon: true }; } // a monitor takes the desk monitor's place
-  if (S.source === 'box' && S.look === 'mouse') return { W: 1.2, D, xc: 0.3, zf: -0.15 + P.D / 2, zm, mouse: true }; // a mouse takes the desk mouse's place
+  if (S.source === 'box' && S.look === 'mouse') return { W: 1.2, D, xc: S.style === 'vertical' ? 0.36 : 0.3, zf: -0.15 + P.D / 2, zm, mouse: true }; /* a vertical mouse a little further out, in line with the forearm, so the wrist stays straight */ // a mouse takes the desk mouse's place
   if (kbd) { const xc = -keyboardLayout(P.W, P.D).home.x, mouseX = Math.max(0.3, xc + P.W / 2 + 0.075); return { W: Math.max(1.2, 2 * (mouseX + 0.12)), D, xc, zf: -0.07, zm, kbd, mouseX }; } // a keyboard takes the desk keyboard's place, the person in front of its letters (not the number pad), the mouse moved out past it
   const xc = Math.max(0.42, 0.36 + P.W / 2), W = Math.max(1.2, 2 * (xc + P.W / 2 + 0.06)); // clear of the monitor (to 0.27) and the mouse (to 0.33)
   const zc = clamp(deskItem() ? -(0.1 + P.D / 2) : P.H > 0.3 || P.D > 0.25 ? zm : -0.3, -(D - 0.03) + P.D / 2, -0.06 - P.D / 2); // tall or deep things line up with the monitor; a ring or a sheet lies near the front
