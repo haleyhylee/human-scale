@@ -4178,7 +4178,7 @@ function vMouseGeo(group, W, D, H, own, dark) {
   for (let k = 0; k < 8; k++) { const t0 = -0.93 + k * 0.09, t1 = t0 + 0.09; if (t1 < tw - 0.06 || t0 > tw + 0.06) seam(sp(0.3, t0), sp(0.3, t1)); } // between the two buttons (broken by the wheel)
   for (let k = 0; k < 6; k++) seam(sp(k / 6 * 0.62, -0.2), sp((k + 1) / 6 * 0.62, -0.2)); // the buttons' back edge, across the face
   for (const [t, l] of [[-0.18, 0.016], [0.02, 0.014]]) { const c = at(-0.235, 0.8, t); own(new RoundedBoxGeometry(0.004, 0.008, l, 2, 0.0015).rotateZ(0.2).translate(c.x, c.y, c.z), dark); } // two thumb buttons high on the left, by the ridge
-  group.userData.vgrip = { n: nrm(-0.4), index: onFace(-0.05, -0.72), knuck: onFace(0.4, -0.4), left: new V3(-1, 0, 0), thumb: at(-0.3, 0.45, -0.35) }; // the hand's marks: the index on the upper button toward the front, the thumb in the hollow on the left
+  group.userData.vgrip = { n: nrm(-0.4), index: onFace(-0.05, -0.72), knuck: onFace(0.45, -0.32), left: new V3(-1, 0, 0), thumb: at(-0.3, 0.45, -0.35) }; // the hand's marks: the index on the upper button toward the front, the thumb in the hollow on the left
   part();
 }
 function mouseGeo(group, W, D, H) {
@@ -5875,13 +5875,17 @@ function mouseGrip(HD) {
   for (const [y, z] of [[0.2, -0.3], [0.3, -0.3], [0.4, -0.3], [0.3, -0.2], [0.3, -0.4]]) palm.push(new V3(0.66 * HD.palmT, y * HD.palmLen, z * HD.palmW)); // the pad at the thumb's root stands proud of the palm
   let F, W, at, best = null;
   const vg = holder.userData.vgrip, toHd = (v) => human.worldToLocal(holder.localToWorld(v.clone())).sub(human.worldToLocal(holder.localToWorld(new V3()))).normalize();
-  if (vg) { /* a vertical mouse, the hand fitted over it: its ridge in the web between the thumb and index finger, the hand rolled partway to the
-     right (the palm over the ridge and down its grip face), the wrist down on the desk behind it */
-    const wy = deskY + jointSizes(limbProfiles(S.A, PERSONAS[S.persona])).wr + 0.002, g0 = HD.fingers[0], lf = toHd(vg.left), nO = toHd(vg.n), ks = human.worldToLocal(holder.localToWorld(vg.knuck.clone())), roll = deg(62), fw = fwd.clone().multiplyScalar(Math.cos(deg(18))).addScaledVector(toHd(vg.left), Math.sin(deg(18)));
-    const kn = new V3(0.5 * HD.palmT, HD.palmLen, g0.z), fit = (h) => { const K = ks.clone().addScaledVector(nO, h); let W1, F1, p0 = -0.3, p1 = 1.2; // pointing straight ahead, pitched up from the wrist on the desk to the knuckles on its ridge
-      for (let k = 0; k < 24; k++) { const p = (p0 + p1) / 2, yd = fw.clone().multiplyScalar(Math.cos(p)).addScaledVector(UP, Math.sin(p)), dn = new V3(0, -1, 0).addScaledVector(yd, yd.y).normalize(), l = lf.clone().addScaledVector(yd, -lf.dot(yd)).normalize(); F1 = handFrame(dn.multiplyScalar(Math.cos(roll)).addScaledVector(l, Math.sin(roll)).normalize(), yd); W1 = K.clone().sub(inHand(F1, kn)); if (W1.y > wy) p0 = p; else p1 = p; }
-      const a = (W) => (x, y, z) => sdfW(W.clone().add(inHand(F1, new V3(x, y, z)))); return { F: F1, W: W1, at: a, m: palm.reduce((m, q) => { const w = W1.clone().add(inHand(F1, q)); return w.y < deskY + 0.006 ? m : Math.min(m, a(W1)(q.x, q.y, q.z)); }, HD.fingers.reduce((m, g) => Math.min(m, a(W1)(0, g.y + 0.35 * g.L[0], g.z) - g.r[0] + 0.0015), 1e9)) }; }; // the fingers' roots kept off it too, so they can curl round it // the heel of the hand may lie on the desk
-    let lo = -0.01, hi = 0.05, r = fit(hi); for (let k = 0; k < 16; k++) { const h = (lo + hi) / 2, c = fit(h); if (c.m < 0.0015) lo = h; else { hi = h; r = c; } } // as close down on it as the palm comes without going in
+  if (vg) { /* a vertical mouse, the hand fitted round it from behind: the wrist on the desk straight behind its ridge (the forearm, wrist and
+     ridge in one line seen from above), the hand rolled partway to the right, so the ridge sits in the web between the thumb and the index
+     finger, the palm round its grip face and the thumb down its left */
+    const wy = deskY + jointSizes(limbProfiles(S.A, PERSONAS[S.persona])).wr + 0.002, lf = toHd(vg.left), roll = deg(50), fw = fwd, hp0 = human.worldToLocal(holder.localToWorld(holder.userData.hump.clone()));
+    const lat = new V3().crossVectors(UP, fw).normalize(), base = hp0.clone().addScaledVector(fw, -fw.dot(hp0.clone().sub(ctr)) - 0.5 * len - 0.12); base.y = wy;
+    const frame = (p, ps) => { const fy = fw.clone().multiplyScalar(Math.cos(ps)).addScaledVector(lat, -Math.sign(lat.dot(lf)) * Math.sin(ps)), yd = fy.multiplyScalar(Math.cos(p)).addScaledVector(UP, Math.sin(p)), dn = new V3(0, -1, 0).addScaledVector(yd, yd.y).normalize(), l = lf.clone().addScaledVector(yd, -lf.dot(yd)).normalize(); return handFrame(dn.multiplyScalar(Math.cos(roll)).addScaledVector(l, Math.sin(roll)).normalize(), yd); };
+    const gap = (F1, W1) => { const a = (x, y, z) => sdfW(W1.clone().add(inHand(F1, new V3(x, y, z)))); let m = HD.fingers.reduce((m, g) => Math.min(m, a(0, g.y + 0.35 * g.L[0], g.z) - g.r[0] + 0.0015), 1e9), sc = 0; for (const q of palm) { const w = W1.clone().add(inHand(F1, q)); if (w.y < deskY + 0.006) continue; const e = a(q.x, q.y, q.z); m = Math.min(m, e); sc += Math.min(e, 0.03); } return { m, sc }; };
+    let r = null;
+    for (let ps = 0; ps <= deg(30.1); ps += deg(5)) for (let p = -0.1; p <= 0.61; p += 0.05) { const F1 = frame(p, ps); let a = 0; // turned a little out at the wrist, slid in from behind as far as it goes onto it
+      for (; a < 0.25; a += 0.004) if (gap(F1, base.clone().addScaledVector(fw, a + 0.004)).m < 0.0015) break;
+      const W1 = base.clone().addScaledVector(fw, a), g = gap(F1, W1), sc = -a + 0.15 * g.sc + 0.02 * ps; if (!r || sc < r.sc) r = { sc, F: F1, W: W1, at: (W) => (x, y, z) => sdfW(W.clone().add(inHand(F1, new V3(x, y, z)))) }; }
     F = r.F; W = r.W; at = r.at;
   } else for (let tl = -0.25; tl <= 0.401; tl += 0.05) { // the palm tilted as it best lies along the shell: settled down onto it, then the tilt with it closest all over
     const F1 = handFrame(new V3(0, -1, 0), fwd.clone().addScaledVector(UP, tl)), at1 = (W) => (x, y, z) => sdfW(W.clone().add(inHand(F1, new V3(x, y, z))));
