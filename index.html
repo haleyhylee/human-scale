@@ -253,7 +253,7 @@ span.br { display: block; }
 .pprev-t { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 13px; color: var(--ink); }
 .pprev-t span { font-size: 12px; color: var(--ink-2); } .pprev-t b { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; } /* the name stands out over its size */
 .pprev-t { flex: 1 1 auto; }
-.pprev.empty img { display: none; } .pprev.empty .pprev-t { align-items: center; text-align: center; } /* nothing pointed at yet: the hint in the middle */
+.pprev.empty img, .pprev img[hidden] { display: none; } .pprev.empty .pprev-t { align-items: center; text-align: center; } /* nothing pointed at yet: the hint in the middle */
 .pstep { display: flex; flex-direction: column; gap: 4px; flex: 0 0 auto; } .pstep .reset { width: 30px; height: 30px; padding: 0; font-size: 16px; line-height: 1; } /* the next or previous product, picked */
 
 .psearch input { flex: 1 1 auto; min-width: 0; height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); font: inherit; font-size: 13px; color: var(--ink); }
@@ -7965,10 +7965,10 @@ function presetSearch() {
   $('presetNone').hidden = !q || hits > 0; syncGrpToggle();
 }
 /* the preview over the list: a product pointed at (not yet picked) shown in the box under the search; off the list, the one in use */
-const THUMB = (k) => (typeof THUMBS !== 'undefined' && THUMBS[k]) || '';
+const THUMB = (k) => { const T = typeof THUMBS !== 'undefined' ? THUMBS : {}, f = familyOf(k); return T[k] || (f && T[FAMILIES[f].sizes[0][0]]) || ''; }; // another size of a family: its first size's picture
 function showPrev(k, name) {
   const pr = PRESETS[k]; if (!pr) return;
-  $('pprevImg').src = THUMB(k); $('pprevName').textContent = name || presetName(k); $('pprevSize').textContent = `${pr.w} × ${pr.d} × ${pr.h} mm`; $('pprevHint').hidden = true; $('pprev').classList.remove('empty');
+  const src = THUMB(k); $('pprevImg').src = src; $('pprevImg').hidden = !src; $('pprevName').textContent = name || presetName(k); $('pprevSize').textContent = `${pr.w} × ${pr.d} × ${pr.h} mm`; $('pprevHint').hidden = true; $('pprev').classList.remove('empty');
 }
 for (const [id, d] of [['pprevPrev', -1], ['pprevNext', 1]]) $(id).addEventListener('click', () => { stepProduct(d); showPrev(S.pkey); }); // picked straight from the preview, staying on this list
 const chipKey = (b) => (b.dataset.family ? FAMILIES[b.dataset.family].sizes[0][0] : b.dataset.preset);
