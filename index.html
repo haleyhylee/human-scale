@@ -7273,7 +7273,7 @@ $('toastClose').addEventListener('click', () => setTipsOff(true)); // tucked awa
 $('btnTip').addEventListener('click', () => setTipsOff(!tipsOff));
 
 /* ---------- views ---------- */
-const isOrtho = () => S.view === 'front' || S.view === 'side' || S.view === 'top';
+const isOrtho = () => S.view === 'front' || S.view === 'side' || S.view === 'top' || S.view === 'bird'; // ('bird': 3rd person pressed again, now an isometric view)
 function sceneBox() {
   const b = new THREE.Box3();
   b.expandByObject(human); b.expandByObject(holder);
@@ -7302,10 +7302,14 @@ function fitView() {
     let ww, hh, up = new V3(0, 1, 0);
     if (S.view === 'front') { ww = s.x; hh = s.y; }
     else if (S.view === 'side') { ww = s.z; hh = s.y; }
-    else { ww = s.x; hh = s.z; up = new V3(0, 0, -1); }
+    else if (S.view === 'top') { ww = s.x; hh = s.z; up = new V3(0, 0, -1); }
+    else { /* isometric: from the front right and above, all three axes foreshortened alike, sized to what the box spans on screen */
+      const d = new V3(1, 1, 1).normalize(); orthoCam.up.set(0, 1, 0); orthoCam.position.copy(c).addScaledVector(d, 10); orthoCam.lookAt(c); orthoCam.updateMatrixWorld(true);
+      const lo = new V3(1e9, 1e9, 1e9), hi = new V3(-1e9, -1e9, -1e9); for (let i = 0; i < 8; i++) { const q = new V3(i & 1 ? box3.max.x : box3.min.x, i & 2 ? box3.max.y : box3.min.y, i & 4 ? box3.max.z : box3.min.z).applyMatrix4(orthoCam.matrixWorldInverse); lo.min(q); hi.max(q); }
+      ww = hi.x - lo.x; hh = hi.y - lo.y; up = new V3(0, 1, 0).sub(d.clone().multiplyScalar(d.y)).normalize(); }
     const half = Math.max(hh / (2 * f), ww / (2 * aspect)) * 1.12 + 0.03;
     const cc = c.clone().addScaledVector(up, off * 2 * half);
-    const back = (S.place === 'back' && kind() === 'pack') !== !!S.viewFlip, pos = S.view === 'front' ? new V3(cc.x, cc.y, back ? box3.min.z - 5 : box3.max.z + 5) /* worn on the back: its own front, from behind; or turned round to the back */ : S.view === 'side' ? new V3(S.viewFlip ? box3.min.x - 5 : box3.max.x + 5, cc.y, cc.z) : new V3(cc.x, S.viewFlip ? box3.min.y - 5 : box3.max.y + 5, cc.z); /* from above, or from underneath */
+    const back = (S.place === 'back' && kind() === 'pack') !== !!S.viewFlip, pos = S.view === 'front' ? new V3(cc.x, cc.y, back ? box3.min.z - 5 : box3.max.z + 5) /* worn on the back: its own front, from behind; or turned round to the back */ : S.view === 'side' ? new V3(S.viewFlip ? box3.min.x - 5 : box3.max.x + 5, cc.y, cc.z) : S.view === 'bird' ? cc.clone().addScaledVector(new V3(1, 1, 1).normalize(), 10) : new V3(cc.x, S.viewFlip ? box3.min.y - 5 : box3.max.y + 5, cc.z); /* isometric; from above, or from underneath */
     Object.assign(orthoCam, { left: -half * aspect, right: half * aspect, top: half, bottom: -half, zoom: 1 });
     orthoCam.up.copy(up); orthoCam.position.copy(pos); orthoCam.lookAt(cc);
     orthoCam.updateProjectionMatrix();
@@ -7316,7 +7320,7 @@ function fitView() {
     perspCam.fov = lensFov(S.view === 'first' ? S.lensFP : S.lens); // 1-person starts wide, close to what eyes take in
     perspCam.aspect = aspect; perspCam.updateProjectionMatrix();
     if (S.view === 'first') return;
-    // 3인칭 looks from the side at eye level, 버드뷰 from high above
+    // 3인칭 looks from the side at eye level
     const dir = S.view === 'bird' ? new V3(0.42, 1.9, S.place === 'back' && kind() === 'pack' ? -0.75 : 0.75) : S.place === 'back' && kind() === 'bag' ? new V3(-0.95, 0.15, 0.5) /* a bag on the right shoulder: from that side */ : S.place === 'back' ? new V3(0.75, 0.15, -1) /* a backpack: from behind */ : laidFlat() && S.place === 'plinth' ? new V3(0.9, 0.75, 0.75) /* a sheet or a ring lying on the plinth: from above enough to see it */ : S.place === 'head' ? new V3(1, 0.12, 0.55) : carried() ? new V3(0.6, 0.12, 1) : atDesk() ? new V3(0.85, 0.42, 0.85) : S.mode === 'use' ? new V3(1, 0.1, S.A.chair === 'product' ? 0.9 : 0.32) : new V3(0.3, 0.08, 1);
     let faceOn = false;
     if (S.view === 'third' && S.place === 'hand' && (['screen', 'paper', 'card', 'brochure', 'book', 'photocard'].includes(imgSlot()) || (S.source === 'box' && S.look === 'cushion')) && S.shape !== 'laptop') { // a screen or a printed sheet in the hand: turned to show its face, from over the shoulder
@@ -7474,9 +7478,9 @@ const topCtrl = () => S.face === 'top' && S.action !== 'dispense'; // a control 
 function syncPenBtn() { const b = $('btnPen'); if (PEN.on) icoBtn(b, 'pen', '선화 모드 (누르면 렌더로)', 'Line drawing (press for render)'); else icoBtn(b, 'render', '렌더 모드 (누르면 선화로)', 'Render (press for line drawing)'); b.setAttribute('aria-pressed', String(PEN.on)); } // the icon shows the mode in use
 function syncGuidesBtn() { const b = $('btnGuides'); icoBtn(b, S.guides ? 'dims' : 'nodims', S.guides ? '치수 표시 켜짐' : '치수 표시 꺼짐', S.guides ? 'Dimensions on' : 'Dimensions off'); b.setAttribute('aria-pressed', String(!!S.guides)); }
 function syncGhostBtn() { const v = personVis(), b = $('btnGhost'), [ko, en] = PV_LABEL[v]; b.hidden = false; icoBtn(b, v === 'on' ? 'person' : v === 'ghost' ? 'ghost' : 'noperson', ko, en); b.setAttribute('aria-pressed', String(v !== 'on')); }
-/* the view buttons: pressed again, 3rd person goes up to the bird's-eye view, front turns to the back, side to the other side */
+/* the view buttons: pressed again, 3rd person turns isometric, front turns to the back, side to the other side */
 const CUBE = '<path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/>', VIEW_ALT = {
-  third: [['3인칭', '3rd person', '<rect x="3" y="7" width="12.5" height="10" rx="2" stroke="none"/><path d="M16.5 12L21 8.2v7.6z" stroke="none"/>'], ['버드뷰', "Bird's-eye", '<path class="f" d="M4 8l4-4h12l-4 4z"/><path class="f2" d="M4 8h12v12H4z"/><path class="f3" d="M16 8l4-4v12l-4 4z"/>' + CUBE]],
+  third: [['3인칭', '3rd person', '<rect x="3" y="7" width="12.5" height="10" rx="2" stroke="none"/><path d="M16.5 12L21 8.2v7.6z" stroke="none"/>'], ['아이소메트릭', 'Isometric', '<path class="f" d="M4 8l4-4h12l-4 4z"/><path class="f2" d="M4 8h12v12H4z"/><path class="f3" d="M16 8l4-4v12l-4 4z"/>' + CUBE]],
   front: [['정면', 'Front', '<path class="f" d="M4 8h12v12H4z"/>' + CUBE], ['후면', 'Back', '<path class="f" d="M8 4h12v12H8z"/>' + CUBE]],
   top: [['평면', 'Top', '<path class="f" d="M4 8l4-4h12l-4 4z"/>' + CUBE], ['밑면', 'Bottom', '<path class="f" d="M4 20l4-4h12l-4 4z"/>' + CUBE]],
   side: [['측면 R', 'Side (R)', '<path class="f" d="M16 8l4-4v12l-4 4z"/>' + CUBE], ['측면 L', 'Side (L)', '<path class="f" d="M4 8l4-4v12l-4 4z"/>' + CUBE]],
@@ -7527,7 +7531,7 @@ function syncLens() {
   if (meas.on) $('vhint').textContent = L('드래그: 상자 크기 · 두 번 클릭: 거리', 'Drag: box size · two clicks: distance');
   else if (S.E) $('vhint').textContent = L(`눈높이 ${cmi(S.E.land.eyeY)}cm 시야 · 드래그해서 둘러보기`, `Eye height ${cmi(S.E.land.eyeY)} cm · drag to look around`);
 }
-/* + / − / 기본: works in every view (ortho views scale, 3인칭·버드뷰 move closer, 1인칭 narrows the view) */
+/* + / − / 기본: works in every view (ortho views scale, 3인칭 moves closer, 1인칭 narrows the view) */
 /* zooming in closes on the product (earbuds on a face, a ring on a finger), not on the middle of the person */
 function mainBox() { // the product alone, without the mockups set beside it
   const side = holder.children.filter((c) => c.userData.unit && c.visible); side.forEach((c) => (c.visible = false));
