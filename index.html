@@ -714,6 +714,7 @@ input:disabled { opacity: 0.55; }
         <div id="vanityRows" hidden>
           <div class="dimrow surfrow"><label for="vanD" data-en="Ledge depth">젠다이 깊이</label><input type="range" id="vanD" min="80" max="400" step="5"><input type="number" id="vanDn" inputmode="decimal" min="80" max="400" step="1"></div>
           <div class="dimrow surfrow"><label for="vanGap" data-en="Ledge to cabinet">젠다이~상부장</label><input type="range" id="vanGap" min="100" max="900" step="10"><input type="number" id="vanGapn" inputmode="decimal" min="100" max="900" step="1"></div>
+          <div class="dimrow surfrow"><label for="vanSink" data-en="Sink height">싱크대 높이</label><input type="range" id="vanSink" min="500" max="1400" step="5"><input type="number" id="vanSinkn" inputmode="decimal" min="500" max="1400" step="1"></div>
         </div>
         <div id="plinthRows" hidden>
           <div class="dimrow surfrow"><label for="plW" data-en="Plinth W">단상 W</label><input type="range" id="plW" min="100" max="1500" step="10"><input type="number" id="plWn" inputmode="decimal" min="100" max="1500" step="1"></div>
@@ -823,7 +824,7 @@ const PERSONAS = {
   elderM: { label: '노인 남성', en: 'Older man', h: 165, bmi: 23.5, hr: [140, 190], br: [16, 40], sex: 'M', heads: 7.1, leg: 0.448, stoop: 8, maxFlex: 40, kind: 'elder', ticks: [155, 160, 165, 170] },
   wheel: { label: '휠체어 사용자', en: 'Wheelchair user', h: 165, bmi: 23, hr: [130, 200], br: [16, 40], sex: 'N', heads: 7.25, leg: 0.455, seated: true, maxFlex: 25, kind: 'wheel', ticks: [150, 160, 170, 180] },
 };
-const bmiHi = (p, hcm) => (p.kind === 'teen' || p.kind === 'child' ? p.br[1] : Math.max(p.br[1], 200 / (hcm / 100) ** 2)); // adults: up to 200 kg
+const bmiHi = (p, hcm) => 200 / (hcm / 100) ** 2, bmiLo = (p, hcm) => 15 / (hcm / 100) ** 2; // anyone: 15 to 200 kg
 /* body data: each person's average height (cm) and BMI by where the data comes from. Korean: Size Korea (8th, 2021); US: CDC NHANES 2015–2018;
    Europe and the international average: NCD-RisC. The Korean set is the one written above; the others swap in */
 const STDS = {
@@ -1097,7 +1098,7 @@ const kidHead = (hcm) => { const T = KID_HEAD; if (hcm <= T[0][0]) return (T[0][
 /* ---------- body proportions (fractions of stature) ---------- */
 function anthro(p, hcm, bmi) {
   const H = hcm / 100;
-  const g = Math.sqrt(bmi / 22); // girth scales with the square root of BMI
+  const g = Math.sqrt(clamp(bmi, 12, 80) / 22); // girth scales with the square root of BMI (the shape stops changing past BMI 12 and 80: a weight beyond those is taken, not drawn more extreme)
   const headH = p.kind === 'child' || p.kind === 'teen' ? kidHead(hcm) : H / p.heads; // adults: the 7.25-head canon
   const shoulderY = H - headH - 0.042 * H;
   const shJY = shoulderY - 0.02 * H;
@@ -2059,7 +2060,7 @@ function poseNow() {
     const Fr = A.seated ? (A.lounge && !loungeWide(A) ? handFrame(new V3(0, -1, 0), new V3(-s * 0.15, 0, 1)) : seatedRest(A, P, s).F) : handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)); // seated: along the thigh
     let out = { ...rc, q: Fr.q, hp: S.handRest };
     let g = plan && k > 0 && (S.mode === 'use' || carried()) ? handGoal(plan, s, P, sh) : null; // side by side: the arms hang at rest // where this hand goes, if anywhere
-    if (g && !(S.place === 'hand' || carried()) && S.torsoBack + (S.bellyPush || 0) > 0 && g.W.distanceTo(sh) > (A.upperArm + A.forearm) * 0.997) g = null; // stood back for the belly, the hand can no longer get there: it stays down (the checks say it is out of reach)
+    if (g && !(S.place === 'hand' || carried()) && S.handShort && g.W.distanceTo(sh) > (A.upperArm + A.forearm) * 0.997) g = null; // stood back for the belly, the hand can no longer get there: it stays down (the checks say it is out of reach)
     if (g) {
       if (S.place === 'hand' || carried()) clearOfTorso(g, A, P); // held: the hand (and what it holds) comes forward; a fixed goal: the person stood back instead (torsoNeed)
       const ch = armIK(sh, restW.clone().lerp(g.W, k), A, g.pole);
@@ -2266,7 +2267,7 @@ const SURF_NAME = { plinth: ['단상', 'plinth'], table: ['테이블', 'table'],
 function expSurfOk() { return !carried() && !!SURF_NAME[S.place] && surface.children.length > 0; } // something it stands on (or hangs on) to take along
 const vanD = () => clamp(((S.surf && S.surf.vanD) || 200) / 1000, 0.08, 0.4); // the vanity ledge's depth (m)
 const vanGap = () => clamp(((S.surf && S.surf.vanGap) || 350) / 1000, 0.1, 0.9); // from the ledge up to the mirror cabinet (m)
-const vanSink = () => Math.max(0.62, SURF.vanity - 0.17); // the basin's counter in front of the ledge, following its height
+const vanSink = () => (S.surf && S.surf.vanSink ? Math.min(S.surf.vanSink / 1000, SURF.vanity) : Math.max(0.62, SURF.vanity - 0.17)); // the basin's counter in front of the ledge: set (up to the ledge's own height, flush with it), or following it
 const VAN_SINK_D = 0.48;
 const GLASS_MIRROR = new THREE.MeshPhysicalMaterial({ color: 0xc9d4d9, metalness: 0.55, roughness: 0.08, clearcoat: 1, clearcoatRoughness: 0.02 }); // a mirror's glass: bright and cool (there is nothing round it to reflect)
 const cookOn = () => S.source === 'box' && ['pan', 'pot'].includes(S.look) && S.place === 'counter'; // a pan or pot on the counter: on an induction hob
@@ -4137,8 +4138,41 @@ function lampShadeParts(own, form, w, d, h, y0, cz, mat, pleat) {
 /* mushroom lamp (a portable lamp): a round stem (black, or the product colour) under a shade of any lamp form (a dome by default) */
 /* a mouse: a gaming one a dome humped toward the back with a wheel and two thumb buttons; a vertical one the same dome leaned over to the
    left so its right face is the grip, at the angle set */
+/* a vertical mouse: a section swept front to back. Seen from the front: a flat foot; on the right the grip face leaning at the set angle
+   (the two buttons on it, the wheel between them toward the front); a rounded ridge along the top, off to the left; on the left a steep
+   hollowed thumb rest flaring to a lip at the foot. Tallest a little ahead of the middle, it runs down to a rounded back under the palm */
+function vMouseGeo(group, W, D, H, own, dark) {
+  const ang = deg(clamp(+dv('vang') || 57, 30, 90)), xr = Math.max(-0.08, 0.4 - (0.74 * H / W) / Math.tan(ang)), lo = [0.4, 0.24], rg = [xr, 0.98];
+  const ctl = [[0.5, 0], [0.5, 0.06], [0.47, 0.14], lo, [(lo[0] + xr) / 2 + 0.02, 0.6], [xr + 0.07, 0.9], [xr + 0.01, 0.985], [xr - 0.06, 1.0], [xr - 0.13, 0.97], [xr - 0.17, 0.9], [-0.245, 0.7], [-0.265, 0.5], [-0.3, 0.3], [-0.37, 0.15], [-0.46, 0.07], [-0.5, 0.02], [-0.5, 0], [-0.25, 0], [0, 0], [0.25, 0]]; // a broad rounded ridge; the thumb side near upright and hollowed, flaring to its lip
+  const sec = new THREE.CatmullRomCurve3(ctl.map(([x, y]) => new V3(x, y, 0)), true, 'centripetal').getSpacedPoints(96).slice(0, 96).map((v) => [v.x, Math.max(0, v.y)]);
+  const e = (t) => Math.pow(Math.max(0, 1 - Math.pow(Math.abs(t), 2.6)), 1 / 2.6), wz = (t) => e(t) * (0.9 + 0.1 * t), hz = (t) => (0.62 + 0.38 * Math.exp(-(((t + 0.3) / 0.8) ** 2))) * Math.pow(e(t), 0.35); // t: -1 the front, +1 the back
+  const NZ = 48, NS = sec.length, pos = [], idx = [], zOf = (t) => -D / 2 + (t * D) / 2;
+  for (let i = 0; i <= NZ; i++) { const t = -1 + (2 * i) / NZ; for (const [x, y] of sec) pos.push(x * W * wz(t), y * H * hz(t), zOf(t)); }
+  for (let i = 0; i < NZ; i++) for (let j = 0; j < NS; j++) { const a = i * NS + j, b = i * NS + ((j + 1) % NS), c = a + NS, d = b + NS; idx.push(a, b, c, b, d, c); }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+  const at = (sx, sy, t) => new V3(sx * W * wz(t), sy * H * hz(t), zOf(t)); // a point of the section, at t along it
+  const onFace = (f, t) => at(rg[0] + (lo[0] - rg[0]) * f, rg[1] + (lo[1] - rg[1]) * f, t); // down the grip face from the ridge (f 0) to its foot (f 1)
+  const tan = (t) => onFace(0.9, t).sub(onFace(0.1, t)).normalize(), nrm = (t) => { const d = tan(t); return new V3(-d.y, d.x, 0); }; // its slope, and its outward normal (up and to the right)
+  group.userData.mouseBody = geo; group.userData.mouseSize = { W, D, H };
+  group.userData.hump = at(xr - 0.03, 1.0, -0.3);
+  part('몸체', 'Body'); own(geo, mats.foam);
+  part('바닥', 'Base'); own(new THREE.CylinderGeometry(0.5, 0.5, 0.003, 48).scale(W * 0.9, 1, D * 0.9).translate(0, 0.0015, -D / 2), dark);
+  /* the wheel between the buttons, sunk so a few millimetres stand out; the seam between the buttons, and where they end */
+  const tw = -0.62, wc = onFace(0.3, tw).addScaledVector(nrm(tw), -0.006), ax = tan(tw);
+  group.userData.wheel = wc.clone(); group.userData.wheelAxis = ax.clone();
+  part('휠', 'Wheel'); own(new THREE.CylinderGeometry(0.0095, 0.0095, 0.007, 24).applyMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(UP, ax))).translate(wc.x, wc.y, wc.z), dark);
+  part('버튼', 'Buttons');
+  const seam = (p, q) => { const m = p.clone().add(q).multiplyScalar(0.5), d = q.clone().sub(p); own(new THREE.BoxGeometry(0.0012, 0.0012, d.length()).applyMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(new V3(0, 0, 1), d.normalize()))).translate(m.x, m.y, m.z), dark); };
+  const sp = (f, t) => onFace(f, t).addScaledVector(nrm(t), 0.0003);
+  for (let k = 0; k < 8; k++) { const t0 = -0.93 + k * 0.09, t1 = t0 + 0.09; if (t1 < tw - 0.06 || t0 > tw + 0.06) seam(sp(0.3, t0), sp(0.3, t1)); } // between the two buttons (broken by the wheel)
+  for (let k = 0; k < 6; k++) seam(sp(k / 6 * 0.62, -0.2), sp((k + 1) / 6 * 0.62, -0.2)); // the buttons' back edge, across the face
+  for (const [t, l] of [[-0.18, 0.016], [0.02, 0.014]]) { const c = at(-0.235, 0.8, t); own(new RoundedBoxGeometry(0.004, 0.008, l, 2, 0.0015).rotateZ(0.2).translate(c.x, c.y, c.z), dark); } // two thumb buttons high on the left, by the ridge
+  group.userData.vgrip = { n: nrm(-0.4), index: onFace(0.2, -0.72), thumb: at(-0.31, 0.62, -0.08) }; // the hand's marks: the index on the upper button toward the front, the thumb in the hollow on the left
+  part();
+}
 function mouseGeo(group, W, D, H) {
   const own = meshIn(group), vert = S.style === 'vertical', dark = mats.stemBlack;
+  if (vert) return vMouseGeo(group, W, D, H, own, dark);
   const geo = new THREE.SphereGeometry(1, 56, 28, 0, Math.PI * 2, 0, Math.PI / 2), p = geo.attributes.position;
   const lean = vert ? 1 / Math.tan(deg(clamp(+dv('vang') || 57, 30, 90))) : 0;
   const sq = (c, n) => Math.sign(c) * Math.pow(Math.abs(c), 2 / n); // a squarer outline than an ellipse
@@ -4157,7 +4191,7 @@ function mouseGeo(group, W, D, H) {
   if (best < 0) top.set(0, H * 0.6, -D * 0.72);
   group.userData.wheel = vert ? null : new V3(top.x, top.y - 0.007, top.z);
   part('휠', 'Wheel'); own(new THREE.CylinderGeometry(0.011, 0.011, 0.007, 24).rotateZ(Math.PI / 2 - (vert ? Math.atan(lean) : 0)).translate(top.x, top.y - 0.007, top.z), dark);
-  if (!vert) { part('버튼', 'Buttons'); for (const [zc, l] of [[-D * 0.38, 0.018], [-D * 0.56, 0.016]]) own(new RoundedBoxGeometry(0.004, 0.009, l, 2, 0.0015).translate(-W * 0.47, H * 0.5, zc), dark); } // thumb buttons on the left
+  if (!vert) { part('버튼', 'Buttons'); group.userData.sideBtns = []; for (const [zc, l] of [[-D * 0.38, 0.018], [-D * 0.56, 0.016]]) { own(new RoundedBoxGeometry(0.004, 0.009, l, 2, 0.0015).translate(-W * 0.47, H * 0.5, zc), dark); group.userData.sideBtns.push([new V3(-W * 0.47, H * 0.5, zc), new V3(0.002, 0.0045, l / 2)]); } } // thumb buttons on the left
   part();
 }
 /* a monitor: a base, a neck behind, a panel 16:9 with its bezel (flat, or curved to the set radius) and the dark screen */
@@ -5049,9 +5083,9 @@ function buildSurface() {
     const w = Math.max(1.0, E.w + 0.5), vd = vanD(), h = SURF.vanity, z0 = EDGE, zb = z0 - vd, ws = 0.12, lvl = S.vanLvl || 0;
     box(surface, w + 0.6, Math.max(2.4, h + vanGap() + 0.9), ws, E.c, Math.max(2.4, h + vanGap() + 0.9) / 2, zb - ws / 2, mats.surfaceTop); // the wall
     box(surface, w, h, vd, E.c, h / 2, z0 - vd / 2, mats.surface); // the ledge, built up from the floor
-    if (lvl < 1) { const cy = h + vanGap(), ch = 0.7, cd = 0.15, mir = mirrorMat();
+    if (lvl < 1) { const cy = h + vanGap(), ch = 0.7, cd = 0.15;
       box(surface, Math.min(w, 0.9), ch, cd, E.c, cy + ch / 2, zb + cd / 2, mats.surface); // the mirror cabinet
-      box(surface, Math.min(w, 0.9) - 0.01, ch - 0.01, 0.004, E.c, cy + ch / 2, zb + cd + 0.002, mir); }
+      const gl = planarMirror(new THREE.PlaneGeometry(Math.min(w, 0.9) - 0.01, ch - 0.01)); gl.userData.own = true; gl.position.set(E.c, cy + ch / 2, zb + cd + 0.0015); surface.add(gl); } // its door a real mirror: the person (and what they hold) in it
     if (lvl < 2) { const sh = vanSink(), sw = Math.min(w, 0.8), sd = VAN_SINK_D, zf = z0 + sd, basin = new THREE.MeshStandardMaterial({ color: 0xf4f4f2, roughness: 0.25 });
       box(surface, sw, sh - 0.152, sd, E.c, 0.12 + (sh - 0.152) / 2, z0 + sd / 2, mats.surface); // the basin unit, its top just under the counter (never the same plane: that flickered)
       const bw = Math.min(0.5, sw * 0.7), bd = Math.min(0.34, sd * 0.7);
@@ -5804,7 +5838,7 @@ function bookHands(plan, P, s, sh, A, t) {
   if (right) { const h = edgeHand(ff, -1, plan.g); return { F: h.F, W: h.W, pole: new V3(-0.6, -1, -0.3), hp: hpR }; }
   const restPole = new V3(s * 0.25, -0.3, -1), toRest = (F0, W0, hp0, u) => { if (u >= 1) return null; if (u <= 0) return { F: F0, W: W0, pole: new V3(s * 0.6, -1, -0.3), hp: hp0 }; let rw, Fr; if (A.seated) { const r = seatedRest(A, P, s); rw = r.W; Fr = r.F; } else { rw = restWrist(A, P, s); const rc = armIK(sh, rw, A, restPole); Fr = handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)); } const q = F0.q.clone().slerp(Fr.q, u * u), ax = (v) => v.applyQuaternion(q); return { F: { q, x: ax(new V3(1, 0, 0)), y: ax(new V3(0, 1, 0)), z: ax(new V3(0, 0, 1)) }, W: W0.clone().lerp(rw, u), pole: new V3(s * 0.6, -1, -0.3).lerp(restPole, u), hp: blendPose(hp0, S.handRest, u * u * u) }; }; // seated, the rest is on the thigh; the fingers stay open till the hand is well away
   if (t < 0.5) { if (plan.kind !== 'sheet') return null; const h = edgeHand(ff, s, plan.g), out = h.W.clone().sub(ff.origin.clone().addScaledVector(ff.Yp, H / 2)); out.addScaledVector(ff.n, -out.dot(ff.n)).normalize(); return toRest(h.F, h.W.clone().addScaledVector(out, 0.16 * smooth01(t / 0.05)), plan.hp, smooth01((t - 0.05) / 0.1)); } // a big book's left hand slid off its spine edge, then down
-  const h = edgeHand(ff, s, plan.g), ui = smooth01((t - 0.74) / 0.12), out = h.W.clone().sub(ff.origin.clone().addScaledVector(ff.Yp, H / 2)); out.addScaledVector(ff.n, -out.dot(ff.n)).normalize(); return toRest(h.F, h.W.clone().addScaledVector(ff.Xp, -W - (plan.kind === 'sheet' ? 0.03 : 0)).addScaledVector(out, 0.16 * (1 - smooth01((t - 0.86) / 0.07))), blendPose(plan.book.B, plan.book.C, smooth01((t - 0.93) / 0.07)), 1 - ui); // to the opened half's outer edge, the thumb kept off it till the hand is there
+  const h = edgeHand(ff, s, plan.g), ui = smooth01((t - 0.74) / 0.12); if (h.W.clone().addScaledVector(ff.Xp, -W).distanceTo(sh) > 0.97 * (A.upperArm + A.forearm)) return null; /* too far for a short arm (a child's): that hand stays down, the book read held in one */ const out = h.W.clone().sub(ff.origin.clone().addScaledVector(ff.Yp, H / 2)); out.addScaledVector(ff.n, -out.dot(ff.n)).normalize(); return toRest(h.F, h.W.clone().addScaledVector(ff.Xp, -W - (plan.kind === 'sheet' ? 0.03 : 0)).addScaledVector(out, 0.16 * (1 - smooth01((t - 0.86) / 0.07))), blendPose(plan.book.B, plan.book.C, smooth01((t - 0.93) / 0.07)), 1 - ui); // to the opened half's outer edge, the thumb kept off it till the hand is there
 }
 /* a plain mouse in the hand, as one holds one: the palm over its hump, the hand's heel at its back, the index and middle fingers along the
    buttons and over the front, the ring and little fingers down its right side, the thumb against its left. Its surface (from its own
@@ -5814,12 +5848,14 @@ function mouseGrip(HD) {
   const geo = holder.userData.mouseBody, pa = geo.attributes.position, na = geo.attributes.normal, toH = new THREE.Matrix4().copy(human.matrixWorld).invert().multiply(holder.matrixWorld), nm = new THREE.Matrix3().getNormalMatrix(toH);
   const vs = [], ns = []; for (let i = 0; i < pa.count; i++) { vs.push(new V3(pa.getX(i), pa.getY(i), pa.getZ(i)).applyMatrix4(toH)); ns.push(new V3(na.getX(i), na.getY(i), na.getZ(i)).applyMatrix3(nm).normalize()); }
   const bb = new THREE.Box3().setFromPoints(vs), deskY = bb.min.y, hump = human.worldToLocal(holder.localToWorld(holder.userData.hump.clone()));
-  const wh = holder.userData.wheel ? human.worldToLocal(holder.localToWorld(holder.userData.wheel.clone())) : null, wx = human.worldToLocal(holder.localToWorld(new V3(1, 0, 0))).sub(human.worldToLocal(holder.localToWorld(new V3()))).normalize();
+  const wh = holder.userData.wheel ? human.worldToLocal(holder.localToWorld(holder.userData.wheel.clone())) : null, wx = human.worldToLocal(holder.localToWorld((holder.userData.wheelAxis || new V3(1, 0, 0)).clone())).sub(human.worldToLocal(holder.localToWorld(new V3()))).normalize(), wr0 = holder.userData.wheelAxis ? 0.0095 : 0.011;
+  const sbs = holder.userData.sideBtns || [], toL = toH.clone().invert();
   const cs = 0.008, key = (x, y, z) => Math.floor(x / cs) + ',' + Math.floor(y / cs) + ',' + Math.floor(z / cs), grid = new Map();
   vs.forEach((v, i) => { const k = key(v.x, v.y, v.z); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(i); });
   const sdfW = (q) => { const o = bb.distanceToPoint(q); let d = q.y - deskY; if (o > 0.012) return Math.min(d, o); let b = 1e9, k = -1; const cx = Math.floor(q.x / cs), cy = Math.floor(q.y / cs), cz = Math.floor(q.z / cs); // the nearest point of its shell (looked for in the cells round it), inside when behind that point's normal
     for (let r = 1; r <= 3 && k < 0; r++) for (let i = -r; i <= r; i++) for (let j = -r; j <= r; j++) for (let l = -r; l <= r; l++) { const c = grid.get((cx + i) + ',' + (cy + j) + ',' + (cz + l)); if (c) for (const n of c) { const e = vs[n].distanceToSquared(q); if (e < b) { b = e; k = n; } } }
-    if (wh) { const u = q.clone().sub(wh), ax = u.dot(wx), rr = Math.sqrt(Math.max(0, u.lengthSq() - ax * ax)) - 0.011, aa = Math.abs(ax) - 0.0035; d = Math.min(d, Math.hypot(Math.max(rr, 0), Math.max(aa, 0)) + Math.min(Math.max(rr, aa), 0)); } // the wheel, standing out of the shell
+    if (wh) { const u = q.clone().sub(wh), ax = u.dot(wx), rr = Math.sqrt(Math.max(0, u.lengthSq() - ax * ax)) - wr0, aa = Math.abs(ax) - 0.0035; d = Math.min(d, Math.hypot(Math.max(rr, 0), Math.max(aa, 0)) + Math.min(Math.max(rr, aa), 0)); } // the wheel, standing out of the shell
+    for (const [c, h] of sbs) { const u = q.clone().applyMatrix4(toL).sub(c), dx = Math.abs(u.x) - h.x, dy = Math.abs(u.y) - h.y, dz = Math.abs(u.z) - h.z; d = Math.min(d, Math.hypot(Math.max(dx, 0), Math.max(dy, 0), Math.max(dz, 0)) + Math.min(Math.max(dx, dy, dz), 0)); } // the thumb buttons
     if (k < 0) return Math.min(d, Math.max(o, 3 * cs)); const sg = ns[k].dot(q.clone().sub(vs[k])) < 0 && q.y > deskY ? -1 : 1; return Math.min(d, sg * Math.sqrt(b)); };
   const fwd = human.worldToLocal(holder.localToWorld(new V3(0, 0, -1))).sub(human.worldToLocal(holder.localToWorld(new V3()))).setY(0).normalize();
   const ctr = bb.getCenter(new V3()), len = bb.getSize(new V3()).dot(new V3(Math.abs(fwd.x), 0, Math.abs(fwd.z)));
@@ -5827,7 +5863,12 @@ function mouseGrip(HD) {
   for (let i = 0; i <= 6; i++) for (let j = 0; j <= 4; j++) palm.push(new V3(0.5 * HD.palmT, HD.palmLen * (0.05 + 0.95 * i / 6), z0 + (z1 - z0) * j / 4));
   for (const [y, z] of [[0.2, -0.3], [0.3, -0.3], [0.4, -0.3], [0.3, -0.2], [0.3, -0.4]]) palm.push(new V3(0.66 * HD.palmT, y * HD.palmLen, z * HD.palmW)); // the pad at the thumb's root stands proud of the palm
   let F, W, at, best = null;
-  for (let tl = -0.25; tl <= 0.401; tl += 0.05) { // the palm tilted as it best lies along the shell: settled down onto it, then the tilt with it closest all over
+  const vg = holder.userData.vgrip, toHd = (v) => human.worldToLocal(holder.localToWorld(v.clone())).sub(human.worldToLocal(holder.localToWorld(new V3()))).normalize();
+  if (vg) { // a vertical mouse, held in a handshake: the palm against its grip face, the hand turned with it, the index finger on the upper button
+    const pn = toHd(vg.n).negate(), y = fwd.clone().addScaledVector(pn, -fwd.dot(pn)).normalize(), g0 = HD.fingers[0]; F = handFrame(pn, y); at = (W) => (x, y2, z) => sdfW(W.clone().add(inHand(F, new V3(x, y2, z))));
+    W = human.worldToLocal(holder.localToWorld(vg.index.clone())) /* the index fingertip about on its mark */.addScaledVector(F.y, -(g0.y + 0.5 * (g0.L[0] + g0.L[1] + g0.L[2]))).addScaledVector(F.z, -g0.z).addScaledVector(F.x, -0.06);
+    for (let k = 0; k < 60; k++) { const m = palm.reduce((m, q) => Math.min(m, at(W)(q.x, q.y, q.z)), 1e9); if (Math.abs(m - 0.0015) < 0.0004) break; W.addScaledVector(F.x, Math.max(-0.01, Math.min(0.01, m - 0.0015))); }
+  } else for (let tl = -0.25; tl <= 0.401; tl += 0.05) { // the palm tilted as it best lies along the shell: settled down onto it, then the tilt with it closest all over
     const F1 = handFrame(new V3(0, -1, 0), fwd.clone().addScaledVector(UP, tl)), at1 = (W) => (x, y, z) => sdfW(W.clone().add(inHand(F1, new V3(x, y, z))));
     const W1 = ctr.clone().addScaledVector(fwd, -0.06 * len).addScaledVector(F1.y, -HD.palmLen).addScaledVector(F1.z, -(HD.fingers[0].z + HD.fingers[1].z) / 2).add(new V3(0, 0.08, 0)); // the knuckles a little ahead of its middle, the wheel between the index and middle fingers
     for (let k = 0; k < 40; k++) { const m = palm.reduce((m, q) => Math.min(m, at1(W1)(q.x, q.y, q.z)), 1e9); if (Math.abs(m - 0.0015) < 0.0004) break; W1.y -= m - 0.0015; }
@@ -5846,9 +5887,9 @@ function mouseGrip(HD) {
     for (let k = 1; k >= 0 && !ang; k -= 0.125) { const a = [ix[0] + deg(5 * i * k), ix[1] + deg(9 * i * k), ix[2] + deg(7 * i * k)], p = digitPts(new V3(0, g.y, g.z), UP, FAX, g.L, a); let lo = 1e9; for (let j = 0; j < 3; j++) for (let m = 1; m <= 4; m++) { const q = p[j].clone().lerp(p[j + 1], m / 4); lo = Math.min(lo, sdf(q.x, q.y, q.z) - g.r[j]); } if (lo >= 0.001) ang = a; }
     f.push(ang || drape(g, [70, 85, 65])); }
   /* the thumb against the side buttons on the left: where they are, in the hand's frame */
-  const sb = human.worldToLocal(holder.localToWorld(new V3(-holder.userData.mouseSize.W * 0.47 - 0.004 - HD.thumb.r[1], holder.userData.mouseSize.H * 0.5, -holder.userData.mouseSize.D * 0.47))).sub(W), spot = new V3(sb.dot(F.x), sb.dot(F.y), sb.dot(F.z));
+  const sb = human.worldToLocal(holder.localToWorld(vg ? vg.thumb.clone() : new V3(-holder.userData.mouseSize.W * 0.47 - 0.006 - HD.thumb.r[1], holder.userData.mouseSize.H * 0.5, -holder.userData.mouseSize.D * 0.47))).sub(W), spot = new V3(sb.dot(F.x), sb.dot(F.y), sb.dot(F.z));
   const hp = { f, ...thumbRest(HD, sdf, f, new V3(0.45, 0.25, -0.85), spot) };
-  return { kind: 'mouse', F, W, hp };
+  return { kind: 'mouse', F, W, hp, vert: !!vg };
 }
 function thumbRest(HD, sdf, f, away, spot, pole = new V3(0.3, -0.2, -1)) {
   const T = HD.thumb, caps = [];
@@ -5963,7 +6004,7 @@ function handGoal(plan, s, P, sh) {
       if (u > 0) { const rw = restWrist(A, P, s), rc = armIK(sh, rw, A, restPole), Fr = handFrame(new V3(-s, 0, 0), new V3().subVectors(rc.wr, rc.el)); { const P1 = W.clone().add(new V3(0, 0.12, 0)), P2 = new V3(rw.x + s * 0.1, P1.y, rw.z + 0.14); W.copy(u < 0.25 ? W.clone().lerp(P1, smooth01(u / 0.25)) : u < 0.6 ? P1.lerp(P2, smooth01((u - 0.25) / 0.35)) : P2.lerp(rw, smooth01((u - 0.6) / 0.4))); } /* up off the upright half, back over to the side at that height, then down: clear of the book all the way */ F.q.slerp(Fr.q, smooth01(u / 0.75)); const ax = (v) => v.applyQuaternion(F.q); return { F: { q: F.q, x: ax(new V3(1, 0, 0)), y: ax(new V3(0, 1, 0)), z: ax(new V3(0, 0, 1)) }, W, pole: new V3(-0.5, -1, -0.4).lerp(restPole, u), hp: blendPose(plan.hp, S.handRest, u) }; }
       return { F, W, pole: new V3(-0.5, -1, -0.4), hp: plan.hp };
     }
-    case 'mouse': return right ? { F: plan.F, W: plan.W, pole: new V3(-0.55, -1, -0.35), hp: plan.hp } : null;
+    case 'mouse': return right ? { F: plan.F, W: plan.W, pole: plan.vert ? new V3(-1, -0.5, -0.3) : new V3(-0.55, -1, -0.35), hp: plan.hp } : null;
     case 'pull': { if (!right) return null; const dr = holder.userData.drawers, dz = dr ? anim.open * dr.pull * S.scale : 0; return { F: plan.F, W: plan.W.clone().add(new V3(0, 0, -dz)), pole: new V3(-0.5, -1, -0.4), hp: plan.hp }; }
     case 'pot2': { const h = plan.side(s); return { F: h.F, W: h.W, pole: new V3(s * 0.7, -1, -0.2), hp: plan.hp }; }
     case 'bar': {
@@ -6291,12 +6332,12 @@ function deskItemChecks(out, add, P) {
 }
 /* a product on the desk, measured against the 24-inch monitor beside it (panel 54 x 32 cm) */
 const monitorTxt = (P) => L(`24인치 모니터(54×32cm) 대비 폭 ${Math.round((P.W / 0.54) * 100)}% · 높이 ${Math.round((P.H / 0.32) * 100)}%`, `${Math.round((P.W / 0.54) * 100)}% the width and ${Math.round((P.H / 0.32) * 100)}% the height of a 24-inch monitor (54×32 cm)`);
-/* stood back for a big belly, the hand may no longer reach what it was going for: say so (it stays down) */
+/* the hand may not reach what it is going for (a short arm, or stood back for a big belly) even leaning in: say so (it stays down) */
 function bellyReach(E) {
-  const A = S.A, back = (S.torsoBack || 0) + (S.bellyPush || 0); if (!E || !S.plan || back < 0.003 || S.mode !== 'use' || S.place === 'hand' || carried()) return;
+  const A = S.A, back = (S.torsoBack || 0) + (S.bellyPush || 0); S.handShort = false; if (!E || !S.plan || S.mode !== 'use' || S.place === 'hand' || carried()) return;
   const lim = (A.upperArm + A.forearm) * 0.995, f0 = E.flex || 0; let over = 0;
   for (let df = 0; df <= 16; df += 2) { const P = basePose(A, PP(), f0 + df, 1), g = handGoal(S.plan, -1, P, P.shR); if (!g) return; over = g.W.distanceTo(P.shR) - lim; if (over <= 0) { E.flex = f0 + df; return; } } // a little more lean first
-  E.checks.unshift({ k: L('손', 'Reach'), v: L(`배 때문에 뒤로 물러나 손이 ${(over * 100).toFixed(1)}cm 모자라 닿지 않아요`, `Stood back for the belly, the hand falls ${(over * 100).toFixed(1)} cm short`), level: 'bad' }); E.verdict = 'bad'; E.summary = E.checks[0].v;
+  S.handShort = true; const cm = (over * 100).toFixed(1); E.checks.unshift({ k: L('손', 'Reach'), v: back >= 0.003 ? L(`배 때문에 뒤로 물러나 손이 ${cm}cm 모자라 닿지 않아요`, `Stood back for the belly, the hand falls ${cm} cm short`) : L(`팔을 뻗어도 손이 ${cm}cm 모자라 닿지 않아요`, `Even at full stretch the hand falls ${cm} cm short`), level: 'bad' }); E.verdict = 'bad'; E.summary = E.checks[0].v;
 }
 function evaluate() {
   S.nod = 0; // the head upright unless it is looking down at something (set below)
@@ -6811,7 +6852,7 @@ function refresh(o = {}) {
   { const key = [S.pkey, S.place, S.mode, S.persona, S.posture, S.source].join('|'); if (key !== anim.key) { anim.key = key; Object.assign(anim, { played: false, phase: 'idle', reach: 1, open: 0, pour: 0, fill: 0, drink: 0, wave: 0 }); } } // a new setup starts at rest
   if (S.place !== S.pvPlace) { S.pvPlace = S.place; S.pv = null; } // a new place: the person shown as that place has it
   if (S.source === 'box' && (S.shape === 'glasses' || S.shape === 'sunglasses')) { const g = glassesSize(); S.w = Math.round(g.W * 1000); S.h = Math.round(g.H * 1000); } // set by the lenses and rims
-  S.height = clamp(S.height, p.hr[0], p.hr[1]); S.bmi = clamp(S.bmi, p.br[0], bmiHi(p, S.height)); // within the real range for this kind of person
+  S.height = clamp(S.height, p.hr[0], p.hr[1]); S.bmi = clamp(S.bmi, bmiLo(p, S.height), bmiHi(p, S.height)); // within the real range for this kind of person
   S.A = anthro(p, S.height, S.bmi);
   if (detKind() === 'office') { const lo = dv('gasMin'), hi = Math.max(dv('gasMax'), lo), want = clamp(Math.round(((S.A.popliteal + 0.01) / S.scale) * 200) * 5, lo, hi); if (want !== S.h) { S.h = want; o = { ...o, rebuild: true }; } } // the gas lift set for this person, within its range
   seatSetup(p);
@@ -6979,7 +7020,7 @@ function syncUI() {
   }
   for (const b of ticks.children) b.setAttribute('aria-pressed', String(Math.abs(+b.dataset.v - S.height) < 0.05));
   const kg = weightKg();
-  { const h2 = (S.height / 100) ** 2; $('wIn').min = Math.ceil(p.br[0] * h2 * 2) / 2; $('wIn').max = Math.floor(bmiHi(p, S.height) * h2 * 2) / 2; } // a build range, not any number
+  { const h2 = (S.height / 100) ** 2; $('wIn').min = Math.ceil(bmiLo(p, S.height) * h2 * 2) / 2; $('wIn').max = Math.floor(bmiHi(p, S.height) * h2 * 2) / 2; } // a build range, not any number
   $('wIn').value = kg.toFixed(1);
   if (document.activeElement !== $('wNum')) { $('wNum').value = Math.round(kg * 2) / 2; $('wNum').min = $('wIn').min; $('wNum').max = $('wIn').max; }
   $('bmiOut').textContent = L(`BMI ${S.bmi.toFixed(1)} · ${bodyLabel(S.bmi, p)} · 몸 두께가 체형에 맞춰 바뀌어요`, `BMI ${S.bmi.toFixed(1)} · ${bodyLabel(S.bmi, p)} · body girth follows the build`);
@@ -7049,7 +7090,7 @@ function syncUI() {
     $('surfReset').hidden = !on && !viewDistOn(); $('surfReset').disabled = !(S.surf && (S.surf[S.place] != null || (viewDistOn() && S.surf.viewD != null) || (S.place === 'wall' && S.surf.sill != null) || (S.place === 'plinth' && (S.surf.plinthW != null || S.surf.plinthD != null || S.surf.plinthR != null || S.surf.plinthForm != null || S.surf.plinthMat != null))));
     if (on && S.place === 'wall' && winLook()) NM.wall = ['창 아래 높이', 'Sill height'];
     if (on) { $('surfLab').textContent = L(...NM[S.place]); for (const id of ['surfIn', 'surfNum']) { $(id).min = lim[0]; $(id).max = lim[1]; if (document.activeElement !== $(id)) $(id).value = mm; } }
-    $('vanityRows').hidden = !(S.place === 'vanity' && !isFurniture()); if (S.place === 'vanity') for (const [id, v] of [['vanD', vanD()], ['vanDn', vanD()], ['vanGap', vanGap()], ['vanGapn', vanGap()]]) if (document.activeElement !== $(id)) $(id).value = Math.round(v * 1000);
+    $('vanityRows').hidden = !(S.place === 'vanity' && !isFurniture()); if (S.place === 'vanity') for (const [id, v] of [['vanD', vanD()], ['vanDn', vanD()], ['vanGap', vanGap()], ['vanGapn', vanGap()], ['vanSink', vanSink()], ['vanSinkn', vanSink()]]) if (document.activeElement !== $(id)) $(id).value = Math.round(v * 1000);
     const pl = S.place === 'plinth' && !isFurniture();
     $('plinthRows').hidden = !pl;
     $('wallRow').hidden = S.place !== 'wall' && !viewDistOn(); $('wallRow').querySelector('label').textContent = viewDistOn() ? (S.look === 'pendant' ? L('펜던트와 거리', 'From the pendant') : L('보는 거리', 'Viewing distance')) : L('벽과 거리', 'From wall'); if (S.place === 'wall' || viewDistOn()) { const v = Math.round((viewDistOn() ? viewDist() : wallDist()) * 1000); for (const id of ['wallD', 'wallDn']) if (document.activeElement !== $(id)) $(id).value = v; }
@@ -7874,9 +7915,9 @@ buildChips();
 $('variantSeg').addEventListener('click', (e) => { const b = e.target.closest('[data-size]'); if (b) { applyPreset(b.dataset.size); goDims(); } });
 $('hIn').addEventListener('input', (e) => { S.height = +e.target.value; refresh(); });
 $('hNum').addEventListener('change', (e) => { const p = PERSONAS[S.persona], v = parseFloat(e.target.value); if (isFinite(v)) S.height = clamp(Math.round(v * 10) / 10, p.hr[0], p.hr[1]); e.target.blur(); refresh(); }); // typed: kept within this person's range
-$('wNum').addEventListener('change', (e) => { const br = PERSONAS[S.persona].br, v = parseFloat(e.target.value); if (isFinite(v) && v > 0) S.bmi = clamp(v / (S.height / 100) ** 2, br[0], bmiHi(PERSONAS[S.persona], S.height)); e.target.blur(); refresh(); });
+$('wNum').addEventListener('change', (e) => { const br = PERSONAS[S.persona].br, v = parseFloat(e.target.value); if (isFinite(v) && v > 0) S.bmi = clamp(v / (S.height / 100) ** 2, bmiLo(PERSONAS[S.persona], S.height), bmiHi(PERSONAS[S.persona], S.height)); e.target.blur(); refresh(); });
 for (const id of ['hNum', 'wNum']) $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
-$('wIn').addEventListener('input', (e) => { const br = PERSONAS[S.persona].br; S.bmi = clamp(+e.target.value / (S.height / 100) ** 2, br[0], bmiHi(PERSONAS[S.persona], S.height)); refresh(); });
+$('wIn').addEventListener('input', (e) => { const br = PERSONAS[S.persona].br; S.bmi = clamp(+e.target.value / (S.height / 100) ** 2, bmiLo(PERSONAS[S.persona], S.height), bmiHi(PERSONAS[S.persona], S.height)); refresh(); });
 const dimRound = (v) => (S.shape === 'ring' ? Math.round(v * 10) / 10 : Math.round(v)); // rings in 0.1 mm
 const dimMin = (key) => (S.shape === 'ring' ? (key === 'h' ? 0 : 0.5) : 1);
 for (const [id, key] of [['pW', 'w'], ['pD', 'd'], ['pH', 'h']]) {
@@ -8009,12 +8050,12 @@ function addUnit(left, top) {
 }
 $('unitAddL').addEventListener('click', () => addUnit(true));
 $('unitAddT').addEventListener('click', () => addUnit(false, true));
-function setSurf(v, key) { if (key === 'wallD' && viewDistOn()) key = 'viewD'; const k = key || S.place, lim = k === 'vanD' ? [80, 400] : k === 'vanGap' ? [100, 900] : k === 'wallD' || k === 'viewD' ? [200, 3000] : k === 'plinthR' ? [0, 200] : k === 'plinthW' || k === 'plinthD' ? [50, 1500] : (k === 'wall' && winLook() ? [0, 2000] : SURF_LIM[k]) || [400, 1200]; if (!['table', 'desk', 'counter', 'vanity', 'vanD', 'vanGap', 'plinth', 'air', 'wall', 'wallD', 'viewD', 'plinthW', 'plinthD', 'plinthR'].includes(k) || !(v >= lim[0] && v <= lim[1])) return; S.surf = { ...(S.surf || {}), [k === 'wall' && winLook() ? 'sill' : k]: Math.round(v) }; refresh({ rebuild: true, refit: true }); }
+function setSurf(v, key) { if (key === 'wallD' && viewDistOn()) key = 'viewD'; const k = key || S.place, lim = k === 'vanD' ? [80, 400] : k === 'vanGap' ? [100, 900] : k === 'vanSink' ? [500, 1400] : k === 'wallD' || k === 'viewD' ? [200, 3000] : k === 'plinthR' ? [0, 200] : k === 'plinthW' || k === 'plinthD' ? [50, 1500] : (k === 'wall' && winLook() ? [0, 2000] : SURF_LIM[k]) || [400, 1200]; if (!['table', 'desk', 'counter', 'vanity', 'vanD', 'vanGap', 'vanSink', 'plinth', 'air', 'wall', 'wallD', 'viewD', 'plinthW', 'plinthD', 'plinthR'].includes(k) || !(v >= lim[0] && v <= lim[1])) return; S.surf = { ...(S.surf || {}), [k === 'wall' && winLook() ? 'sill' : k]: Math.round(v) }; refresh({ rebuild: true, refit: true }); }
 $('surfIn').addEventListener('input', (e) => setSurf(+e.target.value));
 for (const [id, k] of [['plForm', 'plinthForm'], ['plMat', 'plinthMat']]) $(id).addEventListener('click', (e) => { const b = e.target.closest('button[data-v]'); if (!b) return; S.surf = { ...(S.surf || {}), [k]: b.dataset.v }; refresh({ rebuild: true }); }); // the plinth: a cube or a cylinder, solid or glass
-$('surfReset').addEventListener('click', () => { if (!S.surf) return; const n = { ...S.surf }; delete n[S.place]; if (S.place === 'plinth') { delete n.plinthW; delete n.plinthD; delete n.plinthR; delete n.plinthForm; delete n.plinthMat; } if (S.place === 'wall') { delete n.wallD; delete n.sill; } if (S.place === 'vanity') { delete n.vanD; delete n.vanGap; } delete n.viewD; S.surf = n; refresh({ rebuild: true, refit: true }); }); // the table, desk, counter, plinth or height back to its default
+$('surfReset').addEventListener('click', () => { if (!S.surf) return; const n = { ...S.surf }; delete n[S.place]; if (S.place === 'plinth') { delete n.plinthW; delete n.plinthD; delete n.plinthR; delete n.plinthForm; delete n.plinthMat; } if (S.place === 'wall') { delete n.wallD; delete n.sill; } if (S.place === 'vanity') { delete n.vanD; delete n.vanGap; delete n.vanSink; } delete n.viewD; S.surf = n; refresh({ rebuild: true, refit: true }); }); // the table, desk, counter, plinth or height back to its default
 $('surfNum').addEventListener('change', (e) => setSurf(+e.target.value));
-for (const [id, k] of [['plW', 'plinthW'], ['plD', 'plinthD'], ['plR', 'plinthR'], ['wallD', 'wallD'], ['vanD', 'vanD'], ['vanGap', 'vanGap']]) { $(id).addEventListener('input', (e) => setSurf(+e.target.value, k)); $(id + 'n').addEventListener('change', (e) => setSurf(+e.target.value, k)); }
+for (const [id, k] of [['plW', 'plinthW'], ['plD', 'plinthD'], ['plR', 'plinthR'], ['wallD', 'wallD'], ['vanD', 'vanD'], ['vanGap', 'vanGap'], ['vanSink', 'vanSink']]) { $(id).addEventListener('input', (e) => setSurf(+e.target.value, k)); $(id + 'n').addEventListener('change', (e) => setSurf(+e.target.value, k)); }
 /* detail sizes: a slider or a number sets one part; a button picks a material or armrests on/off */
 $('detReset').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); const lamp = ['lamp', 'lampS'].includes(detKind()); S.det = {}; if (lamp && S.base) S.h = S.base.h; detApply(); S.preset = S.preset || null; refresh({ rebuild: true, refit: true }); }); // every detail back to its default (a cap's brim, a lamp's parts…)
 function setDet(k, v) { const sp = detSpec().find((x) => x.k === k); if (!sp) return; if (!sp.opts) v = clamp(Math.round(+v / sp.step) * sp.step, sp.min, sp.max); else v = sp.opts.find((o) => String(o[0]) === String(v))[0]; if (lampDet(k, v)) { refresh({ rebuild: true, refit: true }); return; } S.det = { ...(S.det || {}), [k]: v }; if (sp.apply) { detApply(); refresh({ rebuild: true, refit: true }); } else refresh({ rebuild: true }); }
