@@ -7775,8 +7775,8 @@ let detKey = '';
 const MAT_KEYS = ['mat', 'fin', 'smat', 'stemCol', 'fcol', 'partCol', 'anodR']; // material rows: shown as swatches, above the colour
 const FORM_KEYS = ['form', 'hform', 'bform', 'sform', 'gtype', 'btype', 'spout']; // a product's form: shown first
 function syncDetail() {
-  const k = detKind(), box = $('detField');
-  box.hidden = !k;
+  const k = detKind() || (isElec() ? 'elec' : null), box = $('detField'); // a phone or such with no details of its own still has its material row
+  box.hidden = !detKind();
   if (!k) { detKey = ''; $('formRows').replaceChildren(); $('formField').hidden = true; $('matRows').replaceChildren(); $('matField').hidden = true; return; }
   const spec = detSpec(), key = `${k}|${LANG}`;
   if (key !== detKey) {
