@@ -280,7 +280,7 @@ span.br { display: block; }
 #placeSeg button:disabled { opacity: 1; color: color-mix(in srgb, var(--ink-2) 42%, transparent); } /* faded words, never faded rules */
 #placeSeg button { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 34px; }
 #placeSeg button[hidden] { display: none; }
-#variantSeg { display: grid; gap: 1px; background: var(--line); } #variantSeg button, #variantSeg button + button { border: 0; background: var(--raise); padding: 4px; white-space: normal; line-height: 1.15; height: auto; min-height: 32px; word-break: keep-all; } #variantSeg button[aria-pressed="true"] { background: var(--ink); } #variantSeg.odd::after { content: ""; background: var(--raise); } /* the last cell of an odd count filled, not grey */
+#variantSeg, #variantSeg2 { display: grid; gap: 1px; background: var(--line); } #variantSeg button, #variantSeg button + button, #variantSeg2 button, #variantSeg2 button + button { border: 0; background: var(--raise); padding: 4px; white-space: normal; line-height: 1.15; height: auto; min-height: 32px; word-break: keep-all; } #variantSeg button[aria-pressed="true"], #variantSeg2 button[aria-pressed="true"] { background: var(--ink); } #variantSeg.odd::after, #variantSeg2.odd::after { content: ""; background: var(--raise); } /* the last cell of an odd count filled, not grey */
 #ceilStd { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 8px; } /* the ceiling heights in one table, like the places */
 #ceilStd button { min-height: 34px; padding: 4px 6px; line-height: 1.25; text-align: center; }
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); position: sticky; top: -14px; margin-top: -2px; background: var(--panel); z-index: 2; }
@@ -619,6 +619,7 @@ input:disabled { opacity: 0.55; }
 
     <section class="tabpanel" id="tab-set" role="tabpanel" aria-labelledby="tb-set" hidden>
       <div class="setfor"><b id="setName"></b><span class="stepper"><button type="button" class="reset" id="prodPrev" aria-label="이전 제품" data-en-aria="Previous product" title="이전 제품" data-en-title="Previous product">‹</button><button type="button" class="reset" id="prodNext" aria-label="다음 제품" data-en-aria="Next product" title="다음 제품" data-en-title="Next product">›</button></span><button type="button" class="reset" id="toProducts" data-en="Change product">제품 바꾸기</button></div>
+      <div class="field" id="variantField2" hidden><div class="label" data-en="Sizes">사이즈 종류</div><div class="seg full" id="variantSeg2"></div></div>
       <div class="field" id="shapeField">
         <div class="label" data-en="Shape">형태</div>
         <div class="seg" id="shapeSeg">
@@ -7027,12 +7028,13 @@ function syncUI() {
   for (const b of $('presetChips').querySelectorAll('[data-preset]')) b.setAttribute('aria-pressed', String(S.source === 'box' && b.dataset.preset === S.preset));
   const fam = S.source === 'box' ? familyOf(S.pkey) : null; // a product with sizes: its chip lit, and its sizes to pick from
   for (const b of $('presetChips').querySelectorAll('[data-family]')) b.setAttribute('aria-pressed', String(b.dataset.family === fam));
-  $('variantField').hidden = !fam;
+  $('variantField').hidden = $('variantField2').hidden = !fam;
   syncExamples(); syncParts(); syncMine();
   { const slot = imgSlot(); $('imgField').hidden = !slot; if (slot) { $('imgLbl').textContent = slot === 'cap' ? L('내 이미지 · 모든 제품 공통 (자수는 PNG 추천)', 'Your image · on every product (PNG for embroidery)') : L('내 이미지 · 모든 제품 공통', 'Your image · on every product'); $('imgDel').hidden = !USER_IMG[slot]; } }
   $('setName').textContent = prodName(); $('setName').title = prodName(); // cut short in a narrow panel: the whole name on hover
   if (fam) { FAMILIES[fam].last = S.pkey; $('variantSeg').replaceChildren(...FAMILIES[fam].sizes.map(([k, ko, en]) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.size = k; b.textContent = L(ko, en); b.setAttribute('aria-pressed', String(S.pkey === k)); return b; })); }
-  { const vs = $('variantSeg'), n = vs.children.length; vs.style.gridTemplateColumns = `repeat(${n > 4 ? Math.ceil(n / 2) : Math.max(n, 1)}, minmax(0, 1fr))`; vs.classList.toggle("odd", n > 4 && n % 2 === 1); } // many sizes (the TVs): two rows
+  $('variantSeg2').replaceChildren(...[...$('variantSeg').children].map((b) => b.cloneNode(true))); // the same sizes at the top of the Dimensions tab
+  for (const vs of [$('variantSeg'), $('variantSeg2')]) { const n = vs.children.length; vs.style.gridTemplateColumns = `repeat(${n > 4 ? Math.ceil(n / 2) : Math.max(n, 1)}, minmax(0, 1fr))`; vs.classList.toggle("odd", n > 4 && n % 2 === 1); } // many sizes (the TVs): two rows
   segSet('langSeg', 'lang', LANG); segSet('shapeSeg', 'shape', S.shape); segSet('placeSeg', 'place', S.place); segSet('faceSeg', 'face', S.face); { const t = $('faceSeg').querySelector('[data-face="top"]'); t.disabled = S.source === 'box' && S.look === 'fridge'; if (t.disabled && S.face === 'top') S.face = 'front'; } // a fridge: its controls are on the door segSet('actSeg', 'act', S.action); segSet('modeSeg', 'mode', S.mode); segSet('langSeg', 'lang', LANG);
   const isModel = S.source === 'model', fixedForm = isFurniture() || ring || ['cup', 'laptop', 'headphone', 'earbud'].includes(S.shape) || S.look === 'paper' || kind() !== 'free'; // these come only from the examples
   // the forms an example comes in (the cube: solid or frame; the object: sphere or cone); the plain box mockup, all of them
@@ -7913,6 +7915,7 @@ $('btnSupport').addEventListener('click', () => {
 });
 buildChips();
 $('variantSeg').addEventListener('click', (e) => { const b = e.target.closest('[data-size]'); if (b) { applyPreset(b.dataset.size); goDims(); } });
+$('variantSeg2').addEventListener('click', (e) => { const b = e.target.closest('[data-size]'); if (b) applyPreset(b.dataset.size); });
 $('hIn').addEventListener('input', (e) => { S.height = +e.target.value; refresh(); });
 $('hNum').addEventListener('change', (e) => { const p = PERSONAS[S.persona], v = parseFloat(e.target.value); if (isFinite(v)) S.height = clamp(Math.round(v * 10) / 10, p.hr[0], p.hr[1]); e.target.blur(); refresh(); }); // typed: kept within this person's range
 $('wNum').addEventListener('change', (e) => { const br = PERSONAS[S.persona].br, v = parseFloat(e.target.value); if (isFinite(v) && v > 0) S.bmi = clamp(v / (S.height / 100) ** 2, bmiLo(PERSONAS[S.persona], S.height), bmiHi(PERSONAS[S.persona], S.height)); e.target.blur(); refresh(); });
