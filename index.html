@@ -649,7 +649,7 @@ input:disabled { opacity: 0.55; }
       </div>
       <div class="field det" id="formField" hidden><div class="dimrows" id="formRows"></div></div>
       <div class="field" id="sizeField">
-        <div class="label"><span data-en="Size">크기</span> <span class="muted" data-en="mm, at 100% scale">mm, 배율 100% 기준</span><button type="button" class="reset" id="dimReset" data-en="Reset size">기본 크기</button></div>
+        <div class="label"><span data-en="Size">크기</span> <span class="muted" data-en="mm, at 100% scale">mm, 배율 100% 기준</span><button type="button" class="reset" id="dimReset" data-en="Default">기본값</button></div>
         <div class="dimrows">
           <div class="dimrow"><label for="pW">W 폭</label><input type="range" id="rW" aria-label="폭" data-en-aria="Width"><input type="number" id="pW" inputmode="decimal" min="0" max="3000" step="1"></div>
           <div class="dimrow"><label for="pD">D 깊이</label><input type="range" id="rD" aria-label="깊이" data-en-aria="Depth"><input type="number" id="pD" inputmode="decimal" min="0" max="3000" step="1"></div>
@@ -677,7 +677,7 @@ input:disabled { opacity: 0.55; }
         <p class="hint" data-en="Changing the overall size stretches every part with it. A part made taller lifts the parts stacked on it.">전체 크기를 바꾸면 부품이 비율대로 같이 바뀌어요. 부품 높이를 바꾸면 그 위에 쌓인 부품도 같이 올라가요.</p>
       </div>
       <details class="field det" id="detField" open hidden>
-        <summary class="label"><span data-en="Detail sizes">세부 치수</span> <span class="muted" id="detSub"></span><button type="button" class="reset" id="detReset" data-en="Defaults">기본값</button></summary>
+        <summary class="label"><span data-en="Detail sizes">세부 치수</span> <span class="muted" id="detSub"></span><button type="button" class="reset" id="detReset" data-en="Default">기본값</button></summary>
         <div class="dimrows" id="detRows"></div>
         <p class="hint" id="detHint"></p>
       </details>
@@ -693,7 +693,7 @@ input:disabled { opacity: 0.55; }
         <div class="seg" id="liftSeg"><button type="button" data-lift="0" data-en="Lowered">내림</button><button type="button" data-lift="1" data-en="Lifted">올림</button></div>
       </div>
       <div class="field">
-        <div class="lrow"><label for="sIn" data-en="Scale">배율</label><button type="button" class="reset" id="sReset" data-en="To 100%">100%로</button><output class="big" id="sOut" for="sIn"></output></div>
+        <div class="lrow"><label for="sIn" data-en="Scale">배율</label><button type="button" class="reset" id="sReset" data-en="Default">기본값</button><output class="big" id="sOut" for="sIn"></output></div>
         <input type="range" id="sIn" min="50" max="200" step="5">
         <p class="hint" id="sDims"></p>
       </div>
