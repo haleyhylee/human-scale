@@ -7859,8 +7859,8 @@ function buildChips() {
     row.append(...keys.map((k) => {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'chip';
-      if (k.startsWith('fam:')) { const f = k.slice(4), F = FAMILIES[f]; b.dataset.family = f; b.textContent = L(F.ko, F.en); b.addEventListener('click', () => applyPreset(F.last || F.sizes[0][0])); }
-      else { b.dataset.preset = k; b.textContent = presetName(k); b.addEventListener('click', () => { applyPreset(k); goDims(); }); } // picked: straight on to its dimensions (a family stays, for its size first)
+      if (k.startsWith('fam:')) { const f = k.slice(4), F = FAMILIES[f]; b.dataset.family = f; b.textContent = L(F.ko, F.en); b.addEventListener('click', () => { applyPreset(F.last || F.sizes[0][0]); goDims(); }); }
+      else { b.dataset.preset = k; b.textContent = presetName(k); b.addEventListener('click', () => { applyPreset(k); goDims(); }); } // picked: straight on to its dimensions (a family too: its sizes are at the top there)
       return b;
     }));
     g.append(t, row);
