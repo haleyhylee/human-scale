@@ -253,7 +253,7 @@ span.br { display: block; }
 .pprev-t { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 13px; color: var(--ink); }
 .pprev-t span { font-size: 12px; color: var(--ink-2); } .pprev-t b { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; } /* the name stands out over its size */
 .pprev-t { flex: 1 1 auto; }
-.pprev.empty img, .pprev img[hidden] { display: none; } .pprev.empty .pprev-t { align-items: center; text-align: center; } /* nothing pointed at yet: the hint in the middle */
+.pprev.empty img, .pprev img[hidden] { display: none; } .pprev.empty .pprev-t { align-items: center; text-align: center; padding-left: 34px; } .pprev.empty #pprevName, .pprev.empty #pprevSize { display: none; } /* only the hint, in the middle of the box (the steppers' width made up on the left) */ /* nothing pointed at yet: the hint in the middle */
 .pstep { display: flex; flex-direction: column; gap: 4px; flex: 0 0 auto; } .pstep .reset { width: 30px; height: 30px; padding: 0; font-size: 16px; line-height: 1; } /* the next or previous product, picked */
 
 .psearch input { flex: 1 1 auto; min-width: 0; height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--raise); font: inherit; font-size: 13px; color: var(--ink); }
