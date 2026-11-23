@@ -9,7 +9,7 @@
 "이 제품은 어느 정도 크기여야 할까?"
 산업디자이너가 디자인을 시작하기 전 가장 먼저 부딪히는 질문입니다. 도면 위 숫자만으로는 감이 잘 오지 않고, 실물 목업을 만들기엔 시간과 비용이 듭니다. Human Scale은 이 스케일 감각을 빠르고 꼼꼼하게 확인하기 위해 만들었습니다.
 
-같은 제품도 사람에 따라 다르게 느껴집니다. 성별과 나이, 체형, 장애 여부에 따라 누군가에게는 손이 닿지 않거나, 쥐기 어렵거나, 불편할 수 있습니다. Human Scale에서는 다양한 사람이 제품을 직접 쥐고, 누르고, 펼쳐 보며, 생길 수 있는 불편함을 미리 짚어 줍니다. 나아가 AI가 이를 점검하고 개선 방향을 먼저 제안하는 것까지 목표로 했습니다.
+같은 제품도 사람에 따라 다르게 느껴집니다. 성별과 나이, 체형, 장애 여부에 따라 누군가에게는 손이 닿지 않거나, 쥐기 어렵거나, 불편할 수 있습니다. Human Scale에서는 다양한 사람이 제품을 직접 쥐고, 누르고, 펼쳐 보며, 생길 수 있는 불편함을 미리 짚어 줍니다. 더 많은 사람이 불편 없이 쓸 수 있는 유니버설 디자인을 디자인 초기부터 확인하는 것, 나아가 AI가 이를 점검하고 개선 방향을 먼저 제안하는 것까지 목표로 했습니다.
 
 확인이 끝나면 바로 디자인으로 이어집니다. 사람과 함께 있는 제품을 3D 파일로 내보내면, 크기가 이미 맞춰진 상태에서 곧바로 디자인을 시작할 수 있습니다. 반대로 직접 디자인한 3D 파일을 불러와 사람 옆에 놓아 볼 수도 있습니다.
 
@@ -19,7 +19,7 @@
 
 - **다양한 사람:** 성인 여성·남성, 청소년, 어린이, 노인, 휠체어 사용자. 키와 몸무게(15–200kg)에 따라 체형이 바뀝니다.
 - **실제 사용 동작:** 쥐기, 누르기, 펼치기, 앉기 같은 동작을 재생해 봅니다.
-- **사용성 점검:** 손이 닿는지, 한 손으로 쥘 수 있는지, 높이와 거리가 적당한지 바로 알려 줍니다.
+- **유니버설 디자인 점검:** 손이 닿는지, 한 손으로 쥘 수 있는지, 높이와 거리가 적당한지 다양한 사람 기준으로 바로 알려 줍니다.
 - **3D 파일 불러오기·내보내기:** 내 디자인 파일을 불러오고, 사람과 함께 있는 장면을 크기가 맞춰진 3D 파일로 내보냅니다.
 - **내 이미지 목업:** 종이, 스마트폰, 책 표지 등에 내 이미지를 입혀 봅니다.
 - **다양한 시점:** 여러 시점과 1인칭 시점, 실제 크기 화면 표시, 이미지 저장.
@@ -30,7 +30,7 @@
 
 "How big should this be?" is the first question an industrial designer faces. Numbers on a drawing rarely give a feel for scale, and physical mock-ups take time and money. Human Scale makes that check quick and thorough.
 
-The same product feels different to different people. Depending on sex, age, build and ability, it may be out of reach, hard to grip or uncomfortable. Here, a range of people hold, press and open the product, and problems are pointed out early, with the aim of having AI check for them and suggest improvements first.
+The same product feels different to different people. Depending on sex, age, build and ability, it may be out of reach, hard to grip or uncomfortable. Here, a range of people hold, press and open the product, and problems are pointed out early. The aim is to bring universal design into the very first stage of a project, and to have AI check for these issues and suggest improvements first.
 
 From there, design starts right away: export the product with the person as a 3D file and begin designing at the right size. You can also bring in your own 3D design and set it beside a person.
 
