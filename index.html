@@ -2484,7 +2484,7 @@ DETAIL.armlamp = [{ k: 'form', ko: '형태', en: 'Form', opts: [['cyl', '원형'
   SHADE_ROW('metal'), STEM_COL('기둥·팔 색', 'Pole and arm colour'), ANOD_ROW, LAMP_RAD];
 DETAIL.shelf = [{ k: 'mount', ko: '설치', en: 'Mount', opts: [['floor', '바닥 (기둥)', 'Floor (posts)'], ['wall', '벽 (레일)', 'Wall (rails)']], def: 'floor', apply: true }, { k: 'bays', ko: '칸 수(가로)', en: 'Bays (across)', opts: [[1, '1칸', '1'], [2, '2칸', '2'], [3, '3칸', '3'], [4, '4칸', '4'], [5, '5칸', '5']], def: 2, apply: true },
   { k: 'tiers', ko: '단 수(세로)', en: 'Tiers (up)', opts: [[1, '1단', '1'], [2, '2단', '2'], [3, '3단', '3'], [4, '4단', '4'], [5, '5단', '5'], [6, '6단', '6']], def: 4, apply: true },
-  { ...DR('bayW', '한 칸 폭', 'Bay width', 300, 1200, 800, 5), apply: true }, { ...DR('tierH', '단 높이', 'Tier height', 150, 700, 350, 5), apply: true },
+  { ...DR('bayW', '한 칸 폭', 'Bay width', 300, 1200, 800, 5), apply: true }, { ...DR('tierH', '단 높이', 'Tier height', 150, 700, 350, 5), def: () => (dv('mount') === 'wall' ? 300 : 350), apply: true }, // on the wall rails, lower tiers
   { k: 'bottom', ko: '맨 아래 모듈', en: 'Bottom module', opts: [['shelf', '선반', 'Shelf'], ['cabinet', '수납장(문)', 'Cabinet (door)'], ['drawer', '서랍', 'Drawer']], def: 'shelf' },
   { ...DR('postT', '기둥 굵기', 'Post thickness', 12, 60, 25), apply: true }, DR('shelfT', '선반 두께', 'Shelf thickness', 3, 40, 10), { ...DR('foot', '바닥~첫 선반', 'Floor to first shelf', 0, 300, 30, 5), apply: true },
   { k: 'fcol', ko: '프레임 색', en: 'Frame colour', opts: [['same', '제품색', 'Product colour'], ['white', '화이트', 'White'], ['black', '블랙', 'Black'], ['metal', '메탈', 'Metal']], def: 'metal' },
@@ -4599,6 +4599,14 @@ function wallShelfGeo(own, W, D, H, nb, nt, pt, st, fm, sm, x0, bw) {
       const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(bd, 0); sh.lineTo(bd, -0.008); sh.lineTo(0.02, -bh); sh.lineTo(0, -bh); sh.closePath(); // a tapering bracket under the shelf, deepest at the rail
       own(new THREE.ExtrudeGeometry(sh, { depth: 0.004, bevelEnabled: false }).rotateY(-Math.PI / 2).translate(bx + 0.002, y - st / 2, -D + rd), fm); }
     part('선반', 'Shelves'); }
+  const bt = dv('bottom'); // the lowest tier closed as a hung cabinet or drawer, sitting on its shelf and up to the next (or a tier's height)
+  if (bt !== 'shelf') { part('수납 모듈', 'Module'); const yb = H - gap - (nt - 1) * th, y0 = yb, y1 = nt > 1 ? yb + th - st - 0.006 : yb + Math.min(th, 0.3) - st, hh = y1 - y0, dd = D - rd - 0.006, pm = mats.foam;
+    if (hh > 0.04) for (let i = 0; i < nb; i++) { const cx = x0 + (i + 0.5) * bw, w = bw - pt - 0.004;
+      own(new THREE.BoxGeometry(w, hh, 0.008).translate(cx, y0 + hh / 2, -D + rd + 0.006), pm); // its back
+      for (const sd of [-1, 1]) own(new THREE.BoxGeometry(0.008, hh, dd - 0.02).translate(cx + sd * (w / 2 - 0.004), y0 + hh / 2, -D + rd + (dd - 0.02) / 2), pm); // its sides
+      own(new THREE.BoxGeometry(w - 0.004, hh - 0.004, 0.016).translate(cx, y0 + hh / 2, -0.012), pm); // the door or drawer front
+      if (bt === 'cabinet') own(new THREE.BoxGeometry(0.012, Math.min(0.12, hh * 0.5), 0.012).translate(cx + w / 2 - 0.04, y0 + hh / 2, 0.002), fm); // a bar pull by the edge
+      else own(new THREE.BoxGeometry(Math.min(0.14, w * 0.4), 0.012, 0.012).translate(cx, y0 + hh * 0.72, 0.002), fm); } }
   part();
 }
 /* a TV: a thin panel (bezel round the dark screen), on two feet, a pedestal, or on the wall */
