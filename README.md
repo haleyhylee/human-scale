@@ -22,9 +22,9 @@ It is not only for designers. Anyone with a product in mind, from a sheet of pap
 
 | | |
 |---|---|
-| ![A child reaching the controls of a humidifier on a plinth](docs/02-child-humidifier.png) | ![A hand on a vertical mouse, from above](docs/03-vertical-mouse.png) |
+| ![A child reaching the controls of a humidifier on a plinth](docs/02-child-humidifier.png) | ![A hand on a vertical mouse, from above](docs/03-vertical-mouse-grip.png) |
 | A child reaching a humidifier's controls<br>어린이가 가습기 조작부에 손을 뻗는 모습 | Holding a vertical mouse, from above<br>버티컬 마우스 쥐기 — 위에서 본 모습 |
-| ![A wheelchair user at a microwave on the counter](docs/04-wheelchair-counter.png) | ![A foldable phone held open, in first person](docs/05-first-person.png) |
+| ![A wheelchair user at a microwave on the counter](docs/04-wheelchair-microwave.png) | ![A foldable phone held open, in first person](docs/05-first-person-foldable.png) |
 | Wheelchair user at a microwave<br>휠체어 사용자의 전자레인지 사용 | First person, through the user's eyes<br>사용자의 눈으로 본 1인칭 시점 |
 
 ## What it does
