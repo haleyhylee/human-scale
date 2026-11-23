@@ -5876,9 +5876,10 @@ function mouseGrip(HD) {
   let F, W, at, best = null;
   const vg = holder.userData.vgrip, toHd = (v) => human.worldToLocal(holder.localToWorld(v.clone())).sub(human.worldToLocal(holder.localToWorld(new V3()))).normalize();
   if (vg) { // a vertical mouse, held in a handshake: the palm against its grip face (turned with it, a little less than it leans: over it more than beside it), the index finger on the upper button
-    const pn = toHd(vg.n).negate().multiplyScalar(0.45).add(new V3(0, -0.55, 0)).normalize(), y = fwd.clone().addScaledVector(pn, -fwd.dot(pn)).normalize(), g0 = HD.fingers[0]; F = handFrame(pn, y); at = (W) => (x, y2, z) => sdfW(W.clone().add(inHand(F, new V3(x, y2, z))));
+    const pn = toHd(vg.n).negate().multiplyScalar(0.85).add(new V3(0, -0.15, 0)).normalize(), y = fwd.clone().addScaledVector(pn, -fwd.dot(pn)).normalize(), g0 = HD.fingers[0]; F = handFrame(pn, y); at = (W) => (x, y2, z) => sdfW(W.clone().add(inHand(F, new V3(x, y2, z))));
     W = human.worldToLocal(holder.localToWorld(vg.index.clone())) /* the index fingertip about on its mark */.addScaledVector(F.y, -(g0.y + 0.5 * (g0.L[0] + g0.L[1] + g0.L[2]))).addScaledVector(F.z, -g0.z).addScaledVector(F.x, -0.06);
-    for (let k = 0; k < 60; k++) { const m = palm.reduce((m, q) => Math.min(m, at(W)(q.x, q.y, q.z)), 1e9); if (Math.abs(m - 0.0015) < 0.0004) break; W.addScaledVector(F.x, Math.max(-0.01, Math.min(0.01, m - 0.0015))); }
+    W.y = deskY + jointSizes(limbProfiles(S.A, PERSONAS[S.persona])).wr + 0.002; // the wrist down on the desk, the hand turned up on its side against the face
+    for (let k = 0; k < 60; k++) { const m = palm.reduce((m, q) => Math.min(m, at(W)(q.x, q.y, q.z)), 1e9); if (Math.abs(m - 0.0015) < 0.0004) break; W.addScaledVector(F.x, Math.max(-0.01, Math.min(0.01, m - 0.0015))); W.y = Math.max(W.y, deskY + jointSizes(limbProfiles(S.A, PERSONAS[S.persona])).wr + 0.002); }
   } else for (let tl = -0.25; tl <= 0.401; tl += 0.05) { // the palm tilted as it best lies along the shell: settled down onto it, then the tilt with it closest all over
     const F1 = handFrame(new V3(0, -1, 0), fwd.clone().addScaledVector(UP, tl)), at1 = (W) => (x, y, z) => sdfW(W.clone().add(inHand(F1, new V3(x, y, z))));
     const W1 = ctr.clone().addScaledVector(fwd, -0.06 * len).addScaledVector(F1.y, -HD.palmLen).addScaledVector(F1.z, -(HD.fingers[0].z + HD.fingers[1].z) / 2).add(new V3(0, 0.08, 0)); // the knuckles a little ahead of its middle, the wheel between the index and middle fingers
