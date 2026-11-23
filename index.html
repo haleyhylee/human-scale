@@ -275,6 +275,7 @@ span.br { display: block; }
 .seg button { height: 32px; padding: 0 12px; border: 0; background: none; font-size: 13px; font-weight: 500; color: var(--ink-2); }
 .seg button + button { border-left: 1px solid var(--line); }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
+#stdSeg { display: flex; width: 100%; } #stdSeg button { flex: 1 1 0; min-width: 0; padding: 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* all six body-data sets across the panel, in either language */
 .label .seg.mini { margin-left: auto; }
 .seg.mini button { height: 26px; padding: 0 10px; font-size: 12px; }
 .seg .ox { display: inline-flex; align-items: center; justify-content: center; width: 38px; padding: 0; }
@@ -575,7 +576,7 @@ input:disabled { opacity: 0.55; }
       </div>
       <div class="field">
         <div class="label" data-en="Body data">신체 기준</div>
-        <div class="seg" id="stdSeg"><button type="button" data-std="ko" data-en="Korea">한국</button><button type="button" data-std="intl" data-en="International">국제</button><button type="button" data-std="us" data-en="US">미국</button><button type="button" data-std="eu" data-en="Europe">유럽</button><button type="button" data-std="cn" data-en="China">중국</button><button type="button" data-std="jp" data-en="Japan">일본</button></div>
+        <div class="seg" id="stdSeg"><button type="button" data-std="ko" data-en="Korea">한국</button><button type="button" data-std="intl" data-en="Global">국제</button><button type="button" data-std="us" data-en="US">미국</button><button type="button" data-std="eu" data-en="Europe">유럽</button><button type="button" data-std="cn" data-en="China">중국</button><button type="button" data-std="jp" data-en="Japan">일본</button></div>
         <p class="hint" id="stdSrc"></p>
       </div>
     </section>
