@@ -7,7 +7,7 @@
 ## 소개
 
 "이 제품은 어느 정도 크기여야 할까?"
-산업디자이너가 디자인을 시작하기 전 가장 먼저 부딪히는 질문입니다. 도면 위 숫자만으로는 감이 잘 오지 않고, 실물 목업을 만들기엔 시간과 비용이 듭니다. Human Scale은 이 스케일 감각을 빠르고 꼼꼼하게 확인하기 위해 만들었습니다.
+산업디자이너가 디자인을 시작하기 전 가장 먼저 부딪히는 질문입니다. 이를 확인하려면 비슷한 제품의 크기와 사람의 신체 치수를 하나하나 찾아보고, 마네킹 3D 파일을 구해 불러와 맞춰 보는 데만 꽤 많은 시간이 걸립니다. 도면 위 숫자만으로는 감이 잘 오지 않고, 실물 목업을 만들기엔 시간과 비용이 듭니다. Human Scale은 이 과정을 한곳에 모아, 스케일 감각을 빠르고 꼼꼼하게 확인하기 위해 만들었습니다.
 
 같은 제품도 사람에 따라 다르게 느껴집니다. 성별과 나이, 체형, 장애 여부에 따라 누군가에게는 손이 닿지 않거나, 쥐기 어렵거나, 불편할 수 있습니다. Human Scale에서는 다양한 사람이 제품을 직접 쥐고, 누르고, 펼쳐 보며, 생길 수 있는 불편함을 미리 짚어 줍니다. 더 많은 사람이 불편 없이 쓸 수 있는 유니버설 디자인을 디자인 초기부터 확인하는 것, 나아가 AI가 이를 점검하고 개선 방향을 먼저 제안하는 것까지 목표로 했습니다.
 
@@ -17,7 +17,8 @@
 
 ## 할 수 있는 것
 
-- **다양한 사람:** 성인 여성·남성, 청소년, 어린이, 노인, 휠체어 사용자. 키와 몸무게(15–200kg)에 따라 체형이 바뀝니다.
+- **다양한 사람:** 성인 여성·남성, 청소년, 어린이, 노인, 휠체어 사용자. 실제 신체 치수 자료를 바탕으로, 키와 몸무게(15–200kg)에 따라 체형이 바뀝니다. 마네킹 파일을 따로 구할 필요가 없습니다.
+- **제품 크기 예시:** 휴대폰, 노트북, 가전, 가구, 종이 등 자주 쓰는 제품의 실제 크기가 들어 있어 따로 찾아볼 필요가 없습니다.
 - **실제 사용 동작:** 쥐기, 누르기, 펼치기, 앉기 같은 동작을 재생해 봅니다.
 - **유니버설 디자인 점검:** 손이 닿는지, 한 손으로 쥘 수 있는지, 높이와 거리가 적당한지 다양한 사람 기준으로 바로 알려 줍니다.
 - **3D 파일 불러오기·내보내기:** 내 디자인 파일을 불러오고, 사람과 함께 있는 장면을 크기가 맞춰진 3D 파일로 내보냅니다.
@@ -28,7 +29,7 @@
 
 **Human Scale is a 3D online mock-up for checking a product's size against real people.**
 
-"How big should this be?" is the first question an industrial designer faces. Numbers on a drawing rarely give a feel for scale, and physical mock-ups take time and money. Human Scale makes that check quick and thorough.
+"How big should this be?" is the first question an industrial designer faces. Answering it means looking up the sizes of similar products and human body measurements one by one, then finding a mannequin 3D file and fitting it in — all before design even begins. Numbers on a drawing rarely give a feel for scale, and physical mock-ups take time and money. Human Scale brings all of this into one place, so the check is quick and thorough.
 
 The same product feels different to different people. Depending on sex, age, build and ability, it may be out of reach, hard to grip or uncomfortable. Here, a range of people hold, press and open the product, and problems are pointed out early. The aim is to bring universal design into the very first stage of a project, and to have AI check for these issues and suggest improvements first.
 
