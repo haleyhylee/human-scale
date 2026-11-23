@@ -153,8 +153,8 @@ button { cursor: pointer; }
 .lv.bad { color: var(--bad); background: var(--bad-bg); }
 .lv.info { color: var(--ink-2); background: var(--bg); }
 .tipbtn { position: relative; }
-.hud { container-type: inline-size; } .hud > .tipbtn { order: 0; flex: 0 0 auto; } .hud > .verdict { order: 1; } .hud > .hud-acts { order: 2; }
-@container (max-width: 760px) { .hud > .verdict { order: 0; flex-basis: 100%; } .hud > .tipbtn { order: 1; } } /* wide: tips, then the check line, the buttons to the right; narrow: the check line on top, the tips at the left of the buttons' row */
+.hud > .tipbtn { order: 0; flex: 0 0 auto; } .hud > .verdict { order: 1; } .hud > .hud-acts { order: 2; }
+.hud.stack > .verdict { order: 0; flex-basis: 100%; } .hud.stack > .tipbtn { order: 1; } /* one row (tips, the check line, the buttons) while it fits; when it does not, the check line goes up and the tips stay at the left of the buttons' row */
 .tipbtn[data-new]::after { content: ""; position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); } /* a tip waiting while they are hidden */
 .lv.ico { display: inline-flex; align-items: center; justify-content: center; padding: 3px 5px; vertical-align: -3px; }
 .lv.ico svg { width: 14px; height: 14px; display: block; }
@@ -8627,6 +8627,12 @@ for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEv
 document.addEventListener('touchmove', (e) => { if (e.touches.length > 1 && !e.target.closest('canvas')) e.preventDefault(); }, { passive: false });
 
 { const wm = document.querySelector('.wm'); wm.addEventListener('click', () => location.reload()); wm.addEventListener('keydown', (e) => { if (e.key === 'Enter') location.reload(); }); } // the wordmark: back to the start, as a fresh visit
+
+/* the bottom bar: one row while it fits, else the check line above the tips and buttons (measured, whatever the text's length) */
+{ const hud = document.querySelector('.hud'), tip = $('btnTip'), v = hud && hud.querySelector('.verdict'), a = hud && hud.querySelector('.hud-acts'), tx = $('hudText');
+  const fit = () => { if (!hud || window.innerWidth <= 520 || !hud.offsetWidth) return; hud.classList.remove('stack'); const t = tip.getBoundingClientRect(), lh = parseFloat(getComputedStyle(tx).lineHeight) || 18;
+    if (v.getBoundingClientRect().top >= t.bottom - 2 || a.getBoundingClientRect().top >= t.bottom - 2 || tx.getBoundingClientRect().height > lh * 1.5) hud.classList.add('stack'); };
+  let lw = 0; if (hud) { new ResizeObserver(() => { if (hud.clientWidth !== lw) { lw = hud.clientWidth; fit(); } }).observe(hud); new MutationObserver(fit).observe(v, { childList: true, characterData: true, subtree: true }); fit(); setTimeout(fit, 600); } }
 
 /* ---------- model files: the product as drawn, at its size now, in millimetres ----------
    One zip with a Rhino file (.3dm), an OBJ and an STL. The .3dm is written here (openNURBS layout: what rhino3dm writes for a mesh, the tables
