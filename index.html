@@ -453,7 +453,7 @@ input:disabled { opacity: 0.55; }
         <button type="button" class="chip vbtn" data-view="top" aria-pressed="false" title="평면" data-en-title="Top" aria-label="평면" data-en-aria="Top"><svg class="vi" viewBox="0 0 24 24" aria-hidden="true"><path class="f" d="M4 8l4-4h12l-4 4z"/><path d="M4 8h12v12H4zM4 8l4-4h12v12l-4 4M16 8l4-4" fill="none"/></svg><span class="vl" data-en="Top">평면</span></button>
         </div>
         <div class="lrow">
-          <div class="lens" id="lensSeg"><button type="button" class="ll" id="lensDef" title="렌즈 (화각) · 누르면 기본값" data-en-title="Lens (field of view) · press for the default" aria-label="렌즈 기본값" data-en-aria="Default lens"><svg class="vi lensi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 13L3.5 3M12 13l8.5-10" fill="none"/><path d="M12 13L7.5 7.7a7 7 0 0 1 9 0z" fill="none"/><rect x="8.8" y="15.2" width="6.4" height="5.6" rx="1.3" fill="none"/></svg></button><button type="button" id="lensDial" class="dial" aria-label="렌즈 초점거리 (누를 때마다 바뀌어요)" data-en-aria="Lens focal length (each press steps on)" title="누를 때마다 20 · 35 · 50 · 85mm" data-en-title="Each press: 20 · 35 · 50 · 85 mm"><b id="lensVal">35</b></button></div>
+          <div class="lens" id="lensSeg"><button type="button" class="ll" id="lensDef" title="렌즈 (화각) · 누르면 기본값" data-en-title="Lens (field of view) · press for the default" aria-label="렌즈 기본값" data-en-aria="Default lens"><svg class="vi lensi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 13L3.5 3M12 13l8.5-10" fill="none"/><path d="M12 13L7.5 7.7a7 7 0 0 1 9 0z" fill="none"/><rect x="8.8" y="15.2" width="6.4" height="5.6" rx="1.3" fill="none"/></svg></button><button type="button" id="lensDial" class="dial" aria-label="렌즈 초점거리 (누를 때마다 바뀌어요)" data-en-aria="Lens focal length (each press steps on)" title="누를 때마다 16 · 24 · 35 · 50 · 85 · 200mm" data-en-title="Each press: 16 · 24 · 35 · 50 · 85 · 200 mm"><b id="lensVal">35</b></button></div>
         </div>
       </div>
       <div class="rcol">
@@ -808,7 +808,7 @@ const cm1 = (m) => (Math.round(m * 1000) / 10).toFixed(1);
 const mmi = (m) => Math.round(m * 1000);
 const fmtH = (h) => (Math.round(h * 10) / 10).toFixed(1).replace(/\.0$/, '');
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const LENSES = [20, 35, 50, 85];
+const LENSES = [16, 24, 35, 50, 85, 200];
 const lensFov = (mm) => (2 * Math.atan(12 / mm) * 180) / Math.PI; // vertical angle of view, full-frame
 
 /* ---------- language: Korean or English, remembered per viewer ---------- */
@@ -1073,7 +1073,7 @@ const RANK = { good: 0, info: 0, warn: 1, bad: 2 };
 const EDGE = 0.05; // front edge of a table or counter (product front face sits at z = 0)
 
 const S = {
-  mode: 'use', view: 'third', guides: true, lens: 35, lensFP: 20, posture: 'stand',
+  mode: 'use', view: 'third', guides: true, lens: 35, lensFP: 24, posture: 'stand',
   ceil: { on: false, std: 'ko', h: 2300, w: 4000, d: 4000, t: 9.5 }, // t: the slab's thickness (mm), its underside at h // a ceiling over the scene, kept from product to product
   persona: 'adultF', height: PERSONAS.adultF.h, bmi: PERSONAS.adultF.bmi,
   source: 'box', preset: 'cube', pkey: 'cube', name: '큐브', shape: 'box', style: null, w: 80, d: 80, h: 80, scale: 1, base: { w: 80, d: 80, h: 80 }, screen: false, det: {},
@@ -8485,11 +8485,11 @@ for (const [id, key] of [['rW', 'w'], ['rD', 'd'], ['rH', 'h']]) $(id).addEventL
 $('dimReset').addEventListener('click', () => { if (!S.base) return; if (sizeUnit()) { S.row = S.row.map((u, i) => (i === S.pick ? { ...u, w: S.base.w, d: roundBase() ? S.base.w : S.base.d, h: S.base.h } : u)); refresh({ rebuild: true }); return; } Object.assign(S, S.base); if (roundBase()) S.d = S.w; S.ctrl = Math.min(S.ctrlWant ?? S.ctrl, S.h); S.ctrlWant = null; refresh({ rebuild: true }); });
 
 /* ---------- lens, posture, history, resets, 1-person look ---------- */
-{ // the lens: each press steps on through 20 · 35 · 50 · 85 and round again; its icon goes back to the default
-  const STOPS = [20, 35, 50, 85], d = $('lensDial'), cur = () => (S.view === 'first' ? S.lensFP : S.lens);
+{ // the lens: each press steps on through 16 · 24 · 35 · 50 · 85 · 200 and round again; its icon goes back to the default
+  const STOPS = LENSES, d = $('lensDial'), cur = () => (S.view === 'first' ? S.lensFP : S.lens);
   const set = (v) => { if (S.view === 'first') S.lensFP = v; else S.lens = v; syncLens(); perspCam.fov = lensFov(v); perspCam.updateProjectionMatrix(); };
   d.addEventListener('click', () => { if (d.disabled) return; const i = STOPS.indexOf(cur()); set(STOPS[(i < 0 ? 1 : i + 1) % STOPS.length]); });
-  $('lensDef').addEventListener('click', () => { if (!d.disabled) set(S.view === 'first' ? 20 : 35); });
+  $('lensDef').addEventListener('click', () => { if (!d.disabled) set(S.view === 'first' ? 24 : 35); });
 }
 $('zoomIn').addEventListener('click', () => zoomView(0.8));
 $('zoomOut').addEventListener('click', () => zoomView(1.25));
