@@ -201,16 +201,16 @@ button { cursor: pointer; }
 .brand { display: flex; flex-direction: column; gap: 3px; }
 .swatches { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; margin: 2px 0 8px; max-width: 340px; } /* all ten in one line, however narrow */
 span.br { display: block; }
-.det .seg.matsw { display: flex; flex-wrap: wrap; gap: 8px 8px; border: 0; background: none; overflow: visible; grid-column: 1 / -1; } /* materials as swatches, like the colours */
-.seg.matsw button, .seg.matsw button + button { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 44px; width: auto; max-width: 72px; height: auto; padding: 0 2px; border: 0; background: none; font: 400 12px/1.2 var(--font-body); letter-spacing: 0; color: var(--ink-2); white-space: normal; text-align: center; }
+.det .seg.matsw { display: grid; grid-template-columns: repeat(auto-fill, 62px); justify-content: start; gap: 10px 6px; border: 0; background: none; overflow: visible; grid-column: 1 / -1; } /* materials as swatches, like the colours: each the same width, a long name going onto two lines, so they sit evenly spaced */
+.seg.matsw button, .seg.matsw button + button { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; width: 62px; max-width: 62px; height: auto; padding: 0 2px; border: 0; background: none; font: 400 12px/1.2 var(--font-body); letter-spacing: 0; color: var(--ink-2); white-space: normal; text-align: center; }
 .seg.matsw button[aria-pressed="true"] { background: none; color: var(--ink); font-weight: 500; }
 .mdot { display: block; flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.16); background: var(--prodc, #723838); box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.12); }
 .seg.matsw button[aria-pressed="true"] .mdot { box-shadow: 0 0 0 2px var(--panel), 0 0 0 3.5px var(--ink), inset 0 -4px 8px rgba(0, 0, 0, 0.12); }
 .mdot[data-m="wood"] { background: repeating-linear-gradient(100deg, #b98a5a 0 3px, #a87648 3px 5px, #c39565 5px 8px); }
 .mdot[data-m="glass"] { background: radial-gradient(circle at 35% 30%, #ffffff 0 18%, rgba(205, 228, 240, 0.65) 45%, rgba(150, 185, 205, 0.55)); }
-.mdot[data-m="metal"] { background: linear-gradient(135deg, #f4f4f4 0%, #9a9da2 40%, #e6e7e9 55%, #7d8085 100%); }
+.mdot[data-m="metal"] { background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(0, 0, 0, 0.3) 40%, rgba(255, 255, 255, 0.7) 55%, rgba(0, 0, 0, 0.4) 100%), var(--prodc, #723838); } /* the metals in the product colour, as they render */
 .mdot[data-m="gloss"] { background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.85) 0 14%, transparent 32%), var(--prodc, #723838); }
-.mdot[data-m="anod"] { background: linear-gradient(135deg, #b9bbbe, #8e9196); }
+.mdot[data-m="anod"] { background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(0, 0, 0, 0.22)), var(--prodc, #723838); }
 .mdot[data-m="fabric"] { background: repeating-linear-gradient(45deg, #efe6d6 0 2px, #e2d6c1 2px 4px); }
 .mdot[data-m="paper"] { background: #f6f1e6; }
 .mdot[data-m="black"] { background: #1d1d1f; }
@@ -719,6 +719,7 @@ input:disabled { opacity: 0.55; }
           <div class="dimrow surfrow"><label for="vanD" data-en="Ledge depth">젠다이 깊이</label><input type="range" id="vanD" min="80" max="400" step="5"><input type="number" id="vanDn" inputmode="decimal" min="80" max="400" step="1"></div>
           <div class="dimrow surfrow"><label for="vanGap" data-en="Ledge to cabinet">젠다이~상부장</label><input type="range" id="vanGap" min="100" max="900" step="10"><input type="number" id="vanGapn" inputmode="decimal" min="100" max="900" step="1"></div>
           <div class="dimrow surfrow"><label for="vanSink" data-en="Sink height">싱크대 높이</label><input type="range" id="vanSink" min="500" max="1400" step="5"><input type="number" id="vanSinkn" inputmode="decimal" min="500" max="1400" step="1"></div>
+          <div class="dimrow surfrow"><label for="vanTap" data-en="Tap height">수도꼭지 높이</label><input type="range" id="vanTap" min="50" max="400" step="5"><input type="number" id="vanTapn" inputmode="decimal" min="50" max="400" step="1"></div>
         </div>
         <div id="plinthRows" hidden>
           <div class="dimrow surfrow"><label for="plW" data-en="Plinth W">단상 W</label><input type="range" id="plW" min="100" max="1500" step="10"><input type="number" id="plWn" inputmode="decimal" min="100" max="1500" step="1"></div>
@@ -1514,6 +1515,8 @@ const mats = {
   cup: new THREE.MeshStandardMaterial({ roughness: 0.35, color: 0xf4f4f1 }),
   glaze: new THREE.MeshPhysicalMaterial({ roughness: 0.32, clearcoat: 0.8, clearcoatRoughness: 0.12 }), // a glazed mug: the product colour, glossy
   water: new THREE.MeshStandardMaterial({ color: 0x9fd0f5, transparent: true, opacity: 0.75, roughness: 0.1 }),
+  pour: new THREE.MeshPhysicalMaterial({ color: 0x2f8fe8, transparent: true, opacity: 0.82, roughness: 0.05, clearcoat: 1 }), // water poured into a cup: plainly blue
+  cupGlass: new THREE.MeshPhysicalMaterial({ color: 0xf2f7f8, transparent: true, opacity: 0.22, roughness: 0.04, clearcoat: 1, depthWrite: false, side: THREE.DoubleSide }), // a clear glass, so the water filling it shows
   coffee: new THREE.MeshStandardMaterial({ color: 0x3b2314, roughness: 0.22 }),
   paper: new THREE.MeshStandardMaterial({ color: 0xf7f7f4, roughness: 0.92 }),
   kraft: new THREE.MeshStandardMaterial({ color: 0xc9a26e, roughness: 0.9 }), tape: new THREE.MeshStandardMaterial({ color: 0xd8b27c, roughness: 0.35 }), seam: new THREE.MeshStandardMaterial({ color: 0x6b5233, roughness: 0.9 }),
@@ -2173,8 +2176,9 @@ product.add(tray);
 const TRAY_TOP = 0.022, NOZZLE = 0.022; // drip tray height; the nozzle tip hangs this far below the outlet height
 const surface = new THREE.Group();
 scene.add(surface);
-const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.031, 0.1, 32), mats.cup);
-cup.castShadow = true;
+const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.031, 0.1, 32, 1, true), mats.cupGlass); // a clear glass under the outlet: open at the top, its thick base below
+cup.add(new THREE.Mesh(new THREE.CylinderGeometry(0.031, 0.031, 0.006, 32).translate(0, -0.047, 0), mats.cupGlass)); cup.renderOrder = 2;
+cup.castShadow = false;
 scene.add(cup);
 const cupFill = new THREE.Mesh(new THREE.CylinderGeometry(0.0335, 0.03, 1, 28), mats.water); // what's in the cup
 scene.add(cupFill);
@@ -2271,6 +2275,7 @@ const SURF_NAME = { plinth: ['단상', 'plinth'], table: ['테이블', 'table'],
 function expSurfOk() { return !carried() && !!SURF_NAME[S.place] && surface.children.length > 0; } // something it stands on (or hangs on) to take along
 const vanD = () => clamp(((S.surf && S.surf.vanD) || 200) / 1000, 0.08, 0.4); // the vanity ledge's depth (m)
 const vanGap = () => clamp(((S.surf && S.surf.vanGap) || 350) / 1000, 0.1, 0.9); // from the ledge up to the mirror cabinet (m)
+const vanTap = () => (S.surf && S.surf.vanTap ? Math.min(S.surf.vanTap / 1000, 0.4) : Math.max(0.04, SURF.vanity - vanSink() - 0.03)); // the tap's height over the basin counter: set, or by default its top 3 cm under the ledge's (its upper face stays clear)
 const vanSink = () => (S.surf && S.surf.vanSink ? Math.min(S.surf.vanSink / 1000, SURF.vanity) : Math.max(0.62, SURF.vanity - 0.17)); // the basin's counter in front of the ledge: set (up to the ledge's own height, flush with it), or following it
 const VAN_SINK_D = 0.48;
 const GLASS_MIRROR = new THREE.MeshPhysicalMaterial({ color: 0xc9d4d9, metalness: 0.55, roughness: 0.08, clearcoat: 1, clearcoatRoughness: 0.02 }); // a mirror's glass: bright and cool (there is nothing round it to reflect)
@@ -2323,10 +2328,10 @@ function stoolRing(H, W, y) {
    The H field stays the overall height (for an office chair: its seat, set by the gas lift between lowest and highest to suit the person).
    Only the product being checked takes them; a desk under someone's laptop keeps the defaults. */
 // ceramic: a white glaze with no clear coat (a clear coat with no surroundings to reflect goes black round every rim and edge)
-const TOP_MAT = { ceramic: new THREE.MeshStandardMaterial({ color: 0xf3f1ec, roughness: 0.3, metalness: 0 }), wood: new THREE.MeshStandardMaterial({ color: 0x9c6b43, roughness: 0.72 }), glass: new THREE.MeshStandardMaterial({ color: 0xcfe2e4, roughness: 0.06, transparent: true, opacity: 0.4, depthWrite: false }), metal: mats.metal };
+const TOP_MAT = { ceramic: new THREE.MeshStandardMaterial({ color: 0xf3f1ec, roughness: 0.3, metalness: 0 }), wood: new THREE.MeshStandardMaterial({ color: 0x9c6b43, roughness: 0.72 }), glass: new THREE.MeshStandardMaterial({ color: 0xcfe2e4, roughness: 0.06, transparent: true, opacity: 0.4, depthWrite: false }), metal: new THREE.MeshStandardMaterial({ metalness: 1, roughness: 0.12, envMap: mats.metal.envMap, envMapIntensity: 1 }) }; TOP_MAT.metal.color = mats.foam.color; // polished metal in the product's colour (white: chrome)
 const MAT_ROW = { k: 'mat', ko: '재질', en: 'Material', opts: [['solid', '솔리드', 'Solid'], ['wood', '나무', 'Wood'], ['glass', '유리', 'Glass'], ['metal', '유광 메탈', 'Polished metal'], ['anod', '무광 메탈', 'Anodized metal']], def: 'solid' };
 const ANOD_MATS = new Map();
-function anodMat() { const k = clamp(+(dv('anodR') ?? 60), 0, 100) / 100, key = k.toFixed(2); if (!ANOD_MATS.has(key)) { const m = new THREE.MeshStandardMaterial({ roughness: 0.22 + 0.7 * k, metalness: 0.75 - 0.25 * k }); m.color = mats.foam.color; ANOD_MATS.set(key, m); } return ANOD_MATS.get(key); } // anodized: the product's colour, as matte as set
+function anodMat() { const k = clamp(+(dv('anodR') ?? 60), 0, 100) / 100, key = k.toFixed(2); if (!ANOD_MATS.has(key)) { const m = new THREE.MeshStandardMaterial({ roughness: 0.22 + 0.7 * k, metalness: 0.75 - 0.25 * k, envMap: mats.metal.envMap, envMapIntensity: 0.9 }); m.color = mats.foam.color; ANOD_MATS.set(key, m); } return ANOD_MATS.get(key); } // anodized: the product's colour, as matte as set
 const matOf = (k) => (k === 'anod' ? anodMat() : TOP_MAT[k]);
 /* a lamp's shade: what it is made of, and pleated or plain */
 const SHADE_ROW = (def) => ({ k: 'smat', ko: '갓 재질', en: 'Shade material', opts: [['solid', '솔리드', 'Solid'], ['fabric', '패브릭', 'Fabric'], ['paper', '종이(한지)', 'Paper'], ['glass', '유리(우윳빛)', 'Opal glass'], ['metal', '유광 메탈', 'Polished metal'], ['anod', '무광 메탈', 'Anodized']], def });
@@ -2349,10 +2354,10 @@ const mushForm = () => (S.det && S.det.hform) || 'dome'; // read straight off th
 const STEM_COL = (ko, en) => ({ k: 'stemCol', ko: ko.replace('색', '재질'), en: en.replace('colour', 'material'), opts: [['same', '솔리드', 'Solid'], ['black', '블랙', 'Black'], ['wood', '나무', 'Wood'], ['metal', '유광 메탈', 'Polished metal'], ['anod', '무광 메탈', 'Anodized'], ['glass', '유리', 'Glass']], def: 'same' }); // a lamp's stem (and base): solid in the product colour by default, or another material
 const stemMat = () => { const k = dv('stemCol'); return k === 'black' ? mats.stemBlack : k === 'same' || !k ? mats.foam : k === 'anod' ? anodMat() : TOP_MAT[k] || mats.foam; };
 const SHADE_MATS = {};
-const shadeMat = (k) => (k === 'solid' ? mats.foamDS : k === 'metal' ? mats.shadeMetal : k === 'anod' ? (() => { const m = anodMat().clone(); m.side = THREE.DoubleSide; m.color = mats.foam.color; return m; })() : k === 'fabric' ? lampShade : (SHADE_MATS[k] ||= k === 'paper' ? new THREE.MeshStandardMaterial({ color: 0xfbf7ee, emissive: 0xffe7c2, emissiveIntensity: 0.5, roughness: 0.96, side: THREE.DoubleSide }) : new THREE.MeshStandardMaterial({ color: 0xf6f4f0, emissive: 0xffecd0, emissiveIntensity: 0.42, roughness: 0.14, side: THREE.DoubleSide }))); // fabric and paper glow warm, opal glass a little glossy, solid and metal don't
+const shadeMat = (k) => (k === 'solid' ? mats.foamDS : k === 'metal' ? (() => { const m = TOP_MAT.metal.clone(); m.side = THREE.DoubleSide; m.color = mats.foam.color; return m; })() : k === 'anod' ? (() => { const m = anodMat().clone(); m.side = THREE.DoubleSide; m.color = mats.foam.color; return m; })() : k === 'fabric' ? lampShade : (SHADE_MATS[k] ||= k === 'paper' ? new THREE.MeshStandardMaterial({ color: 0xfbf7ee, emissive: 0xffe7c2, emissiveIntensity: 0.5, roughness: 0.96, side: THREE.DoubleSide }) : new THREE.MeshStandardMaterial({ color: 0xf6f4f0, emissive: 0xffecd0, emissiveIntensity: 0.42, roughness: 0.14, side: THREE.DoubleSide }))); // fabric and paper glow warm, opal glass a little glossy, solid and metal don't
 const SFORM = () => (S.det && S.det.sform) || 'square'; // the sunglasses' shape sets their default lens and rim sizes
 const DR = (k, ko, en, min, max, def, step = 1, unit = 'mm') => ({ k, ko, en, min, max, def, step, unit });
-const ANOD_ROW = { ...DR('anodR', '무광 강도 (%)', 'Matte strength (%)', 0, 100, 60), show: () => [dv('mat'), dv('stemCol'), dv('smat')].includes('anod') }; // how matte the anodized finish is
+const ANOD_ROW = { ...DR('anodR', '무광 정도 (%)', 'Matte strength (%)', 0, 100, 60), show: () => [dv('mat'), dv('stemCol'), dv('smat'), dv('fin')].includes('anod') || dv('mat') === 'solid' || dv('fin') === 'solid' }; // how matte the anodized finish is
 const PLEAT_MM = { ...DR('pleatMm', '주름 간격 (mm마다 한 번 접힘)', 'Pleat spacing (one fold every mm)', 6, 80, 25), show: () => dv('pleat') === 'on' }; // how close the folds are
 const TABLE_ROWS = (t, leg, legKo = '다리 굵기', legEn = 'Leg thickness') => [DR('topT', '상판 두께', 'Top thickness', 12, 80, t), DR('legT', legKo, legEn, 15, 120, leg), MAT_ROW, ANOD_ROW];
 /* a snowman: two to four balls, each one's size, how far each sits into the one below (or, below zero, the gap between them) */
@@ -2551,9 +2556,12 @@ function detKind() {
 const FIN_ROW = { k: 'fin', ko: '재질', en: 'Material', opts: [['solid', '무광', 'Matte'], ['gloss', '유광', 'Gloss'], ['anod', '무광 메탈', 'Matte metal'], ['metal', '유광 메탈', 'Polished metal']], def: 'solid' };
 const ELEC_KEYS = new Set(PRESET_GROUPS.filter(([[ko]]) => ko === '전자제품' || ko === '생활 제품').flatMap(([, ks]) => ks).flatMap((k) => (k.startsWith('fam:') ? FAMILIES[k.slice(4)].sizes.map((s) => s[0]) : [k])).concat(['kettle', 'microwave', 'ricecooker', 'airbuds', 'airmax']));
 const isElec = () => S.source === 'box' && ELEC_KEYS.has(S.pkey) && !(DETAIL[detKind()] || []).some((r) => r.k === 'mat');
-const detSpec = () => { const b = DETAIL[detKind()] || []; return isElec() ? [...b, FIN_ROW] : b; };
-const FINISH = { solid: [0.88, 0], gloss: [0.22, 0], anod: [0.45, 0.8], metal: [0.14, 1] };
-function applyFinish() { const [r, m] = FINISH[isElec() ? dv('fin') || 'solid' : 'solid'] || FINISH.solid; mats.foam.roughness = r; mats.foam.metalness = m; const env = m > 0 ? mats.metal.envMap : null; if (mats.foam.envMap !== env) { mats.foam.envMap = env; mats.foam.envMapIntensity = 0.9; mats.foam.needsUpdate = true; } } // the body's product-colour material
+const detSpec = () => { const b = DETAIL[detKind()] || []; return isElec() ? [...b, FIN_ROW, ANOD_ROW] : b; };
+const FINISH = { gloss: [0.22, 0], metal: [0.12, 1] };
+function applyFinish() { /* the body's product-colour material: matte (as matte as set), gloss, matte metal (as the anodized parts) or polished metal, all in the product's colour */
+  const f = isElec() ? dv('fin') || 'solid' : 'solid', k = clamp(+(dv('anodR') ?? 60), 0, 100) / 100;
+  const [r, m] = f === 'solid' ? [Math.min(1, 0.4 + 0.8 * k), 0] : f === 'anod' ? [0.22 + 0.7 * k, 0.75 - 0.25 * k] : FINISH[f] || [0.88, 0];
+  mats.foam.roughness = r; mats.foam.metalness = m; const env = m > 0 ? mats.metal.envMap : null; if (mats.foam.envMap !== env) { mats.foam.envMap = env; mats.foam.envMapIntensity = 0.9; mats.foam.needsUpdate = true; } }
 function dv(k) { const sp = detSpec().find((x) => x.k === k); if (!sp) return undefined; const v = S.det && S.det[k] != null ? S.det[k] : sp.def; return typeof v === 'function' ? v() : v; }
 let DET_ON = false; // set while the product itself is being built
 const q = (k, d) => { if (!DET_ON) return d; const v = dv(k); return v == null ? d : v / 1000; };
@@ -4733,7 +4741,7 @@ function kettleParts() {
 }
 const kettleDims = () => { const k = kettleParts(); return { W: k.left + k.right, D: 2 * Math.max(k.rb, k.baseR), H: k.y0 + k.bh + k.lidH + k.knobH }; };
 function kettleGeo(group, W, D, H) {
-  const own = meshIn(group), k = kettleParts(), cz = -D / 2, ax = k.ax, body = dv('mat') === 'metal' ? steel : dv('mat') === 'glass' ? TOP_MAT.glass : mats.foam, pm = dv('partCol') === 'same' ? mats.foam : mats.stemBlack, V2 = THREE.Vector2;
+  const own = meshIn(group), k = kettleParts(), cz = -D / 2, ax = k.ax, body = dv('mat') === 'metal' ? TOP_MAT.metal : dv('mat') === 'glass' ? TOP_MAT.glass : mats.foam, pm = dv('partCol') === 'same' ? mats.foam : mats.stemBlack, V2 = THREE.Vector2;
   const top = k.y0 + k.bh, e = 0.008, s = 0.006; // the bottom edge's round, the shoulder's
   const prof = [new V2(0, k.y0), new V2(k.rb - e, k.y0)];
   for (let i = 1; i <= 5; i++) { const a = (i / 5) * (Math.PI / 2); prof.push(new V2(k.rb - e + e * Math.sin(a), k.y0 + e - e * Math.cos(a))); }
@@ -4918,7 +4926,7 @@ function teddyGeo(group, W, D, H) {
   S3(0.026 * H, 0, 0.725 * H, 0.21 * H, [1.2, 0.85, 0.8], dark); // the nose
   if (S.h > 200) return;
   // the keyring: sized as real ones are, whatever the bear's size (a 25 mm split ring, 7 mm links)
-  const met = TOP_MAT.metal, top = 0.928 * H, link = (y, rot) => own(new THREE.TorusGeometry(0.0032, 0.0008, 8, 20).scale(1, 1.45, 1).rotateY(rot).translate(0, y, cz - 0.004 * sz), met);
+  const met = mats.metal, top = 0.928 * H, link = (y, rot) => own(new THREE.TorusGeometry(0.0032, 0.0008, 8, 20).scale(1, 1.45, 1).rotateY(rot).translate(0, y, cz - 0.004 * sz), met);
   own(new THREE.TorusGeometry(0.0028, 0.0009, 8, 20).rotateY(Math.PI / 2).translate(0, top + 0.002, cz - 0.004 * sz), met); // the loop sewn into the head
   for (let i = 0; i < 3; i++) link(top + 0.0068 + i * 0.0072, i % 2 ? 0 : Math.PI / 2);
   own(new THREE.TorusGeometry(0.0125, 0.0011, 10, 48).translate(0, top + 0.0068 + 3 * 0.0072 + 0.009, cz - 0.004 * sz), met); // the split ring
@@ -5105,7 +5113,7 @@ function buildSurface() {
         const top = new THREE.Mesh(new THREE.ExtrudeGeometry(sh2, { depth: 0.03, bevelEnabled: false, curveSegments: 40 }).rotateX(-Math.PI / 2).translate(E.c, sh - 0.03, z0 + sd / 2 + 0.005), basin); top.userData.own = true; surface.add(top); }
       const bowl = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 20, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2).scale(bw / 2, 0.14, bd / 2), new THREE.MeshStandardMaterial({ color: 0xe8e8e6, roughness: 0.3, side: THREE.DoubleSide }));
       bowl.position.set(E.c, sh - 0.001, z0 + sd / 2 + 0.02); surface.add(bowl);
-      box(surface, 0.03, Math.max(0.05, h - sh + 0.06), 0.03, E.c, sh + Math.max(0.05, h - sh + 0.06) / 2, z0 + 0.03, steel); box(surface, 0.022, 0.022, 0.12, E.c, sh + Math.max(0.05, h - sh + 0.06) - 0.011, z0 + 0.09, steel); } // the tap, standing at the ledge's front
+      const th = vanTap(); box(surface, 0.03, th, 0.03, E.c, sh + th / 2, z0 + 0.03, steel); box(surface, 0.022, 0.022, 0.12, E.c, sh + th - 0.011, z0 + 0.09, steel); } // the tap, standing at the ledge's front
     return;
   }
   if (S.place === 'counter') {
@@ -5799,7 +5807,7 @@ function planHands() {
     S.plan = objectGrip(HD, { W: 0.076, D: 0.076, H: 0.1 }, true, 0);
     S.cupLocal = human.worldToLocal(new V3(0, Math.max(c.y - 0.084, SURF[S.place] + 0.052), 0.058)); // under the outlet (35 mm out), far enough off the front that the fingers round the cup's back miss it
     const hp = pointPose(), pts = fingerPts(HD, hp)[0], dir = new V3().subVectors(pts[3], pts[2]).normalize();
-    S.plan.press2 = { hp, tip: pts[3].clone().addScaledVector(dir, HD.fingers[0].r[2] * 0.8), at: human.worldToLocal(product.localToWorld(buttonPoint()).add(new V3(0, 0.004, 0))) };
+    S.plan.press2 = { hp, tip: pts[3].clone().addScaledVector(dir, HD.fingers[0].r[2] * 0.8), at: human.worldToLocal(frontButton() ? product.localToWorld(buttonPoint().add(new V3(0, 0, 0.006))) : product.localToWorld(buttonPoint()).add(new V3(0, 0.004, 0))) }; // on its face: just off the front, or just over the top
   } else if (lookCtrl()) { // only looked at: both hands stay down, the head lifts to the display
     S.plan = { kind: 'look', hp: restPose() };
     S.pressLocal = human.worldToLocal(c.clone());
@@ -6077,9 +6085,9 @@ function handGoal(plan, s, P, sh) {
       if (!right) { // the other hand presses the dispense button
         const p2 = plan.press2;
         if (!p2) return null;
-        const d2 = new V3().subVectors(p2.at, sh); if (frontButton()) d2.y = 0; // a button on the front: the finger goes straight at it, not down from the shoulder
+        const d2 = new V3().subVectors(p2.at, sh); if (frontButton()) { d2.y = 0; d2.normalize().multiplyScalar(0.35).add(new V3(0, 0, -1).transformDirection(product.matrixWorld).transformDirection(human.matrixWorld.clone().invert()).setY(0).normalize()); } // a button on the front: the finger goes nearly straight into the face at it, not across it from the shoulder
         const F = handFrame(new V3(0, -1, 0), d2);
-        return { F, W: p2.at.clone().sub(inHand(F, p2.tip)), pole: new V3(0.55, -1, -0.35), hp: p2.hp };
+        return { F, W: p2.at.clone().sub(inHand(F, p2.tip.clone().setZ(-p2.tip.z))), pole: new V3(0.55, -1, -0.35), hp: p2.hp }; // the left hand is the right one mirrored across its width
       }
       let F = handFrame(new V3(1, 0, 0), new V3(0.25, 0, 1)), W = S.place === 'hand' ? holdWrist(A, P) : null;
       if (W && waving() && anim.wave) { const a = deg(24) * anim.wave, c = Math.cos(a), sn = Math.sin(a), y = F.y.clone().multiplyScalar(c).addScaledVector(F.z, sn), z = F.z.clone().multiplyScalar(c).addScaledVector(F.y, -sn); F = { x: F.x, y, z, q: new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(F.x, y, z)) }; W = W.clone().add(new V3(0, 0.012 * Math.abs(anim.wave), 0.035 * anim.wave)); } // swung forward and back: the wrist flicks, the forearm goes with it a little
@@ -6228,7 +6236,7 @@ function placeExtras(pose) {
     product.position.copy(hr.localToWorld(plan.off.clone())).addScaledVector(Yp, -P.H / 2).addScaledVector(Zp, P.D / 2);
   }
   water.visible = false; cupFill.visible = false;
-  const use = S.mode === 'use' && !carried(), liq = isCoffee() ? mats.coffee : mats.water;
+  const use = S.mode === 'use' && !carried(), liq = isCoffee() ? mats.coffee : mats.pour;
   water.material = liq; cupFill.material = liq;
   const held = use && cupInHand() && grip && effReach() > 0.35, onTray = use && cupOnTray();
   cup.visible = held || onTray;
@@ -7111,7 +7119,7 @@ function syncUI() {
     $('surfReset').hidden = !on && !viewDistOn(); $('surfReset').disabled = !(S.surf && (S.surf[S.place] != null || (viewDistOn() && S.surf.viewD != null) || (S.place === 'wall' && S.surf.sill != null) || (S.place === 'plinth' && (S.surf.plinthW != null || S.surf.plinthD != null || S.surf.plinthR != null || S.surf.plinthForm != null || S.surf.plinthMat != null))));
     if (on && S.place === 'wall' && winLook()) NM.wall = ['창 아래 높이', 'Sill height'];
     if (on) { $('surfLab').textContent = L(...NM[S.place]); for (const id of ['surfIn', 'surfNum']) { $(id).min = lim[0]; $(id).max = lim[1]; if (document.activeElement !== $(id)) $(id).value = mm; } }
-    $('vanityRows').hidden = !(S.place === 'vanity' && !isFurniture()); if (S.place === 'vanity') for (const [id, v] of [['vanD', vanD()], ['vanDn', vanD()], ['vanGap', vanGap()], ['vanGapn', vanGap()], ['vanSink', vanSink()], ['vanSinkn', vanSink()]]) if (document.activeElement !== $(id)) $(id).value = Math.round(v * 1000);
+    $('vanityRows').hidden = !(S.place === 'vanity' && !isFurniture()); if (S.place === 'vanity') for (const [id, v] of [['vanD', vanD()], ['vanDn', vanD()], ['vanGap', vanGap()], ['vanGapn', vanGap()], ['vanSink', vanSink()], ['vanSinkn', vanSink()], ['vanTap', vanTap()], ['vanTapn', vanTap()]]) if (document.activeElement !== $(id)) $(id).value = Math.round(v * 1000);
     const pl = S.place === 'plinth' && !isFurniture();
     $('plinthRows').hidden = !pl;
     $('wallRow').hidden = S.place !== 'wall' && !viewDistOn(); $('wallRow').querySelector('label').textContent = viewDistOn() ? (S.look === 'pendant' ? L('펜던트와 거리', 'From the pendant') : L('보는 거리', 'Viewing distance')) : L('벽과 거리', 'From wall'); if (S.place === 'wall' || viewDistOn()) { const v = Math.round((viewDistOn() ? viewDist() : wallDist()) * 1000); for (const id of ['wallD', 'wallDn']) if (document.activeElement !== $(id)) $(id).value = v; }
@@ -8073,12 +8081,12 @@ function addUnit(left, top) {
 }
 $('unitAddL').addEventListener('click', () => addUnit(true));
 $('unitAddT').addEventListener('click', () => addUnit(false, true));
-function setSurf(v, key) { if (key === 'wallD' && viewDistOn()) key = 'viewD'; const k = key || S.place, lim = k === 'vanD' ? [80, 400] : k === 'vanGap' ? [100, 900] : k === 'vanSink' ? [500, 1400] : k === 'wallD' || k === 'viewD' ? [200, 3000] : k === 'plinthR' ? [0, 200] : k === 'plinthW' || k === 'plinthD' ? [50, 1500] : (k === 'wall' && winLook() ? [0, 2000] : SURF_LIM[k]) || [400, 1200]; if (!['table', 'desk', 'counter', 'vanity', 'vanD', 'vanGap', 'vanSink', 'plinth', 'air', 'wall', 'wallD', 'viewD', 'plinthW', 'plinthD', 'plinthR'].includes(k) || !(v >= lim[0] && v <= lim[1])) return; S.surf = { ...(S.surf || {}), [k === 'wall' && winLook() ? 'sill' : k]: Math.round(v) }; refresh({ rebuild: true, refit: true }); }
+function setSurf(v, key) { if (key === 'wallD' && viewDistOn()) key = 'viewD'; const k = key || S.place, lim = k === 'vanD' ? [80, 400] : k === 'vanGap' ? [100, 900] : k === 'vanSink' ? [500, 1400] : k === 'vanTap' ? [50, 400] : k === 'wallD' || k === 'viewD' ? [200, 3000] : k === 'plinthR' ? [0, 200] : k === 'plinthW' || k === 'plinthD' ? [50, 1500] : (k === 'wall' && winLook() ? [0, 2000] : SURF_LIM[k]) || [400, 1200]; if (!['table', 'desk', 'counter', 'vanity', 'vanD', 'vanGap', 'vanSink', 'vanTap', 'plinth', 'air', 'wall', 'wallD', 'viewD', 'plinthW', 'plinthD', 'plinthR'].includes(k) || !(v >= lim[0] && v <= lim[1])) return; S.surf = { ...(S.surf || {}), [k === 'wall' && winLook() ? 'sill' : k]: Math.round(v) }; refresh({ rebuild: true, refit: true }); }
 $('surfIn').addEventListener('input', (e) => setSurf(+e.target.value));
 for (const [id, k] of [['plForm', 'plinthForm'], ['plMat', 'plinthMat']]) $(id).addEventListener('click', (e) => { const b = e.target.closest('button[data-v]'); if (!b) return; S.surf = { ...(S.surf || {}), [k]: b.dataset.v }; refresh({ rebuild: true }); }); // the plinth: a cube or a cylinder, solid or glass
-$('surfReset').addEventListener('click', () => { if (!S.surf) return; const n = { ...S.surf }; delete n[S.place]; if (S.place === 'plinth') { delete n.plinthW; delete n.plinthD; delete n.plinthR; delete n.plinthForm; delete n.plinthMat; } if (S.place === 'wall') { delete n.wallD; delete n.sill; } if (S.place === 'vanity') { delete n.vanD; delete n.vanGap; delete n.vanSink; } delete n.viewD; S.surf = n; refresh({ rebuild: true, refit: true }); }); // the table, desk, counter, plinth or height back to its default
+$('surfReset').addEventListener('click', () => { if (!S.surf) return; const n = { ...S.surf }; delete n[S.place]; if (S.place === 'plinth') { delete n.plinthW; delete n.plinthD; delete n.plinthR; delete n.plinthForm; delete n.plinthMat; } if (S.place === 'wall') { delete n.wallD; delete n.sill; } if (S.place === 'vanity') { delete n.vanD; delete n.vanGap; delete n.vanSink; delete n.vanTap; } delete n.viewD; S.surf = n; refresh({ rebuild: true, refit: true }); }); // the table, desk, counter, plinth or height back to its default
 $('surfNum').addEventListener('change', (e) => setSurf(+e.target.value));
-for (const [id, k] of [['plW', 'plinthW'], ['plD', 'plinthD'], ['plR', 'plinthR'], ['wallD', 'wallD'], ['vanD', 'vanD'], ['vanGap', 'vanGap'], ['vanSink', 'vanSink']]) { $(id).addEventListener('input', (e) => setSurf(+e.target.value, k)); $(id + 'n').addEventListener('change', (e) => setSurf(+e.target.value, k)); }
+for (const [id, k] of [['plW', 'plinthW'], ['plD', 'plinthD'], ['plR', 'plinthR'], ['wallD', 'wallD'], ['vanD', 'vanD'], ['vanGap', 'vanGap'], ['vanSink', 'vanSink'], ['vanTap', 'vanTap']]) { $(id).addEventListener('input', (e) => setSurf(+e.target.value, k)); $(id + 'n').addEventListener('change', (e) => setSurf(+e.target.value, k)); }
 /* detail sizes: a slider or a number sets one part; a button picks a material or armrests on/off */
 $('detReset').addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); const lamp = ['lamp', 'lampS'].includes(detKind()); S.det = {}; if (lamp && S.base) S.h = S.base.h; detApply(); S.preset = S.preset || null; refresh({ rebuild: true, refit: true }); }); // every detail back to its default (a cap's brim, a lamp's parts…)
 function setDet(k, v) { const sp = detSpec().find((x) => x.k === k); if (!sp) return; if (!sp.opts) v = clamp(Math.round(+v / sp.step) * sp.step, sp.min, sp.max); else v = sp.opts.find((o) => String(o[0]) === String(v))[0]; if (lampDet(k, v)) { refresh({ rebuild: true, refit: true }); return; } S.det = { ...(S.det || {}), [k]: v }; if (sp.apply) { detApply(); refresh({ rebuild: true, refit: true }); } else refresh({ rebuild: true }); }
