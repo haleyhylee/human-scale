@@ -2470,7 +2470,7 @@ DETAIL.shelf = [{ k: 'mount', ko: '설치', en: 'Mount', opts: [['floor', '바�
   { k: 'mat', ko: '선반 재질', en: 'Shelf material', opts: [['solid', '솔리드', 'Solid'], ['glass', '유리', 'Glass'], ['wood', '나무', 'Wood'], ['metal', '메탈', 'Metal']], def: 'solid' }];
 DETAIL.door = [DR('jamb', '문틀 폭 (0 = 틀 없는 문)', 'Frame width (0 = no frame)', 0, 150, 50)]; // W and H are the whole opening with its frame
 const doorLeaf = () => { const j = (+dv('jamb') || 0) / 1000 * S.scale, W = dims().W, H = dims().H; return { w: W - 2 * j - (j ? 0.006 : 0), h: H - j - (j ? 0.006 : 0.003) }; }; // the leaf itself, inside its frame
-DETAIL.paper = [DR('corner', '귀도리 (모서리 R)', 'Corner radius', 0, 30, 0, 0.5)]; // paper and cards: their corners rounded off
+DETAIL.paper = [{ k: 'orient', ko: '방향', en: 'Orientation', opts: [['v', '세로', 'Portrait'], ['h', '가로', 'Landscape']], def: 'v', apply: true }, DR('corner', '귀도리 (모서리 R)', 'Corner radius', 0, 30, 0, 0.5)]; // paper and cards: their corners rounded off
 DETAIL.card = [{ k: 'orient', ko: '방향', en: 'Orientation', opts: [['h', '가로', 'Landscape'], ['v', '세로', 'Portrait']], def: 'h', apply: true }, DR('corner', '귀도리 (모서리 R)', 'Corner radius', 0, 10, 0, 0.5)]; // a business card, either way up
 const cardLike = () => S.source === 'box' && (S.pkey === 'card' || S.pkey === 'photocard'); // pinched up to look at, the way a business card is shown
 DETAIL.photocard = [{ k: 'orient', ko: '방향', en: 'Orientation', opts: [['v', '세로', 'Portrait'], ['h', '가로', 'Landscape']], def: 'v', apply: true }, DR('corner', '귀도리 (모서리 R)', 'Corner radius', 0, 10, 3, 0.5),
@@ -2505,7 +2505,8 @@ function detApply0() {
   else if (S.look === 'tv') { const t = tvScreen(); S.w = t.sw + 2 * t.b; S.h = t.sh + 2 * t.b + t.standH; } // the panel, and the stand under it when it has one
   else if (S.look === 'monitor') S.h = Math.round(+dv('lift') + S.w * 0.5625 + 2 * +dv('bezel') + 12); // the panel's height from its width (16:9) and bezel, raised on its stand
   else if (S.look === 'shelf') { const wl = dv('mount') === 'wall'; S.w = +dv('bays') * +dv('bayW') + +dv('postT'); S.h = (wl ? 0 : +dv('foot')) + +dv('tiers') * +dv('tierH') + (wl ? 120 : 0); if (wl && S.place !== 'wall') S.place = 'wall'; else if (!wl && S.place === 'wall') S.place = 'floor'; } // bays across, tiers up; on the wall: rails a little past the top shelf, hung at the height set
-  else if (S.look === 'paper' && (S.pkey === 'photocard' || S.pkey === 'card')) { const lo = Math.min(S.w, S.h), hi = Math.max(S.w, S.h); if (dv('orient') === 'h') { S.w = hi; S.h = lo; } else { S.w = lo; S.h = hi; } } // turned on its side, or upright
+  else if (S.look === 'paper' && S.source === 'box') { // any paper or card: portrait or landscape (W and H swapped)
+    const lo = Math.min(S.w, S.h), hi = Math.max(S.w, S.h); if (dv('orient') === 'h') { S.w = hi; S.h = lo; } else { S.w = lo; S.h = hi; } } // turned on its side, or upright
   else if (S.look === 'armlamp') { const a = armLamp(); S.w = Math.round(a.W * 1000); S.d = Math.round(a.D * 1000); S.h = Math.round(a.H * 1000); }
   else if (S.look === 'teddy') { if (S.det && S.det.tsize != null && S.det._ts !== S.det.tsize) { S.det = { ...S.det, _ts: S.det.tsize }; delete S.det.tH; } const t = S.det && S.det.tH != null ? +S.det.tH : +dv('tsize'); S.h = t; S.w = Math.round(0.62 * t); S.d = Math.round(0.55 * t); S.place = t <= 200 ? 'hand' : 'plinth'; } // a keyring size goes in the hand, a big one on the plinth
   else if (S.look === 'cream') { const [w, h] = { 15: [45, 35], 30: [55, 42], 50: [62, 48], 100: [75, 58] }[dv('ml')]; const k = dv('form') === 'cube' ? 0.92 : 1; S.w = S.d = Math.round(w * k); S.h = h; }
