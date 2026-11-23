@@ -4149,7 +4149,7 @@ function mouseGeo(group, W, D, H) {
     if (vert) x -= y * lean * 0.9;
     p.setXYZ(i, x, y, z); }
   geo.computeBoundingBox(); const bb = geo.boundingBox; geo.translate(-(bb.min.x + bb.max.x) / 2, 0, 0); geo.scale(W / (bb.max.x - bb.min.x), H / bb.max.y, D / 2); geo.translate(0, 0, -D / 2); geo.computeVertexNormals();
-  group.userData.mouseBody = vert ? null : geo;
+  group.userData.mouseBody = vert ? null : geo; group.userData.mouseSize = { W, D, H };
   { let hy = -1; const hp = geo.attributes.position; for (let i = 0; i < hp.count; i++) if (hp.getY(i) > hy) { hy = hp.getY(i); group.userData.hump = new V3(hp.getX(i), hy, hp.getZ(i)); } } // the top of the hump: where the palm rests
   part('몸체', 'Body'); own(geo, mats.foam);
   part('바닥', 'Base'); own(new THREE.CylinderGeometry(0.5, 0.5, 0.003, 48).scale(W * 0.92, 1, D * 0.94).translate(vert ? W * 0.04 : 0, 0.0015, -D / 2), dark);
@@ -5251,7 +5251,7 @@ function objectGrip(HD, P, cyl, up) {
     const tc = new V3(0.24 * HD.palmT, 0.3 * HD.palmLen, -0.3 * HD.palmW), ts = new V3(0.44 * HD.palmT, 0.28 * HD.palmLen, 0.18 * HD.palmW);
     let pad = 0;
     for (let i = 0; i <= 8; i++) for (let j = 0; j <= 8; j++) { const y = yc - by + (2 * by * i) / 8, z = off.z - P.H / 2 + (P.H * j) / 8, k = 1 - ((y - tc.y) / ts.y) ** 2 - ((z - tc.z) / ts.z) ** 2; if (k > 0) pad = Math.max(pad, tc.x + ts.x * Math.sqrt(k) - HD.palmT / 2); }
-    off.x += pad;
+    off.x += pad + (S.source === 'box' && S.look === 'trap' ? 0.004 : 0); // a tapered block's sloped faces lean out toward their foot
   }
   const shape = { kind: cyl ? 'c' : 'r', cx: off.x, cy: off.y, r: sx / 2, ax: sx / 2, by, rc, z0: off.z - P.H / 2, z1: off.z + P.H / 2 };
   return { kind: 'grip', hp: gripPose(HD, shape), off, swap: P.D > P.W };
@@ -5409,7 +5409,8 @@ function edgeGrip(kind) {
     if (inset + reach * Math.sin(a) <= half - 0.009 && inset + 0.5 * pl * Math.sin(a) + 0.5 * pw * Math.cos(a) <= half - 0.002) break;
   }
   inset = Math.min(inset, half - 0.002 - 0.5 * pl * Math.sin(a) - 0.5 * pw * Math.cos(a));
-  const g = { a, inset, up: Math.max(0.1 * D3.H, 0.5 * pw * Math.sin(a) + 0.01) };
+  const far = S.source === 'box' && S.look === 'book' && /^elder/.test(S.persona); // held out at arm's length (older eyes), the forearm comes in level under it: the hands further up its sides, its bottom corners clear below the wrists
+  const g = { a, inset, up: Math.max(far ? 0.065 : 0.1 * D3.H, 0.5 * pw * Math.sin(a) + 0.01) };
   g.inset -= thumbClear(g); // both hands set out a little, so neither thumb cuts into the sheet's edge
   return g;
 }
@@ -5698,7 +5699,8 @@ function planHands() {
       const a = new V3(0, holder.userData.handleRise || 0, 1).normalize().transformDirection(product.matrixWorld).transformDirection(human.matrixWorld.clone().invert()); // along the handle, toward its free end
       // the fingers carry on the forearm's line (a straight wrist): the forearm from an elbow hanging easy at the side, the handle crossing the palm at whatever slant that gives
       const P0 = basePose(A, PP(), 0), el = P0.shR.clone().add(new V3(-0.03, -0.92 * A.upperArm, 0.1)), fd = bar.clone().sub(el).normalize();
-      const ps = Math.asin(clamp(-a.dot(fd), Math.sin(deg(15)), Math.sin(deg(62)))), wv = fd.clone().addScaledVector(a, -fd.dot(a)).normalize();
+      const wrR = jointSizes(limbProfiles(A, PERSONAS[S.persona])).wr, cx0 = HD.palmT / 2 + 0.011 * k, psMax = Math.min(deg(55), Math.acos(Math.min(1, Math.sqrt(Math.max(0, (wrR + 0.016 * k) ** 2 - cx0 * cx0)) / (0.58 * HD.palmLen)))); // no steeper across the palm than keeps its free end clear of the wrist
+      const ps = Math.asin(clamp(-a.dot(fd), Math.sin(deg(15)), Math.sin(Math.max(deg(15), psMax)))), wv = fd.clone().addScaledVector(a, -fd.dot(a)).normalize();
       const Y = a.clone().multiplyScalar(-Math.sin(ps)).addScaledVector(wv, Math.cos(ps)), X = new V3().crossVectors(wv, a).normalize();
       const F = handFrame(X, Y), ah = new V3(0, -Math.sin(ps), Math.cos(ps)), Zh = new V3().crossVectors(X, Y);
       // the handle's real section: a flat rounded bar 32 mm across, 22 mm deep, corners 6 mm (as panGeo sweeps it)
@@ -5837,8 +5839,15 @@ function mouseGrip(HD) {
     let best = null;
     for (let a0 = 0; a0 <= lim[0]; a0 += 3) for (let c = 0; c <= lim[1]; c += 4) { const ang = [deg(a0), deg(1.1 * c), deg(Math.min(0.8 * c, lim[2]))], e = segGap(ang); if (e.lo < 0.001) continue; const sc = e.sum + 0.0003 * Math.abs(a0 - c) / 5; if (!best || sc < best.sum) best = { sum: sc, ang }; } // evenly curled, as a relaxed finger is
     return best ? best.ang : [0, 0, 0].map(() => deg(4)); };
-  const f = HD.fingers.map((g, i) => drape(g, i < 2 ? [45, 70, 55] : [70, 85, 65]));
-  const hp = { f, ...thumbRest(HD, sdf, f, new V3(0.45, 0.25, -0.85), new V3(HD.palmT * 1.6, HD.palmLen * 0.55, -0.62 * HD.palmW)) };
+  /* the index laid along its button as it lies; the middle, ring and little fingers each curled a little more than the one before, down
+     round the right side (as far as the shell lets them) */
+  const ix = drape(HD.fingers[0], [45, 70, 55]), f = [ix];
+  for (let i = 1; i < 4; i++) { const g = HD.fingers[i]; let ang = null;
+    for (let k = 1; k >= 0 && !ang; k -= 0.125) { const a = [ix[0] + deg(5 * i * k), ix[1] + deg(9 * i * k), ix[2] + deg(7 * i * k)], p = digitPts(new V3(0, g.y, g.z), UP, FAX, g.L, a); let lo = 1e9; for (let j = 0; j < 3; j++) for (let m = 1; m <= 4; m++) { const q = p[j].clone().lerp(p[j + 1], m / 4); lo = Math.min(lo, sdf(q.x, q.y, q.z) - g.r[j]); } if (lo >= 0.001) ang = a; }
+    f.push(ang || drape(g, [70, 85, 65])); }
+  /* the thumb against the side buttons on the left: where they are, in the hand's frame */
+  const sb = human.worldToLocal(holder.localToWorld(new V3(-holder.userData.mouseSize.W * 0.47 - 0.004 - HD.thumb.r[1], holder.userData.mouseSize.H * 0.5, -holder.userData.mouseSize.D * 0.47))).sub(W), spot = new V3(sb.dot(F.x), sb.dot(F.y), sb.dot(F.z));
+  const hp = { f, ...thumbRest(HD, sdf, f, new V3(0.45, 0.25, -0.85), spot) };
   return { kind: 'mouse', F, W, hp };
 }
 function thumbRest(HD, sdf, f, away, spot, pole = new V3(0.3, -0.2, -1)) {
