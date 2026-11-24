@@ -539,13 +539,13 @@ input:disabled { opacity: 0.55; }
     </header>
 
     <div class="tabs" role="tablist" aria-label="설정 분류" data-en-aria="Settings sections">
-      <button type="button" role="tab" id="tb-person" aria-controls="tab-person" aria-selected="true"><span data-en="Person">사람</span></button>
-      <button type="button" role="tab" id="tb-product" aria-controls="tab-product" aria-selected="false"><span data-en="Product">제품</span></button>
+      <button type="button" role="tab" id="tb-product" aria-controls="tab-product" aria-selected="true"><span data-en="Product">제품</span></button>
       <button type="button" role="tab" id="tb-set" aria-controls="tab-set" aria-selected="false"><span data-en="Dimensions">치수</span></button>
+      <button type="button" role="tab" id="tb-person" aria-controls="tab-person" aria-selected="false"><span data-en="Person">사람</span></button>
       <button type="button" role="tab" id="tb-check" aria-controls="tab-check" aria-selected="false"><span data-en="Checks">확인</span> <span class="lv info" id="tabPill">-</span></button>
     </div>
 
-    <section class="tabpanel" id="tab-person" role="tabpanel" aria-labelledby="tb-person">
+    <section class="tabpanel" id="tab-person" role="tabpanel" aria-labelledby="tb-person" hidden>
       <div class="field">
         <div class="label" data-en="Who">누구</div>
         <div class="chips" id="personaChips"></div>
@@ -583,7 +583,7 @@ input:disabled { opacity: 0.55; }
       </div>
     </section>
 
-    <section class="tabpanel" id="tab-product" role="tabpanel" aria-labelledby="tb-product" hidden>
+    <section class="tabpanel" id="tab-product" role="tabpanel" aria-labelledby="tb-product">
       <div class="field">
         <div class="label exrow"><span class="exl"><span id="presetCount"></span> <span class="muted">· <span data-en="fine-tune it in Dimensions">치수 탭에서 다듬어요</span></span></span><button type="button" class="reset" id="grpToggle">전체 접기</button></div>
         <div class="pstick"><div class="psearch"><input type="search" id="presetQ" placeholder="제품 검색" data-en-ph="Search products" aria-label="제품 검색" data-en-aria="Search products" autocomplete="off"><button type="button" class="btn" id="presetQBtn" aria-label="검색" data-en-aria="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 15l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>
@@ -7241,9 +7241,9 @@ let toastItem = null, aiQueue = [];
 const dismissed = new Set();
 /* the tips: a short manual, one step at a time ("다음" steps on, the last starts over); the checks live in their own tab */
 const MANUAL = [
-  ['사람 탭에서 누구인지(성인·어린이 등)와 키·몸무게를 골라요.', 'In Person, pick who it is (adult, child…) and their height and weight.'],
-  ['제품 탭에서 예시 제품을 고르거나 \'내 모델 넣기\'로 파일을 올려요.', 'In Product, pick an example or add your own model file.'],
+  ['제품 탭에서 예시 제품을 고르거나 \'내 모델 넣기\'로 파일을 올려요. 마우스를 올리면 미리 보여요.', 'In Product, pick an example (point at one to preview it) or add your own model file.'],
   ['치수 탭에서 크기·놓는 곳·재질·색을 다듬어요. 제품을 고르면 바로 넘어가요.', 'In Dimensions, fine-tune the size, where it stands, its material and colour. Picking a product takes you there.'],
+  ['사람 탭에서 누구인지(성인·어린이·휠체어 등)와 키·몸무게를 바꿔 같은 제품을 비교해요.', 'In Person, change who it is (adult, child, wheelchair…) and their height and weight to compare on the same product.'],
   ['▶ 동작 보기를 누르면 사람이 쥐거나 눌러 보며 크기를 확인해요.', 'Press ▶ Play: the person holds or presses it, so you can judge the size.'],
   ['위의 시점 버튼으로 3인칭·1인칭·정면·측면·평면을 오가요. 화각 숫자를 누르면 렌즈가 바뀌어요.', 'The view buttons switch between 3rd person, eye view, front, side and top. Tap the lens number to change it.'],
   ['실제 사이즈를 누르면 화면에 실제 크기로 보여요. 처음엔 톱니 버튼에서 자로 화면을 맞춰요.', 'Actual Size shows it at its real size on screen. The first time, match the screen with a ruler under the gear.'],
